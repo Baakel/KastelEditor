@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Add a new Stakeholder</h1>
+        <form action="" method="post" name="addstakeholder">
+            {{ form.hidden_tag() }}
+            <table>
+                <tr>
+                    {{ form.stakeholder(size=30) }} <input type="submit" value="Add">
+                </tr>
+                <tr><td></td></tr>
+                <tr>
+                    <th>Current Stakeholders</th>
+                </tr>
+                {% for stakeholder in stakeholders %}
+                <tr>
+                    <td>{{ stakeholder.nickname }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+        </form>
+{% endblock %}

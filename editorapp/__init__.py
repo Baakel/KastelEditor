@@ -1,8 +1,5 @@
-import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from config import basedir
-# from flask_oauth import OAuth
 from flask_github import GitHub
 
 app = Flask(__name__)
@@ -13,7 +10,7 @@ github = GitHub(app)
 from editorapp import views
 from .models import Stakeholder
 
-if Stakeholder.query.filter_by(nickname='Law').first() is None:
-    law = Stakeholder(nickname='Law')
-    db.session.add(law)
-    db.session.commit()
+# if Stakeholder.query.filter_by(nickname='Law').first() is None:
+#     law = Stakeholder(nickname='Law')
+#     db.session.add(law)
+#     db.session.commit()

@@ -1,15 +1,23 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>OAuth Demo</h1>
+    <h1>Kastel Editor</h1>
     {% for message in get_flashed_messages() %}
-        <p><b>Error:</b>{{ message }}</p>
+        <p><b>Error:</b> {{ message }}</p>
     {% endfor %}
     {% if g.user %}
-        <h2>Hi, {{ g.user.nickname }}!</h2>
-        <p><a href="{{ url_for('logout') }}">Logout</a></p>
+        <h2>Hi, {{ g.user.nickname }}!</h2><a href="{{ url_for('logout') }}">Logout</a>
+        <table>
+            <tr>
+                <th>Current Projects</th>
+                <th> </th>
+                <th>|</th>
+                <th> </th>
+                <th><a href="{{ url_for('projects', name='New Project') }}">Start a new project</a></th>
+            </tr>
+        </table>
     {% else %}
-        <h2>I don't know you!</h2>
+        <h2>Login to work on a project</h2>
         <p><a href="{{ url_for('login') }}">Login with github</a></p>
     {% endif %}
     <!--<h1>Welcome, {{ user.nickname }}</h1>-->

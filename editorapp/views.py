@@ -1,32 +1,32 @@
 from flask import render_template, url_for, flash, redirect, request, session, g
 from editorapp import app, db, github
+from flask_login import login_required
 from .forms import StakeHoldersForm
-from .models import Stakeholder, User, lm
+from .models import Stakeholder, Users, lm, Projects
 import requests
+
+@app.errorhandler(401)
+def unauthorized_error(error):
+    flash('Please log in first.')
+    return redirect(url_for('index'))
 
 @app.before_request
 def before_request():
     g.user = None
     if 'user_id' in session:
-        g.user = User.query.get(session['user_id'])
+        g.user = Users.query.get(session['user_id'])
 
 @app.route('/')
 @app.route('/index')
 def index():
-    user = {'nickname': 'John'}
-    projects = [
-        {'author': {'nicknames': ['John','Diego']},
-         'description': 'first test project'},
-        {'author': {'nicknames': 'David'},
-         'description': 'second test project'}
-    ]
+    cprojects = Projects.query().all()
     return render_template('index.html',
                            title='Home',
-                           user=user,
-                           projects=projects)
+                           projects=cprojects)
 
 
 @app.route('/edit', methods=['GET', 'POST'])
+@login_required
 def edit():
     form = StakeHoldersForm()
     if form.validate_on_submit():
@@ -41,13 +41,28 @@ def edit():
                            form=form,
                            stakeholders=stakeholders)
 
+@app.route('/projects/<name>', methods=['GET', 'POST'])
+@login_required
+def projects(name):
+    project = Projects.query.filter_by(name=name).first()
+    if project == None:
+        return render_template('projects.html',
+                               title=name,
+                               project=None,
+                               user=g.user)
+    else:
+        return render_template('projects.html',
+                           title=project.name,
+                           project=project.id,
+                                user=g.user)
+
 @lm.user_loader
 def load_user(id):
-    return User.query.get(int(id))
+    return Users.query.get(int(id))
 
 @app.route('/login')
 def login():
-    return github.authorize()
+    return github.authorize(scope='user:email')
 
 @app.route('/github-callback')
 @github.authorized_handler
@@ -61,13 +76,20 @@ def authorized(oauth_token):
     r = requests.get(emailurl)
     nickname = r.json()['login']
     u_id = r.json()['id']
-    if r.json()['email'] == 'null':
-        contact = r.json()['url']
+    if r.json()['email'] == None:
+        emailurl = "https://api.github.com/user/emails?access_token=" + oauth_token
+        r = requests.get(emailurl)
+        v = 0
+        for i in r.json():
+            if r.json()[v]['primary'] == True:
+                contact = r.json()[v]['email']
+            else:
+                v += 1
     else:
         contact = r.json()['email']
-    user = User.query.filter_by(nickname=nickname).first()
+    user = Users.query.filter_by(nickname=nickname).first()
     if user is None:
-        user = User(id=u_id, oaccess_token=oauth_token, nickname=nickname, contact=contact)
+        user = Users(id=u_id, oaccess_token=oauth_token, nickname=nickname, contact=contact)
         db.session.add(user)
         db.session.commit()
 

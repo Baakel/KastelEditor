@@ -1,7 +1,7 @@
 <html>
     <head>
         {% if title %}
-        <title>{{ title}} - Castel Editor</title>
+        <title>{{ title}} - Kastel Editor</title>
         {% else %}
         <title>Castel Editor</title>
         {% endif %}
@@ -11,15 +11,6 @@
             <a href="{{ url_for('index') }}">Home</a>
         </div>
         <hr>
-        {% with messages = get_flashed_messages() %}
-            {% if messages %}
-                <ul>
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-                </ul>
-            {% endif %}
-        {% endwith %}
         {% block content %}{% endblock %}
     </body>
 </html>

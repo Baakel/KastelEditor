@@ -6,7 +6,7 @@
         <p><b>Error:</b> {{ message }}</p>
     {% endfor %}
     {% if g.user %}
-        <h2>Hi, {{ g.user.nickname }}!</h2><a href="{{ url_for('logout') }}">Logout</a>
+        <h2>Hi, {{ g.user.nickname }}!</h2>
         <table>
             <tr>
                 <th>Current Projects</th>
@@ -15,6 +15,11 @@
                 <th> </th>
                 <th><a href="{{ url_for('projects', name='New Project') }}">Start a new project</a></th>
             </tr>
+            {% for project in g.user.wprojects %}
+            <tr>
+                <td><a href="{{ url_for('projects', name=project.name)}}">{{ project.name }}</a></td>
+            </tr>
+            {% endfor %}
         </table>
     {% else %}
         <h2>Login to work on a project</h2>

@@ -2,6 +2,9 @@
 
 {% block content %}
     <h1>Add a new Stakeholder</h1>
+    {% for message in get_flashed_messages() %}
+        <p>{{ message }}</p>
+    {% endfor %}
         <form action="" method="post" name="addstakeholder">
             {{ form.hidden_tag() }}
             <table>
@@ -12,7 +15,7 @@
                 <tr>
                     <th>Current Stakeholders</th>
                 </tr>
-                {% for stakeholder in stakeholders %}
+                {% for stakeholder in project.stake_holders %}
                 <tr>
                     <td>{{ stakeholder.nickname }}</td>
                 </tr>

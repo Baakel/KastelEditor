@@ -10,3 +10,7 @@ class StakeHoldersForm(FlaskForm):
 
 class ProjectForm(FlaskForm):
     project = StringField('project', validators=[DataRequired()])
+
+
+# class EditorsList(FlaskForm):
+#     editor_list = SelectField(u'Editors', coerce=int)

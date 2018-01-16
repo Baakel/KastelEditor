@@ -16,20 +16,52 @@
             </form>
     {% else %}
         <h1>Choose an option</h1>
-            <table>
-                <tr>
-                    <td><a href="{{ url_for('stakeholders') }}">Stakeholders</a></td>
-                    <td> | </td>
-                    <td><a href="{{ url_for('index') }}">Soft Goals</a></td>
-                    <td> | </td>
-                    <td><a href="{{ url_for('index') }}">Goods</a></td>
-                    <td><a href="{{ url_for('index') }}">Hard Goals</a></td>
-                </tr>
-                {% for stakeholder in project.stake_holders %}
-                <tr>
-                    <td>{{ stakeholder.nickname }}</td>
-                </tr>
-                {% endfor %}
-            </table>
+        {% for message in get_flashed_messages() %}
+            <p>{{ message }}</p>
+        {% endfor %}
+            <div class="container-fluid">
+                <div class="row align-items-start">
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col"><a href="{{ url_for('stakeholders', project=project.name) }}">Stakeholders</a></div>
+                    </div>
+                    {% for stakeholder in project.stake_holders %}
+                    <div class="row">
+                        <div class="col">{{ stakeholder.nickname }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col"><a href="{{ url_for('index') }}">Soft Goals</a></div>
+                    </div>
+                    {% for sgoal in project.soft_goals %}
+                    <div class="row">
+                        <div class="col">{{ sgoal.description }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col"><a href="{{ url_for('index') }}">Goods</a></div>
+                    </div>
+                    {% for good in project.goods %}
+                    <div class="row">
+                        <div class="col">{{ good.description }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col"><a href="{{ url_for('index') }}">Hard Goals</a></div>
+                    </div>
+                    {% for hgoal in project.hard_goals.items %}
+                    <div class="row">
+                        <div class="col">{{ hgoal }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                </div>
+            </div>
     {% endif %}
 {% endblock %}

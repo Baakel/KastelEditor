@@ -26,28 +26,30 @@ def before_request():
     if 'user_id' in session:
         g.user = Users.query.get(session['user_id'])
 
-@app.route('/', methods=['GET', 'POST'])
-@app.route('/index', methods=['GET', 'POST'])
+@app.route('/')
+@app.route('/index')
 def index():
     return render_template('index.html',
                            title='Home')
 
 
-@app.route('/stakeholders', methods=['GET', 'POST'])
+@app.route('/stakeholders/<project>', methods=['GET', 'POST'])
 @login_required
-def stakeholders():
+def stakeholders(project):
+    project = Projects.query.filter_by(name=project).first()
     form = StakeHoldersForm()
     if form.validate_on_submit():
-        stakeholder = Stakeholder(nickname=form.stakeholder.data)
+        stakeholder = Stakeholder(nickname=form.stakeholder.data, project_id=project.id)
         db.session.add(stakeholder)
         db.session.commit()
         flash('Stakeholder Added to the Database')
-        return redirect(url_for('edit'))
+        return redirect(url_for('stakeholders', project=project.name))
     stakeholders = Stakeholder.query.all()
     return render_template('editor.html',
-                           title='Project',
+                           title=project,
                            form=form,
-                           stakeholders=stakeholders)
+                           stakeholders=stakeholders,
+                           project=project)
 
 @app.route('/projects/<name>', methods=['GET', 'POST'])
 @login_required
@@ -72,7 +74,7 @@ def projects(name):
         return render_template('projects.html',
                                title=project.name,
                                form=form,
-                               project=project.id,
+                               project=project,
                                user=g.user)
 
 @lm.user_loader

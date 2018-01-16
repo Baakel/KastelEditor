@@ -36,3 +36,12 @@ class TestCase(unittest.TestCase):
         assert u1.is_contributing(p1)
         assert u1.wprojects.count() == 1
         assert u1.wprojects.first().name == 'Kastel'
+        assert p1.editors.count() == 1
+        assert p1.editors.first().nickname == 'john'
+        u = u1.revoke_access(p1)
+        assert u is not None
+        db.session.add(u)
+        db.session.commit()
+        assert not u1.is_contributing(p1)
+        assert u1.wprojects.count() == 0
+        assert p1.editors.count() == 0

@@ -1,5 +1,5 @@
 from editorapp import db, app
-from flask_login import LoginManager, UserMixin
+from flask_login import LoginManager
 
 lm = LoginManager(app)
 
@@ -15,10 +15,26 @@ class Users(db.Model):
     contact = db.Column(db.String(64), index=True, unique=True)
     wprojects = db.relationship('Projects',
                                 secondary=wprojects,
-                                primaryjoin=(wprojects.c.user_id == id),
-                                secondaryjoin=(wprojects.c.project_id == id),
                                 backref=db.backref('editors', lazy='dynamic'),
                                 lazy='dynamic')
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        try:
+            return unicode(self.id)
+        except NameError:
+            return str(self.id)
 
     def contribute(self, project):
         if not self.is_contributing(project):

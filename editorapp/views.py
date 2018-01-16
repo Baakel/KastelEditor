@@ -1,7 +1,7 @@
 from flask import render_template, url_for, flash, redirect, request, session, g
 from editorapp import app, db, github
 from flask_login import login_required
-from .forms import StakeHoldersForm
+from .forms import StakeHoldersForm, ProjectForm
 from .models import Stakeholder, Users, lm, Projects
 import requests
 
@@ -10,24 +10,32 @@ def unauthorized_error(error):
     flash('Please log in first.')
     return redirect(url_for('index'))
 
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('404.html'), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    return render_template('500.html'), 500
+
 @app.before_request
 def before_request():
     g.user = None
     if 'user_id' in session:
         g.user = Users.query.get(session['user_id'])
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 def index():
-    cprojects = Projects.query().all()
     return render_template('index.html',
-                           title='Home',
-                           projects=cprojects)
+                           title='Home')
 
 
-@app.route('/edit', methods=['GET', 'POST'])
+@app.route('/stakeholders', methods=['GET', 'POST'])
 @login_required
-def edit():
+def stakeholders():
     form = StakeHoldersForm()
     if form.validate_on_submit():
         stakeholder = Stakeholder(nickname=form.stakeholder.data)
@@ -45,16 +53,27 @@ def edit():
 @login_required
 def projects(name):
     project = Projects.query.filter_by(name=name).first()
+    form = ProjectForm()
+    if form.validate_on_submit():
+        proj = Projects(name=form.project.data)
+        db.session.add(proj)
+        db.session.commit()
+        db.session.add(g.user.contribute(proj))
+        db.session.commit()
+        flash('Project created.')
+        return redirect(url_for('projects', name=proj.name))
     if project == None:
         return render_template('projects.html',
                                title=name,
+                               form=form,
                                project=None,
                                user=g.user)
     else:
         return render_template('projects.html',
-                           title=project.name,
-                           project=project.id,
-                                user=g.user)
+                               title=project.name,
+                               form=form,
+                               project=project.id,
+                               user=g.user)
 
 @lm.user_loader
 def load_user(id):

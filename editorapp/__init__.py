@@ -10,7 +10,7 @@ github = GitHub(app)
 from editorapp import views
 from .models import Stakeholder
 
-# if Stakeholder.query.filter_by(nickname='Law').first() is None:
-#     law = Stakeholder(nickname='Law')
-#     db.session.add(law)
-#     db.session.commit()
+if Stakeholder.query.filter_by(nickname='Law').first() is None:
+    law = Stakeholder(nickname='Law')
+    db.session.add(law)
+    db.session.commit()

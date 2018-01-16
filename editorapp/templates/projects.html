@@ -1,5 +1,35 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>hi</h1>
+    {% if project == None %}
+        <h1>Creating a new Project</h1>
+        {% for message in get_flashed_messages() %}
+            <p>{{ message }}</p>
+        {% endfor %}
+            <form action="" method="post" name="createproject">
+                {{ form.hidden_tag() }}
+                <table>
+                    <tr>
+                        {{ form.project(size=30) }} <input type="submit" value="Create">
+                    </tr>
+                </table>
+            </form>
+    {% else %}
+        <h1>Choose an option</h1>
+            <table>
+                <tr>
+                    <td><a href="{{ url_for('stakeholders') }}">Stakeholders</a></td>
+                    <td> | </td>
+                    <td><a href="{{ url_for('index') }}">Soft Goals</a></td>
+                    <td> | </td>
+                    <td><a href="{{ url_for('index') }}">Goods</a></td>
+                    <td><a href="{{ url_for('index') }}">Hard Goals</a></td>
+                </tr>
+                {% for stakeholder in project.stake_holders %}
+                <tr>
+                    <td>{{ stakeholder.nickname }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+    {% endif %}
 {% endblock %}

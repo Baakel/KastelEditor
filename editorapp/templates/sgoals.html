@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Add a new Soft Goal</h1>
+    {% for message in get_flashed_messages(category_filter=["succ"]) %}
+        <div class="alert-success" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% for errors in get_flashed_messages(category_filter=["error"]) %}
+        <div class="alert-danger" role="alert">{{ errors }}</div>
+    {% endfor %}
+        <form action="" method="post" name="addsgoals">
+            {{ form.hidden_tag() }}
+            <table>
+                <tr>
+                    <td>{{ form.sgoals(size=140, placeholder="describe your soft goals") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></td>
+                    <td>{{ form.priority }} Check for <b style="color: darkmagenta">HIGH</b> priority</td>
+                </tr>
+                <tr><td></td></tr>
+                <tr>
+                    <th>Current Soft Goals</th>
+                </tr>
+                {% for sgoal in project.soft_goals %}
+                    {% if sgoal.priority == True %}
+                        <tr>
+                            <td><b style="color: darkmagenta">{{ sgoal.description }}</b></td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td>{{ sgoal.description }}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </table>
+        </form>
+{% endblock %}

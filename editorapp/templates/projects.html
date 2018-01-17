@@ -13,7 +13,7 @@
                         <td>{{ form.project(size=30) }} <button type="submit" class="btn btn-primary">Create</button></td>
                     </tr>
                     <tr>
-                        <td>{{ form.law }} Add LAW as a Stakeholder</td>
+                        <td><div class="switch">{{ form.law(type="checkbox") }} Add LAW as a Stakeholder</div></td>
                     </tr>
                 </table>
             </form>
@@ -31,14 +31,14 @@
                         </div>
                         {% endfor %}
                     </div>
-                    <div class="col"><a href="{{ url_for('index') }}">Soft Goals</a>
+                    <div class="col"><a href="{{ url_for('soft_goals', project=project.name) }}">Soft Goals</a>
                         {% for sgoal in project.soft_goals %}
                         <div class="row">
                             <div class="col">{{ sgoal.description }}</div>
                         </div>
                         {% endfor %}
                     </div>
-                    <div class="col"><a href="{{ url_for('index') }}">Goods</a>
+                    <div class="col"><a href="{{ url_for('goods', project=project.name) }}">Goods</a>
                         {% for good in project.goods %}
                         <div class="row">
                             <div class="col">{{ good.description }}</div>

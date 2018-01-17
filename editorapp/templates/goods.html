@@ -1,26 +1,26 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Add a new Stakeholder</h1>
+    <h1>Add a new Good</h1>
     {% for message in get_flashed_messages(category_filter=["succ"]) %}
         <div class="alert-success" role="alert">{{ message }}</div>
     {% endfor %}
     {% for errors in get_flashed_messages(category_filter=["error"]) %}
         <div class="alert-danger" role="alert">{{ errors }}</div>
     {% endfor %}
-        <form action="" method="post" name="addstakeholder">
+        <form action="" method="post" name="addgood">
             {{ form.hidden_tag() }}
             <table>
                 <tr>
-                    <td>{{ form.stakeholder(size=30, placeholder="Add a stakeholder") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></td>
+                    <td>{{ form.goods(size=60, placeholder="add your goods") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></td>
                 </tr>
                 <tr><td></td></tr>
                 <tr>
-                    <th>Current Stakeholders</th>
+                    <th>Current Goods</th>
                 </tr>
-                {% for stakeholder in project.stake_holders %}
+                {% for good in project.goods %}
                 <tr>
-                    <td>{{ stakeholder.nickname }}</td>
+                    <td>{{ good.description }}</td>
                 </tr>
                 {% endfor %}
             </table>

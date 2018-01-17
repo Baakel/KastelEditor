@@ -13,5 +13,13 @@ class ProjectForm(FlaskForm):
     law = BooleanField('law', default=True)
 
 
+class GoodsForm(FlaskForm):
+    goods = StringField('goods', validators=[DataRequired()])
+
+
+class SoftGoalsForm(FlaskForm):
+    sgoals = TextAreaField('sgoals', validators=[DataRequired()])
+    priority = BooleanField('priority', default=False)
+
 # class EditorsList(FlaskForm):
 #     editor_list = SelectField(u'Editors', coerce=int)

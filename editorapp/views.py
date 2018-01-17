@@ -57,13 +57,19 @@ def projects(name):
     project = Projects.query.filter_by(name=name).first()
     form = ProjectForm()
     if form.validate_on_submit():
-        proj = Projects(name=form.project.data)
-        db.session.add(proj)
+        projn = Projects.make_unique_name(form.project.data)
+        projname = Projects(name=projn)
+        db.session.add(projname)
         db.session.commit()
-        db.session.add(g.user.contribute(proj))
+        db.session.add(g.user.contribute(projname))
         db.session.commit()
+        if form.law.data == True:
+            projid = Projects.query.filter_by(name=projname.name).first()
+            law = Stakeholder(nickname='Law', project_id=projid.id)
+            db.session.add(law)
+            db.session.commit()
         flash('Project created.')
-        return redirect(url_for('projects', name=proj.name))
+        return redirect(url_for('projects', name=projname.name))
     if project == None:
         return render_template('projects.html',
                                title=name,

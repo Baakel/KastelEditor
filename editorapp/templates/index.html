@@ -3,7 +3,7 @@
 {% block content %}
     <h1>Kastel Editor</h1>
     {% for message in get_flashed_messages() %}
-        <p><b>Error:</b> {{ message }}</p>
+        <div class="alert-danger" role="alert"><b>Error:</b> {{ message }}</div>
     {% endfor %}
     {% if g.user %}
         <h2>Hi, {{ g.user.nickname }}!</h2>

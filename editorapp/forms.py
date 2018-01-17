@@ -10,6 +10,7 @@ class StakeHoldersForm(FlaskForm):
 
 class ProjectForm(FlaskForm):
     project = StringField('project', validators=[DataRequired()])
+    law = BooleanField('law', default=True)
 
 
 # class EditorsList(FlaskForm):

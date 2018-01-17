@@ -49,9 +49,10 @@ class Users(db.Model):
     def is_contributing(self, project):
         return self.wprojects.filter(wprojects.c.project_id == project.id).count() > 0
 
+
 class Stakeholder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nickname = db.Column(db.String(64), index=True, unique=True)
+    nickname = db.Column(db.String(64))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
 
 
@@ -75,5 +76,20 @@ class Projects(db.Model):
     soft_goals = db.relationship('SoftGoal', backref='project', lazy='dynamic')
     stake_holders= db.relationship('Stakeholder', backref='project', lazy='dynamic')
     goods = db.relationship('Good', backref='project', lazy='dynamic')
+
+    @staticmethod
+    def make_unique_name(name):
+        if Projects.query.filter_by(name=name).first() is None:
+            return name
+        version = 2
+        while True:
+            new_name = name + str(version)
+            if Projects.query.filter_by(name=new_name).first() is None:
+                break
+            version += 1
+        return new_name
+
+    def __repr__(self):
+        return '<Projects %r>' % self.name
 
 

@@ -3,8 +3,11 @@
 {% block content %}
     {% if project == None %}
         <h1>Choose a unique name for the project</h1>
-        {% for message in get_flashed_messages() %}
+        {% for message in get_flashed_messages(category_filter=["succ"]) %}
             <div class="alert-success" role="alert">{{ message }}</div>
+        {% endfor %}
+        {% for errors in get_flashed_messages(category_filter=["error"]) %}
+            <div class="alert-danger" role="alert">{{ errors }}</div>
         {% endfor %}
             <form action="" method="post" name="createproject">
                 {{ form.hidden_tag() }}
@@ -13,14 +16,17 @@
                         <td>{{ form.project(size=30) }} <button type="submit" class="btn btn-primary">Create</button></td>
                     </tr>
                     <tr>
-                        <td><div class="switch">{{ form.law(type="checkbox") }} Add LAW as a Stakeholder</div></td>
+                        <td><div class="switch"><label>{{ form.law(type="checkbox") }} Add LAW as a Stakeholder</label></div></td>
                     </tr>
                 </table>
             </form>
     {% else %}
         <h1>Choose an option</h1>
-        {% for message in get_flashed_messages() %}
+        {% for message in get_flashed_messages(category_filter=["succ"]) %}
             <div class="alert-success" role="alert">{{ message }}</div>
+        {% endfor %}
+        {% for errors in get_flashed_messages(category_filter=["error"]) %}
+            <div class="alert-danger" role="alert">{{ errors }}</div>
         {% endfor %}
             <div class="container-fluid">
                 <div class="row align-items-start">
@@ -33,9 +39,18 @@
                     </div>
                     <div class="col"><a href="{{ url_for('soft_goals', project=project.name) }}">Soft Goals</a>
                         {% for sgoal in project.soft_goals %}
-                        <div class="row">
-                            <div class="col">{{ sgoal.description }}</div>
-                        </div>
+                            {% if sgoal.priority == True %}
+                                <div class="row">
+                                    <div class="col"><b>{{ sgoal.description }}</b></div>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        {% for sgoal in project.soft_goals %}
+                            {% if sgoal.priority == False %}
+                                <div class="row">
+                                    <div class="col">{{ sgoal.description }}</div>
+                                </div>
+                            {% endif %}
                         {% endfor %}
                     </div>
                     <div class="col"><a href="{{ url_for('goods', project=project.name) }}">Goods</a>
@@ -51,6 +66,69 @@
                             <div class="col">{{ hgoal }}</div>
                         </div>
                         {% endfor %}
+                    </div>
+                    <div class="col" style="color: dodgerblue">Current Editors
+                        {% for editor in project.editors %}
+                            <div class="row">
+                                <div class="col" style="color: black">{{ editor.nickname }}</div>
+                            </div>
+                        {% endfor %}
+                        <div class="row">
+                            <div class="col"><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editor">Add another editor</button></div>
+                            <div class="modal fade" id="editor" tabindex="-1" role="dialog" aria-labelledby="editorModalLabel" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="editorModalLabel">Type the name of the editor</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <form action="" method="post" name="addeditor">
+                                        {{ form.hidden_tag() }}
+                                            <div class="modal-body">
+                                                <div class="form-group">
+                                                    {{ form2.editor.label(class_="form-control-label") }}
+                                                    {{ form2.editor(class_="form-control", placeholder="Editor name") }}
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                <button type="submit" class="btn btn-primary">Add editor</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if g.user.id == project.creator %}
+                                <div class="col"><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#access">Delete an editor</button></div>
+                                <div class="modal fade" id="access" tabindex="-1" role="dialog" aria-labelledby="accessModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="accessModalLabel">Type the name of the editor</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <form action="" method="post" name="removeeditor">
+                                            {{ form.hidden_tag() }}
+                                                <div class="modal-body">
+                                                    <div class="form-group">
+                                                        {{ form3.revoke.label(class_="form-control-label") }}
+                                                        {{ form3.revoke(class_="form-control", placeholder="Editor name") }}
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary">Remove editor</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>

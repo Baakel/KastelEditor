@@ -71,6 +71,7 @@ class SoftGoal(db.Model):
 
 class Projects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    creator = db.Column(db.Integer)
     name = db.Column(db.String(64), index=True, unique=True)
     hard_goals = db.Column(db.String(140))
     soft_goals = db.relationship('SoftGoal', backref='project', lazy='dynamic')

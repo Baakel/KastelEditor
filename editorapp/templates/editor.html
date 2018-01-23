@@ -12,7 +12,7 @@
             {{ form.hidden_tag() }}
             <table>
                 <tr>
-                    <td>{{ form.stakeholder(size=30, placeholder="Add a stakeholder") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></td>
+                    <td><div class="form-group">{{ form.stakeholder.label(class_="form-control-label") }}{{ form.stakeholder(class_="form-control", placeholder="Add a stakeholder") }}</div><button type="submit" class="btn btn-raised btn-primary">Add</button></td>
                 </tr>
                 <tr><td></td></tr>
                 <tr>
@@ -21,6 +21,7 @@
                 {% for stakeholder in project.stake_holders %}
                 <tr>
                     <td>{{ stakeholder.nickname }}</td>
+                    <td><a href="{{ url_for('removesh', project=project.name, desc=stakeholder.nickname) }}">Remove</a></td>
                 </tr>
                 {% endfor %}
             </table>

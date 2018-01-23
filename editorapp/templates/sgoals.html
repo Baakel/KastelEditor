@@ -12,8 +12,9 @@
             {{ form.hidden_tag() }}
             <table>
                 <tr>
-                    <td>{{ form.sgoals(size=140, placeholder="describe your soft goals") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></td>
-                    <td>{{ form.priority }} Check for <b style="color: darkmagenta">HIGH</b> priority</td>
+                    <td>{{ form.sgoals(class_="form-control", size=140, placeholder="describe your soft goals") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></td>
+                    <td></td>
+                    <td><div class="switch"><label>{{ form.priority }} Check for <b>HIGH</b> priority</label></div></td>
                 </tr>
                 <tr><td></td></tr>
                 <tr>
@@ -22,11 +23,16 @@
                 {% for sgoal in project.soft_goals %}
                     {% if sgoal.priority == True %}
                         <tr>
-                            <td><b style="color: darkmagenta">{{ sgoal.description }}</b></td>
+                            <td><b>{{ sgoal.description }}</b></td>
+                            <td><a href="{{ url_for('removesg', project=project.name, desc=sgoal.description) }}">Remove</a></td>
                         </tr>
-                    {% else %}
+                    {% endif %}
+                {% endfor %}
+                {% for sgoal in project.soft_goals %}
+                    {% if sgoal.priority == False %}
                         <tr>
                             <td>{{ sgoal.description }}</td>
+                            <td><a href="{{ url_for('removesg', project=project.name, desc=sgoal.description) }}">Remove</a></td>
                         </tr>
                     {% endif %}
                 {% endfor %}

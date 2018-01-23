@@ -12,7 +12,7 @@
             {{ form.hidden_tag() }}
             <table>
                 <tr>
-                    <td>{{ form.goods(size=60, placeholder="add your goods") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></td>
+                    <td><div class="form-group">{{ form.goods.label(class_="form-control-label") }}{{ form.goods(class_="form-control", placeholder="Good") }}</div><button type="submit" class="btn btn-raised btn-primary">Add</button></td>
                 </tr>
                 <tr><td></td></tr>
                 <tr>
@@ -21,6 +21,7 @@
                 {% for good in project.goods %}
                 <tr>
                     <td>{{ good.description }}</td>
+                    <td><a href="{{ url_for('removeg', project=project.name, desc=good.description) }}">Remove</a></td>
                 </tr>
                 {% endfor %}
             </table>

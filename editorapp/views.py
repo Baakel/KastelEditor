@@ -41,33 +41,39 @@ def index():
 @login_required
 def stakeholders(project):
     project = Projects.query.filter_by(name=project).first()
-    form = StakeHoldersForm()
-    if form.validate_on_submit():
-        stkhld = Stakeholder.query.filter_by(nickname=form.stakeholder.data, project_id=project.id).first()
-        if stkhld is None:
-            stakeholder = Stakeholder(nickname=form.stakeholder.data, project_id=project.id)
-            db.session.add(stakeholder)
-            db.session.commit()
-            flash('Stakeholder Added to the Database', 'succ')
-            return redirect(url_for('stakeholders', project=project.name))
-        else:
-            flash('Stakeholder already exists', 'error')
-    stakeholders = Stakeholder.query.filter_by(project_id=project.id).all()
-    return render_template('editor.html',
-                           title=project.name,
-                           form=form,
-                           stakeholders=stakeholders,
-                           project=project)
+    if g.user in project.editors:
+        form = StakeHoldersForm()
+        if form.validate_on_submit():
+            stkhld = Stakeholder.query.filter_by(nickname=form.stakeholder.data, project_id=project.id).first()
+            if stkhld is None:
+                stakeholder = Stakeholder(nickname=form.stakeholder.data, project_id=project.id)
+                db.session.add(stakeholder)
+                db.session.commit()
+                flash('Stakeholder Added to the Database', 'succ')
+                return redirect(url_for('stakeholders', project=project.name))
+            else:
+                flash('Stakeholder already exists', 'error')
+        stakeholders = Stakeholder.query.filter_by(project_id=project.id).all()
+        return render_template('editor.html',
+                               title=project.name,
+                               form=form,
+                               stakeholders=stakeholders,
+                               project=project)
+    else:
+        return redirect(url_for('index'))
 
 
 @app.route('/removesh/<project>/<desc>', methods=['GET', 'POST'])
 @login_required
 def removesh(project, desc):
-    cproj = Projects.query.filter_by(name=project).first()
-    Stakeholder.query.filter_by(nickname=desc, project_id=cproj.id).delete()
-    db.session.commit()
-    flash('Stakeholder removed', 'error')
-    return redirect(url_for('stakeholders', project=project))
+    project = Projects.query.filter_by(name=project).first()
+    if g.user in project.editors:
+        Stakeholder.query.filter_by(nickname=desc, project_id=project.id).delete()
+        db.session.commit()
+        flash('Stakeholder removed', 'error')
+        return redirect(url_for('stakeholders', project=project.name))
+    else:
+        return redirect(url_for('index'))
 
 
 @app.route('/projects/<name>', methods=['GET', 'POST'])
@@ -129,7 +135,7 @@ def projects(name):
                                form3=form3,
                                project=None,
                                user=g.user)
-    else:
+    elif g.user in project.editors:
         return render_template('projects.html',
                                title=project.name,
                                form=form,
@@ -137,7 +143,38 @@ def projects(name):
                                form3=form3,
                                project=project,
                                user=g.user)
+    else:
+        return redirect(url_for('index'))
 
+
+@app.route('/project/<project>', methods=['DELETE', 'GET'])
+@login_required
+def delete_project(project):
+    project = Projects.query.filter_by(name=project).first()
+    if g.user.id == project.creator:
+        stakeholders = Stakeholder.query.filter_by(project_id=project.id).all()
+        for stkhld in stakeholders:
+            db.session.delete(stkhld)
+            db.session.commit()
+        softgoals = SoftGoal.query.filter_by(project_id=project.id).all()
+        for sftgl in softgoals:
+            db.session.delete(sftgl)
+            db.session.commit()
+        goods = Good.query.filter_by(project_id=project.id).all()
+        for gd in goods:
+            db.session.delete(gd)
+            db.session.commit()
+        for editor in project.editors:
+            u = editor.revoke_access(project)
+            db.session.add(u)
+            db.session.commit()
+        db.session.delete(project)
+        db.session.commit()
+        flash('Project %s deleted' % project.name)
+        return redirect(url_for('index'))
+    else:
+        flash('Cannot delete projects you don\'t own', 'error')
+        return redirect(url_for('projects', name=project.name))
 
 @lm.user_loader
 def load_user(id):
@@ -199,63 +236,75 @@ def logout():
 @login_required
 def goods(project):
     project = Projects.query.filter_by(name=project).first()
-    form = GoodsForm()
-    if form.validate_on_submit():
-        gd = Good.query.filter_by(description=form.goods.data, project_id=project.id).first()
-        if gd is None:
-            good = Good(description=form.goods.data, project_id=project.id)
-            db.session.add(good)
-            db.session.commit()
-            flash('Good Added to the Database', 'succ')
-            return redirect(url_for('goods', project=project.name))
-        else:
-            flash('Good already exists', 'error')
-    goods = Good.query.filter_by(project_id=project.id).all()
-    return render_template('goods.html',
-                           title=project.name,
-                           form=form,
-                           goods=goods,
-                           project=project)
+    if g.user in project.editors:
+        form = GoodsForm()
+        if form.validate_on_submit():
+            gd = Good.query.filter_by(description=form.goods.data, project_id=project.id).first()
+            if gd is None:
+                good = Good(description=form.goods.data, project_id=project.id)
+                db.session.add(good)
+                db.session.commit()
+                flash('Good Added to the Database', 'succ')
+                return redirect(url_for('goods', project=project.name))
+            else:
+                flash('Good already exists', 'error')
+        goods = Good.query.filter_by(project_id=project.id).all()
+        return render_template('goods.html',
+                               title=project.name,
+                               form=form,
+                               goods=goods,
+                               project=project)
+    else:
+        return redirect(url_for('index'))
 
 
 @app.route('/removeg/<project>/<desc>', methods=['GET', 'POST'])
 @login_required
 def removeg(project, desc):
-    cproj = Projects.query.filter_by(name=project).first()
-    Good.query.filter_by(description=desc, project_id=cproj.id).delete()
-    db.session.commit()
-    flash('Good removed', 'error')
-    return redirect(url_for('goods', project=project))
+    project = Projects.query.filter_by(name=project).first()
+    if g.user in project.editors:
+        Good.query.filter_by(description=desc, project_id=project.id).delete()
+        db.session.commit()
+        flash('Good removed', 'error')
+        return redirect(url_for('goods', project=project.name))
+    else:
+        return redirect(url_for('index'))
 
 
 @app.route('/soft_goals/<project>', methods=['GET', 'POST'])
 @login_required
 def soft_goals(project):
     project = Projects.query.filter_by(name=project).first()
-    form = SoftGoalsForm()
-    if form.validate_on_submit():
-        sg = SoftGoal.query.filter_by(description=form.sgoals.data, project_id=project.id).first()
-        if sg is None:
-            sgoal = SoftGoal(description=form.sgoals.data, project_id=project.id, priority=form.priority.data)
-            db.session.add(sgoal)
-            db.session.commit()
-            flash('Soft Goal Added to the Database', 'succ')
-            return redirect(url_for('soft_goals', project=project.name))
-        else:
-            flash('Soft Goal already exists', 'error')
-    sgoals = SoftGoal.query.filter_by(project_id=project.id).all()
-    return render_template('sgoals.html',
-                           title=project.name,
-                           form=form,
-                           sgoals=sgoals,
-                           project=project)
+    if g.user in project.editors:
+        form = SoftGoalsForm()
+        if form.validate_on_submit():
+            sg = SoftGoal.query.filter_by(description=form.sgoals.data, project_id=project.id).first()
+            if sg is None:
+                sgoal = SoftGoal(description=form.sgoals.data, project_id=project.id, priority=form.priority.data)
+                db.session.add(sgoal)
+                db.session.commit()
+                flash('Soft Goal Added to the Database', 'succ')
+                return redirect(url_for('soft_goals', project=project.name))
+            else:
+                flash('Soft Goal already exists', 'error')
+        sgoals = SoftGoal.query.filter_by(project_id=project.id).all()
+        return render_template('sgoals.html',
+                               title=project.name,
+                               form=form,
+                               sgoals=sgoals,
+                               project=project)
+    else:
+        return redirect(url_for('index'))
 
 
 @app.route('/removesg/<project>/<desc>', methods=['GET', 'POST'])
 @login_required
 def removesg(project, desc):
-    cproj = Projects.query.filter_by(name=project).first()
-    SoftGoal.query.filter_by(description=desc, project_id=cproj.id).delete()
-    db.session.commit()
-    flash('Soft goal removed', 'error')
-    return redirect(url_for('soft_goals', project=project))
+    project = Projects.query.filter_by(name=project).first()
+    if g.user in project.editors:
+        SoftGoal.query.filter_by(description=desc, project_id=project.id).delete()
+        db.session.commit()
+        flash('Soft goal removed', 'error')
+        return redirect(url_for('soft_goals', project=project.name))
+    else:
+        return redirect(url_for('index'))

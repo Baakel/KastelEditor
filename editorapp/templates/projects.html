@@ -22,6 +22,28 @@
             </form>
     {% else %}
         <h1>Choose an option</h1>
+        {% if g.user.id == project.creator %}
+        <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#sureModal">Delete Project</button>
+            <div class="modal fade" id="sureModal" tabindex="-1" role="dialog" aria-labelledby="sureModalLbl" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="sureModalLbl">Confirm deletion</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to delete project <b>{{ project.name }}</b>?</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <a href="{{ url_for('delete_project', project=project.name) }}" class="btn btn-outline-danger" role="button" aria-pressed="true">Delete Project</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
         {% for message in get_flashed_messages(category_filter=["succ"]) %}
             <div class="alert-success" role="alert">{{ message }}</div>
         {% endfor %}
@@ -74,34 +96,34 @@
                             </div>
                         {% endfor %}
                         <div class="row">
-                            <div class="col"><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#editor">Add another editor</button></div>
-                            <div class="modal fade" id="editor" tabindex="-1" role="dialog" aria-labelledby="editorModalLabel" aria-hidden="true">
-                                <div class="modal-dialog" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="editorModalLabel">Type the name of the editor</h5>
-                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                <span aria-hidden="true">&times;</span>
-                                            </button>
-                                        </div>
-                                        <form action="" method="post" name="addeditor">
-                                        {{ form.hidden_tag() }}
-                                            <div class="modal-body">
-                                                <div class="form-group">
-                                                    {{ form2.editor.label(class_="form-control-label") }}
-                                                    {{ form2.editor(class_="form-control", placeholder="Editor name") }}
+                            {% if g.user.id == project.creator %}
+                                <div class="col"><button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#editor">Add another editor</button></div>
+                                <div class="modal fade" id="editor" tabindex="-1" role="dialog" aria-labelledby="editorModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editorModalLabel">Type the name of the editor</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <form action="" method="post" name="addeditor">
+                                            {{ form.hidden_tag() }}
+                                                <div class="modal-body">
+                                                    <div class="form-group">
+                                                        {{ form2.editor.label(class_="form-control-label") }}
+                                                        {{ form2.editor(class_="form-control", placeholder="Editor name") }}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                <button type="submit" class="btn btn-primary">Add editor</button>
-                                            </div>
-                                        </form>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary">Add editor</button>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            {% if g.user.id == project.creator %}
-                                <div class="col"><button type="button" class="btn btn-primary" data-toggle="modal" data-target="#access">Delete an editor</button></div>
+                                <div class="col"><button type="button" class="btn btn-outline-warning" data-toggle="modal" data-target="#access">Remove an editor</button></div>
                                 <div class="modal fade" id="access" tabindex="-1" role="dialog" aria-labelledby="accessModalLabel" aria-hidden="true">
                                     <div class="modal-dialog" role="document">
                                         <div class="modal-content">

@@ -308,3 +308,12 @@ def removesg(project, desc):
         return redirect(url_for('soft_goals', project=project.name))
     else:
         return redirect(url_for('index'))
+
+
+@app.route('/hard_goals/<project>')
+@login_required
+def hard_goals(project):
+    project = Projects.query.filter_by(name=project).first()
+    return render_template('hardgoals.html',
+                           title=project.name,
+                           project=project)

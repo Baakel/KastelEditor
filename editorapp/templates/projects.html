@@ -82,7 +82,7 @@
                         </div>
                         {% endfor %}
                     </div>
-                    <div class="col"><a href="{{ url_for('index') }}">Hard Goals</a>
+                    <div class="col"><a href="{{ url_for('hard_goals', project=project.name) }}">Hard Goals</a>
                         {% for hgoal in project.hard_goals.items %}
                         <div class="row">
                             <div class="col">{{ hgoal }}</div>

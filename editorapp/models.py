@@ -69,11 +69,20 @@ class SoftGoal(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
 
 
+class HardGoal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    authenticity = db.Column(db.Boolean(), default=False)
+    confidentiality = db.Column(db.Boolean(), default=False)
+    integrity = db.Column(db.Boolean(), default=False)
+    application = db.Column(db.Boolean(), default=False)
+    service = db.Column(db.Boolean(), default=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+
 class Projects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     creator = db.Column(db.Integer)
     name = db.Column(db.String(64), index=True, unique=True)
-    hard_goals = db.Column(db.String(140))
+    hard_goals = db.relationship('HardGoal', backref='project', lazy='dynamic')
     soft_goals = db.relationship('SoftGoal', backref='project', lazy='dynamic')
     stake_holders= db.relationship('Stakeholder', backref='project', lazy='dynamic')
     goods = db.relationship('Good', backref='project', lazy='dynamic')

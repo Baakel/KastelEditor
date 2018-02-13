@@ -8,25 +8,88 @@
     {% for errors in get_flashed_messages(category_filter=["error"]) %}
         <div class="alert-danger" role="alert">{{ errors }}</div>
     {% endfor %}
-    <table class="table table-striped table-bordered table-hover">
-        <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">First</th>
-                <th scope="col">Second</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <th scope="row">1</th>
-                <td>uno</td>
-                <td>dos</td>
-            </tr>
-            <tr>
-                <th scope="row">2</th>
-                <td>tres</td>
-                <td>cuatro</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="container-fluid">
+    <form method="post">
+        <div class="row">
+            <div class="col">
+                <table class="table table-striped table-bordered table-hover w-50">
+                    <caption>Goods and Protection Goals Table</caption>
+                    <thead class="thead-dark">
+                        <tr>
+                            <th class="bg-warning" scope="col">Good</th>
+                            <th class="bg-success" scope="col">Confidentiality</th>
+                            <th class="bg-success" scope="col">Integrity</th>
+                            <th class="bg-success" scope="col">Authenticity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for good in project.goods %}
+                        <tr>
+                            <th scope="row">{{ good.description }}</th>
+                            <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}" name="confidentiality{{ good.id }}" value="Confidentiality"><label for="conf_{{ good.id }}"></label></td>
+                            <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}" name="integrity" value="Integrity"><label for="integ_{{ good.id }}"></label></td>
+                            <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}" name="authenticity" value="Authenticity"><label for="auth_{{ good.id }}"></label></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col">
+                <table class="table table-striped table-bordered table-hover w-50">
+                    <caption>Functional Requirements</caption>
+                    <thead class="thead-dark">
+                        <tr>
+                            <th class="bg-danger" scope="col">Functional Requirements</th>
+                            <th class="bg-info" scope="col">App</th>
+                            <th class="bg-info" scope="col">Service</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sgoal in project.soft_goals %}
+                        <tr>
+                            {% if sgoal.priority == True %}
+                                <th scope="row">{{ sgoal.description }}</th>
+                            {% else %}
+                                <td>{{ sgoal.description }}</td>
+                            {% endif %}
+                            <td class="text-center"><input type="checkbox" id="app_{{ sgoal.id }}" name="AppG" value="app_{{ sgoal.id }}"><label for="app_{{ sgoal.id }}"></label></td>
+                            <td class="text-center"><input type="checkbox" id="serv_{{ sgoal.id }}" name="ServG" value="serv_{{ sgoal.id }}"><label for="serv_{{ sgoal.id }}"></label></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <button type="submit" class="btn btn-raised btn-primary">Submit</button>
+            </div>
+        </div>
+    </form>
+    <div class="row">
+        <div class="col">
+            <table class="table table-striped table-bordered table-hover">
+                <caption>Hard Goals Matrix</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Soft Goals / Functional Requirements</th>
+                        {% for sgoal in project.soft_goals %}
+                        <th scope="col">{{ sgoal.description }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for good in project.goods %}
+                    <tr>
+                        <th scope="row">{{ good.description }}</th>
+                        {% for box in project.soft_goals %}
+                        <td class="text-center"><input type="checkbox" id="box{{ good.id }}{{ box.id }}" name="HardGoal" value="Box{{ good.id }}{{ box.id }}"><label for="box{{ good.id }}{{ box.id }}">BOX{{ good.id }}{{ box.id }}</label></td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
 {% endblock %}

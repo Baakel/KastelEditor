@@ -1,7 +1,7 @@
 from flask import render_template, url_for, flash, redirect, request, session, g
 from editorapp import app, db, github
 from flask_login import login_required
-from .forms import StakeHoldersForm, ProjectForm, GoodsForm, SoftGoalsForm, EditorForm, AccessForm
+from .forms import StakeHoldersForm, ProjectForm, GoodsForm, SoftGoalsForm, EditorForm, AccessForm, HardGoalsForm
 from .models import Stakeholder, Users, lm, Projects, Good, SoftGoal
 import requests
 
@@ -310,10 +310,26 @@ def removesg(project, desc):
         return redirect(url_for('index'))
 
 
-@app.route('/hard_goals/<project>')
+@app.route('/hard_goals/<project>', methods=['GET', 'POST'])
 @login_required
 def hard_goals(project):
     project = Projects.query.filter_by(name=project).first()
+    gds = Good.query.filter_by(project_id=project.id).all()
+    if request.method == 'POST':
+        for good in project.goods:
+            print(request.form.getlist('confidentiality%s' % good.id))
+            for goal in request.form.getlist('confidentiality%s' % good.id):
+                u = goal + " of " + good.description
+                print(u)
+    # elements = len(gds)
+    # if request.method == 'POST':
+    #     elements += len(request.form.getlist('confidentiality')) + len(request.form.getlist(
+    #     'integrity')) + len(request.form.getlist('authenticity'))
+    #     print(request.form.getlist('confidentiality'), request.form.getlist('integrity'), request.form.getlist('authenticity'))
+    # else:
+    #     print('nope')
+    # if request.form.validate_on_submit():
+    #     print(request.form.getlist('confidentiality'))
     return render_template('hardgoals.html',
                            title=project.name,
                            project=project)

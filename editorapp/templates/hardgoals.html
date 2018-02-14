@@ -26,9 +26,33 @@
                     {% for good in project.goods %}
                         <tr>
                             <th scope="row">{{ good.description }}</th>
-                            <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}" name="confidentiality{{ good.id }}" value="Confidentiality"><label for="conf_{{ good.id }}"></label></td>
-                            <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}" name="integrity" value="Integrity"><label for="integ_{{ good.id }}"></label></td>
-                            <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}" name="authenticity" value="Authenticity"><label for="auth_{{ good.id }}"></label></td>
+                            {% for hardgoal in hardgoals %}
+                                {% if hardgoal.confidentiality != None %}
+                                    {% if "Confidentiality of %s" %good.description in hardgoal.confidentiality %}
+                                        <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}checked" name="confidentiality{{ good.id }}" value="Confidentiality" checked><label for="conf_{{ good.id }}">CC</label></td>
+                                    {% else %}
+                                        <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}" name="confidentiality{{ good.id }}" value="Confidentiality"><label for="conf_{{ good.id }}">C</label></td>
+                                    {% endif %}
+                                {% endif %}
+                                {% if hardgoal.integrity != None %}
+                                    {% if "Integrity of %s" %good.description in hardgoal.integrity %}
+                                        <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}checked" name="integrity{{ good.id }}" value="Integrity" checked><label for="integ_{{ good.id }}">IC</label></td>
+                                    {% else %}
+                                        <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}" name="integrity{{ good.id }}" value="Integrity"><label for="integ_{{ good.id }}">I</label></td>
+                                    {% endif %}
+                                {% endif %}
+                                {% if hardgoal.authenticity != None %}
+                                    {% if "Authenticity of %s" %good.description in hardgoal.authenticity %}
+                                        <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}checked" name="authenticity{{ good.id }}" value="Authenticity" checked><label for="auth_{{ good.id }}">AC</label></td>
+                                    {% else %}
+                                        <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}" name="authenticity{{ good.id }}" value="Authenticity"><label for="auth_{{ good.id }}">A</label></td>
+                                    {% endif %}
+                                {% endif %}
+
+
+
+                            {% endfor %}
+
                         </tr>
                     {% endfor %}
                     </tbody>

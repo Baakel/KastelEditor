@@ -326,17 +326,22 @@ def removefr(project, desc):
 @login_required
 def hard_goals(project):
     project = Projects.query.filter_by(name=project).first()
-    gds = Good.query.filter_by(project_id=project.id).all()
+    hardgoals = HardGoal.query.filter_by(project_id=project.id).all()
     if request.method == 'POST':
         for good in project.goods:
-            for goal in request.form.getlist('confidentiality%s' % good.id):
+            for goal in request.form.getlist('authenticity%s' % good.id):
                 auth_desc = goal + " of " + good.description
-                HG = HardGoal.query.filter_by(authenticity=auth_desc, project_id=project.id).all()
+                if any("Authenticity of %s" %good.description in hardgoal.authenticity for hardgoal in hardgoals):
+                    print("found it!")
+                else:
+                    print("Nope")
+                HG = HardGoal.query.filter_by(authenticity=auth_desc, project_id=project.id).first()
                 if HG is None:
                     auth = HardGoal(authenticity=auth_desc, project_id=project.id)
                     db.session.add(auth)
                     db.session.commit()
                     flash('Protection Goals updated', 'succ')
+
 
     # elements = len(gds)
     # if request.method == 'POST':
@@ -349,4 +354,5 @@ def hard_goals(project):
     #     print(request.form.getlist('confidentiality'))
     return render_template('hardgoals.html',
                            title=project.name,
-                           project=project)
+                           project=project,
+                           hardgoals=hardgoals)

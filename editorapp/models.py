@@ -70,11 +70,13 @@ class FunctionalRequirement(db.Model):
 
 class HardGoal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    authenticity = db.Column(db.Boolean(), default=False)
-    confidentiality = db.Column(db.Boolean(), default=False)
-    integrity = db.Column(db.Boolean(), default=False)
-    application = db.Column(db.Boolean(), default=False)
-    service = db.Column(db.Boolean(), default=False)
+    authenticity = db.Column(db.String(280))
+    confidentiality = db.Column(db.String(280))
+    integrity = db.Column(db.String(280))
+    applications = db.Column(db.String(280))
+    services = db.Column(db.String(280))
+    priority = db.Column(db.Boolean(), default=False)
+    description = db.Column(db.String(500))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
 
 

@@ -12,7 +12,7 @@
             {{ form.hidden_tag() }}
             <table>
                 <tr>
-                    <td>{{ form.freq(class_="form-control", size=140, placeholder="describe your requirements") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></td>
+                    <td><div class="form-group">{{ form.freq.label(class_="form-control-label") }}{{ form.freq(class_="form-control", size=140, placeholder="describe your requirements") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></div></td>
                     <td></td>
                     <td><div class="switch"><label>{{ form.priority }} Check for <b>HIGH</b> priority</label></div></td>
                 </tr>

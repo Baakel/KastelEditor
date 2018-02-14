@@ -2,7 +2,7 @@ from flask import render_template, url_for, flash, redirect, request, session, g
 from editorapp import app, db, github
 from flask_login import login_required
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, HardGoalsForm
-from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement
+from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement, HardGoal
 import requests
 
 
@@ -329,10 +329,15 @@ def hard_goals(project):
     gds = Good.query.filter_by(project_id=project.id).all()
     if request.method == 'POST':
         for good in project.goods:
-            print(request.form.getlist('confidentiality%s' % good.id))
             for goal in request.form.getlist('confidentiality%s' % good.id):
-                u = goal + " of " + good.description
-                print(u)
+                auth_desc = goal + " of " + good.description
+                HG = HardGoal.query.filter_by(authenticity=auth_desc, project_id=project.id).all()
+                if HG is None:
+                    auth = HardGoal(authenticity=auth_desc, project_id=project.id)
+                    db.session.add(auth)
+                    db.session.commit()
+                    flash('Protection Goals updated', 'succ')
+
     # elements = len(gds)
     # if request.method == 'POST':
     #     elements += len(request.form.getlist('confidentiality')) + len(request.form.getlist(

@@ -59,20 +59,11 @@
                         </div>
                         {% endfor %}
                     </div>
-                    <div class="col"><a href="{{ url_for('soft_goals', project=project.name) }}">Functional Requirements</a>
-                        {% for sgoal in project.soft_goals %}
-                            {% if sgoal.priority == True %}
+                    <div class="col"><a href="{{ url_for('functional_req', project=project.name) }}">Functional Requirements</a>
+                        {% for freq in project.functional_req %}
                                 <div class="row">
-                                    <div class="col"><b>{{ sgoal.description }}</b></div>
+                                    <div class="col">{{ freq.description }}</div>
                                 </div>
-                            {% endif %}
-                        {% endfor %}
-                        {% for sgoal in project.soft_goals %}
-                            {% if sgoal.priority == False %}
-                                <div class="row">
-                                    <div class="col">{{ sgoal.description }}</div>
-                                </div>
-                            {% endif %}
                         {% endfor %}
                     </div>
                     <div class="col"><a href="{{ url_for('goods', project=project.name) }}">Goods</a>

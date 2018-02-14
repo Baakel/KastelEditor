@@ -1,8 +1,8 @@
 from flask import render_template, url_for, flash, redirect, request, session, g
 from editorapp import app, db, github
 from flask_login import login_required
-from .forms import StakeHoldersForm, ProjectForm, GoodsForm, SoftGoalsForm, EditorForm, AccessForm, HardGoalsForm
-from .models import Stakeholder, Users, lm, Projects, Good, SoftGoal
+from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, HardGoalsForm
+from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement
 import requests
 
 
@@ -28,6 +28,18 @@ def before_request():
     g.user = None
     if 'user_id' in session:
         g.user = Users.query.get(session['user_id'])
+
+
+@app.route('/test', methods=['GET', 'POST'])
+def test():
+    form = HardGoalsForm()
+    if form.validate_on_submit():
+        print(form.test_case.data)
+        print('did it')
+        return redirect(url_for('test'))
+    return render_template('test.html',
+                           form=form,
+                           project=None)
 
 
 @app.route('/')
@@ -271,41 +283,41 @@ def removeg(project, desc):
         return redirect(url_for('index'))
 
 
-@app.route('/soft_goals/<project>', methods=['GET', 'POST'])
+@app.route('/functional_req/<project>', methods=['GET', 'POST'])
 @login_required
-def soft_goals(project):
+def functional_req(project):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
-        form = SoftGoalsForm()
+        form = FunctionalRequirementsForm()
         if form.validate_on_submit():
-            sg = SoftGoal.query.filter_by(description=form.sgoals.data, project_id=project.id).first()
-            if sg is None:
-                sgoal = SoftGoal(description=form.sgoals.data, project_id=project.id, priority=form.priority.data)
-                db.session.add(sgoal)
+            fr = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
+            if fr is None:
+                freq = FunctionalRequirement(description=form.freq.data, project_id=project.id)
+                db.session.add(freq)
                 db.session.commit()
-                flash('Soft Goal Added to the Database', 'succ')
-                return redirect(url_for('soft_goals', project=project.name))
+                flash('Functional Requirement Added to the Database', 'succ')
+                return redirect(url_for('functional_req', project=project.name))
             else:
-                flash('Soft Goal already exists', 'error')
-        sgoals = SoftGoal.query.filter_by(project_id=project.id).all()
-        return render_template('sgoals.html',
+                flash('Functional Requirement already exists', 'error')
+        freqs = FunctionalRequirement.query.filter_by(project_id=project.id).all()
+        return render_template('funcreq.html',
                                title=project.name,
                                form=form,
-                               sgoals=sgoals,
+                               freqs=freqs,
                                project=project)
     else:
         return redirect(url_for('index'))
 
 
-@app.route('/removesg/<project>/<desc>', methods=['GET', 'POST'])
+@app.route('/removefr/<project>/<desc>', methods=['GET', 'POST'])
 @login_required
-def removesg(project, desc):
+def removefr(project, desc):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
-        SoftGoal.query.filter_by(description=desc, project_id=project.id).delete()
+        FunctionalRequirement.query.filter_by(description=desc, project_id=project.id).delete()
         db.session.commit()
-        flash('Soft goal removed', 'error')
-        return redirect(url_for('soft_goals', project=project.name))
+        flash('Functional Requirement removed', 'error')
+        return redirect(url_for('functional_req', project=project.name))
     else:
         return redirect(url_for('index'))
 

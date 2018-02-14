@@ -62,10 +62,9 @@ class Good(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
 
 
-class SoftGoal(db.Model):
+class FunctionalRequirement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    description = db.Column(db.String(140))
-    priority = db.Column(db.Boolean(), default=False)
+    description = db.Column(db.String(280))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
 
 
@@ -78,12 +77,13 @@ class HardGoal(db.Model):
     service = db.Column(db.Boolean(), default=False)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
 
+
 class Projects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     creator = db.Column(db.Integer)
     name = db.Column(db.String(64), index=True, unique=True)
     hard_goals = db.relationship('HardGoal', backref='project', lazy='dynamic')
-    soft_goals = db.relationship('SoftGoal', backref='project', lazy='dynamic')
+    functional_req = db.relationship('FunctionalRequirement', backref='project', lazy='dynamic')
     stake_holders= db.relationship('Stakeholder', backref='project', lazy='dynamic')
     goods = db.relationship('Good', backref='project', lazy='dynamic')
 

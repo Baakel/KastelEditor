@@ -12,7 +12,7 @@
             {{ form.hidden_tag() }}
             <table>
                 <tr>
-                    <td>{{ form.sgoals(class_="form-control", size=140, placeholder="describe your requirements") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></td>
+                    <td>{{ form.freq(class_="form-control", size=140, placeholder="describe your requirements") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></td>
                     <td></td>
                     <td><div class="switch"><label>{{ form.priority }} Check for <b>HIGH</b> priority</label></div></td>
                 </tr>
@@ -20,21 +20,11 @@
                 <tr>
                     <th>Current Functional Requirements</th>
                 </tr>
-                {% for sgoal in project.soft_goals %}
-                    {% if sgoal.priority == True %}
+                {% for freq in project.functional_req %}
                         <tr>
-                            <td><b>{{ sgoal.description }}</b></td>
-                            <td><a href="{{ url_for('removesg', project=project.name, desc=sgoal.description) }}">Remove</a></td>
+                            <td>{{ freq.description }}</td>
+                            <td><a href="{{ url_for('removefr', project=project.name, desc=freq.description) }}">Remove</a></td>
                         </tr>
-                    {% endif %}
-                {% endfor %}
-                {% for sgoal in project.soft_goals %}
-                    {% if sgoal.priority == False %}
-                        <tr>
-                            <td>{{ sgoal.description }}</td>
-                            <td><a href="{{ url_for('removesg', project=project.name, desc=sgoal.description) }}">Remove</a></td>
-                        </tr>
-                    {% endif %}
                 {% endfor %}
             </table>
         </form>

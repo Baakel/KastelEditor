@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<form action="" method="post" name="test">
+    {{ form.hidden_tag() }}
+    <p>{{ form.test_case.label }}{{ form.test_case }}</p>
+    <button type="submit" class="btn btn-raised btn-primary">Add</button>
+</form>
+
+{% endblock %}

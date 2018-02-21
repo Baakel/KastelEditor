@@ -56,9 +56,10 @@ class HardGoalsForm(FlaskForm):
     # test_choices = [('uno', 'one'),
     #                 ('dos', 'two'),
     #                 ('tres', 'three')]
-    goods = Good.query.filter_by(project_id=3).all()
-    good_choices = [(str(good.id), good.description) for good in goods]
-    test_case = HardGoalsFormMultiple('Label', choices=good_choices)
+    # goods = Good.query.filter_by(project_id=3).all()
+    # good_choices = [(str(good.id), good.description) for good in goods]
+    # test_case = HardGoalsFormMultiple('Label', choices=good_choices)
+    pass
 
 # class EditorsList(FlaskForm):
 #     editor_list = SelectField(u'Editors', coerce=int)

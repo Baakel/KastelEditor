@@ -12,7 +12,7 @@
     <form method="post">
         <div class="row">
             <div class="col">
-                <table class="table table-striped table-bordered table-hover w-50">
+                <table class="table table-striped table-bordered table-hover w-34">
                     <caption>Pick the protection goals for your goods</caption>
                     <thead class="thead-dark">
                         <tr>
@@ -26,40 +26,96 @@
                     {% for good in project.goods %}
                         <tr>
                             <th scope="row">{{ good.description }}</th>
+                            {% set auth = [] %}
+                            {% set conf = [] %}
+                            {% set integrity = [] %}
                             {% for hardgoal in hardgoals %}
                                 {% if hardgoal.confidentiality != None %}
                                     {% if "Confidentiality of %s" %good.description in hardgoal.confidentiality %}
-                                        <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}checked" name="confidentiality{{ good.id }}" value="Confidentiality" checked><label for="conf_{{ good.id }}">CC</label></td>
-                                    {% else %}
-                                        <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}" name="confidentiality{{ good.id }}" value="Confidentiality"><label for="conf_{{ good.id }}">C</label></td>
+                                        {% if conf.append(True) %} {% endif %}
                                     {% endif %}
                                 {% endif %}
                                 {% if hardgoal.integrity != None %}
                                     {% if "Integrity of %s" %good.description in hardgoal.integrity %}
-                                        <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}checked" name="integrity{{ good.id }}" value="Integrity" checked><label for="integ_{{ good.id }}">IC</label></td>
-                                    {% else %}
-                                        <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}" name="integrity{{ good.id }}" value="Integrity"><label for="integ_{{ good.id }}">I</label></td>
+                                        {% if integrity.append(True) %} {% endif %}
                                     {% endif %}
                                 {% endif %}
                                 {% if hardgoal.authenticity != None %}
                                     {% if "Authenticity of %s" %good.description in hardgoal.authenticity %}
-                                        <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}checked" name="authenticity{{ good.id }}" value="Authenticity" checked><label for="auth_{{ good.id }}">AC</label></td>
-                                    {% else %}
-                                        <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}" name="authenticity{{ good.id }}" value="Authenticity"><label for="auth_{{ good.id }}">A</label></td>
+                                        {% if auth.append(True) %} {% endif %}
                                     {% endif %}
                                 {% endif %}
-
-
-
                             {% endfor %}
-
+                            {% if conf %}
+                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}checked" name="confidentiality{{ good.id }}" value="Confidentiality" checked><label for="conf_{{ good.id }}checked">Already in DB</label></td>
+                            {% else %}
+                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}" name="confidentiality{{ good.id }}" value="Confidentiality"><label for="conf_{{ good.id }}">Not in DB</label></td>
+                            {% endif %}
+                            {% if integrity %}
+                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}checked" name="integrity{{ good.id }}" value="Integrity" checked><label for="integ_{{ good.id }}checked">Already in DB</label></td>
+                            {% else %}
+                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}" name="integrity{{ good.id }}" value="Integrity"><label for="integ_{{ good.id }}">Not in DB</label></td>
+                            {% endif %}
+                            {% if auth %}
+                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}checked" name="authenticity{{ good.id }}" value="Authenticity" checked><label for="auth_{{ good.id }}checked">Already in DB</label></td>
+                            {% else %}
+                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}" name="authenticity{{ good.id }}" value="Authenticity"><label for="auth_{{ good.id }}">Not in DB</label></td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                     </tbody>
                 </table>
             </div>
             <div class="col">
-                <table class="table table-striped table-bordered table-hover w-50">
+                <table class="table table-striped table-bordered table-hover w-33">
+                    <caption>Choose protection priority</caption>
+                    <thead class="thead-dark">
+                        <tr>
+                            <th class="bg-success" scope="col">Description</th>
+                            <th class="bg-primary" scope="col">High Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hgoal in hardgoals %}
+                        {% if hgoal.authenticity != None %}
+                            <tr>
+                                {% if hgoal.priority == True %}
+                                    <td><b>{{ hgoal.authenticity }}</b></td>
+                                    <td class="text-center"><input type="checkbox" id="hgoalauth_{{ hgoal.id }}checked" name="Hgoal{{ hgoal.id }}" value=True checked><label for="hgoalauth_{{ hgoal.id }}checked"></label></td>
+                                {% else %}
+                                    <td>{{ hgoal.authenticity }}</td>
+                                    <td class="text-center"><input type="checkbox" id="hgoalauth_{{ hgoal.id }}" name="Hgoal{{ hgoal.id }}" value=True><label for="hgoalauth_{{ hgoal.id }}"></label></td>
+                                {% endif %}
+                            </tr>
+                        {% endif %}
+                        {% if hgoal.confidentiality != None %}
+                            <tr>
+                                {% if hgoal.priority == True %}
+                                    <td><b>{{ hgoal.confidentiality }}</b></td>
+                                    <td class="text-center"><input type="checkbox" id="hgoalconf_{{ hgoal.id }}checked" name="Hgoal{{ hgoal.id }}" value=True checked><label for="hgoalconf_{{ hgoal.id }}checked"></label></td>
+                                {% else %}
+                                    <td>{{ hgoal.confidentiality }}</td>
+                                    <td class="text-center"><input type="checkbox" id="hgoalconf_{{ hgoal.id }}" name="Hgoal{{ hgoal.id }}" value=True><label for="hgoalconf_{{ hgoal.id }}"></label></td>
+                                {% endif %}
+                            </tr>
+                        {% endif %}
+                        {% if hgoal.integrity != None %}
+                            <tr>
+                                {% if hgoal.priority == True %}
+                                    <td><b>{{ hgoal.integrity }}</b></td>
+                                    <td class="text-center"><input type="checkbox" id="hgoalint_{{ hgoal.id }}checked" name="Hgoal{{ hgoal.id }}" value=True checked><label for="hgoalint_{{ hgoal.id }}checked"></label></td>
+                                {% else %}
+                                    <td>{{ hgoal.integrity }}</td>
+                                    <td class="text-center"><input type="checkbox" id="hgoalint_{{ hgoal.id }}" name="Hgoal{{ hgoal.id }}" value=True><label for="hgoalint_{{ hgoal.id }}"></label></td>
+                                {% endif %}
+                            </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col">
+                <table class="table table-striped table-bordered table-hover w-33">
                     <caption>Pick who should perform the requirements</caption>
                     <thead class="thead-dark">
                         <tr>
@@ -72,8 +128,30 @@
                         {% for freq in project.functional_req %}
                         <tr>
                             <td>{{ freq.description }}</td>
-                            <td class="text-center"><input type="checkbox" id="app_{{ freq.id }}" name="AppG" value="app_{{ freq.id }}"><label for="app_{{ freq.id }}"></label></td>
-                            <td class="text-center"><input type="checkbox" id="serv_{{ freq.id }}" name="ServG" value="serv_{{ freq.id }}"><label for="serv_{{ freq.id }}"></label></td>
+                            {% set apps = [] %}
+                            {% set service = [] %}
+                            {% for hardgoal in hardgoals %}
+                                {% if hardgoal.applications != None %}
+                                    {% if "Application handles %s" %freq.description in hardgoal.applications %}
+                                        {% if apps.append(True) %} {% endif %}
+                                    {% endif %}
+                                {% endif %}
+                                {% if hardgoal.services != None %}
+                                    {% if "Service handles %s" %freq.description in hardgoal.services %}
+                                        {% if service.append(True) %} {% endif %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if apps %}
+                                <td class="text-center"><input type="checkbox" id="apps_{{ freq.id }}checked" name="applications{{ freq.id }}" value="Application" checked><label for="apps_{{ freq.id }}checked">Already in DB</label></td>
+                            {% else %}
+                                <td class="text-center"><input type="checkbox" id="apps_{{ freq.id }}" name="applications{{ freq.id }}" value="Application"><label for="apps_{{ freq.id }}">Not in DB</label></td>
+                            {% endif %}
+                            {% if service %}
+                                <td class="text-center"><input type="checkbox" id="service_{{ freq.id }}checked" name="services{{ freq.id }}" value="Service" checked><label for="service_{{ freq.id }}checked">Already in DB</label></td>
+                            {% else %}
+                                <td class="text-center"><input type="checkbox" id="service_{{ freq.id }}" name="services{{ freq.id }}" value="Service"><label for="service_{{ freq.id }}">Not in DB</label></td>
+                            {% endif %}
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -88,23 +166,57 @@
     </form>
     <div class="row">
         <div class="col">
-            <table class="table table-striped table-bordered table-hover">
+            <table class="table table-bordered table-hover">
                 <caption>Soft Goals Matrix</caption>
                 <thead>
                     <tr>
                         <th scope="col">Soft Goals / Functional Requirements</th>
-                        {% for freq in project.functional_req %}
-                        <th scope="col">{{ freq.description }}</th>
+                        {% for hgoal in hardgoals %}
+                        {% if hgoal.applications != None %}
+                            <th scope="col">{{ hgoal.applications }}</th>
+                        {% endif %}
+                        {% if hgoal.services != None %}
+                            <th scope="col">{{ hgoal.services }}</th>
+                        {% endif %}
                         {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
-                    {% for good in project.goods %}
+                    {% for hgoal in project.hard_goals %}
                     <tr>
-                        <th scope="row">{{ good.description }}</th>
-                        {% for box in project.functional_req %}
-                        <td class="text-center"><input type="checkbox" id="box{{ good.id }}{{ box.id }}" name="HardGoal" value="Box{{ good.id }}{{ box.id }}"><label for="box{{ good.id }}{{ box.id }}">BOX{{ good.id }}{{ box.id }}</label></td>
-                        {% endfor %}
+                        {% if hgoal.authenticity != None %}
+                            <th scope="row">{{ hgoal.authenticity }}</th>
+                            {% for req in hardgoals %}
+                                {% if req.applications != None %}
+                                    <td class="text-center"><input type="checkbox" id="appa{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="appa{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                {% endif %}
+                                {% if req.services != None %}
+                                    <td class="text-center"><input type="checkbox" id="serva{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="serva{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        {% if hgoal.confidentiality != None %}
+                            <th scope="row">{{ hgoal.confidentiality }}</th>
+                            {% for req in hardgoals %}
+                                {% if req.applications != None %}
+                                    <td class="text-center"><input type="checkbox" id="appc{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="appc{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                {% endif %}
+                                {% if req.services != None %}
+                                    <td class="text-center"><input type="checkbox" id="servc{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="servc{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                        {% if hgoal.integrity != None %}
+                            <th scope="row">{{ hgoal.integrity }}</th>
+                            {% for req in hardgoals %}
+                                {% if req.applications != None %}
+                                    <td class="text-center"><input type="checkbox" id="appi{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="appi{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                {% endif %}
+                                {% if req.services != None %}
+                                    <td class="text-center"><input type="checkbox" id="servi{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="servi{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>

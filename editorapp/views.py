@@ -328,19 +328,66 @@ def hard_goals(project):
     project = Projects.query.filter_by(name=project).first()
     hardgoals = HardGoal.query.filter_by(project_id=project.id).all()
     if request.method == 'POST':
+
         for good in project.goods:
             for goal in request.form.getlist('authenticity%s' % good.id):
                 auth_desc = goal + " of " + good.description
-                if any("Authenticity of %s" %good.description in hardgoal.authenticity for hardgoal in hardgoals):
-                    print("found it!")
-                else:
-                    print("Nope")
                 HG = HardGoal.query.filter_by(authenticity=auth_desc, project_id=project.id).first()
                 if HG is None:
                     auth = HardGoal(authenticity=auth_desc, project_id=project.id)
                     db.session.add(auth)
                     db.session.commit()
                     flash('Protection Goals updated', 'succ')
+
+            for goal in request.form.getlist('confidentiality%s' % good.id):
+                conf_desc = goal + " of " + good.description
+                HG = HardGoal.query.filter_by(confidentiality=conf_desc, project_id=project.id).first()
+                if HG is None:
+                    conf = HardGoal(confidentiality=conf_desc, project_id=project.id)
+                    db.session.add(conf)
+                    db.session.commit()
+                    flash('Protection Goals updated', 'succ')
+
+            for goal in request.form.getlist('integrity%s' % good.id):
+                integ_desc = goal + " of " + good.description
+                HG = HardGoal.query.filter_by(integrity=integ_desc, project_id=project.id).first()
+                if HG is None:
+                    integ = HardGoal(integrity=integ_desc, project_id=project.id)
+                    db.session.add(integ)
+                    db.session.commit()
+                    flash('Protection Goals updated', 'succ')
+
+        for hgoal in project.hard_goals:
+            test = request.form.getlist('Hgoal%s' % hgoal.id)
+            if test:
+                hgoal.priority = True
+                db.session.add(hgoal)
+                db.session.commit()
+            else:
+                hgoal.priority = False
+                db.session.add(hgoal)
+                db.session.commit()
+
+        for freq in project.functional_req:
+            for handler in request.form.getlist('applications%s' % freq.id):
+                freq_desc = handler + ' handles ' + freq.description
+                Hg = HardGoal.query.filter_by(applications=freq_desc, project_id=project.id).first()
+                if Hg is None:
+                    apps = HardGoal(applications=freq_desc, project_id=project.id)
+                    db.session.add(apps)
+                    db.session.commit()
+                    flash('Functional Requirement Handlers updated', 'succ')
+
+            for handler in request.form.getlist('services%s' % freq.id):
+                freq_desc = handler + ' handles ' + freq.description
+                Hg = HardGoal.query.filter_by(services=freq_desc, project_id=project.id).first()
+                if Hg is None:
+                    serv = HardGoal(services=freq_desc, project_id=project.id)
+                    db.session.add(serv)
+                    db.session.commit()
+                    flash('Functional Requirement Handlers updated', 'succ')
+
+        return redirect(url_for('hard_goals', project=project.name))
 
 
     # elements = len(gds)

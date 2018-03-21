@@ -327,7 +327,7 @@ def removefr(project, desc):
 def hard_goals(project):
     project = Projects.query.filter_by(name=project).first()
     hardgoals = HardGoal.query.filter_by(project_id=project.id).all()
-    if request.method == 'POST':
+    if request.method == 'POST' and request.form.get('subb') == 'pressed':
 
         for good in project.goods:
             for goal in request.form.getlist('authenticity%s' % good.id):
@@ -370,35 +370,82 @@ def hard_goals(project):
 
         for freq in project.functional_req:
             for handler in request.form.getlist('applications%s' % freq.id):
-                freq_desc = handler + ' handles ' + freq.description
+                freq_desc = freq.description
                 Hg = HardGoal.query.filter_by(applications=freq_desc, project_id=project.id).first()
                 if Hg is None:
                     apps = HardGoal(applications=freq_desc, project_id=project.id)
                     db.session.add(apps)
                     db.session.commit()
-                    flash('Functional Requirement Handlers updated', 'succ')
+                    flash('Functional Requirement %ss updated' %handler, 'succ')
 
             for handler in request.form.getlist('services%s' % freq.id):
-                freq_desc = handler + ' handles ' + freq.description
+                freq_desc = freq.description
                 Hg = HardGoal.query.filter_by(services=freq_desc, project_id=project.id).first()
                 if Hg is None:
                     serv = HardGoal(services=freq_desc, project_id=project.id)
                     db.session.add(serv)
                     db.session.commit()
-                    flash('Functional Requirement Handlers updated', 'succ')
+                    flash('Functional Requirement %ss updated' %handler, 'succ')
+
+        return redirect(url_for('hard_goals', project=project.name))
+    elif request.method == 'POST' and request.form.get('sub2') == 'pressed2':
+        appau = request.form.getlist('appau')
+        servau = request.form.getlist('servau')
+        appco = request.form.getlist('appco')
+        servco = request.form.getlist('servco')
+        appin = request.form.getlist('appin')
+        servin = request.form.getlist('servin')
+
+        for desc in appau:
+            Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
+            if Hg is None:
+                description = HardGoal(description=desc, project_id=project.id)
+                db.session.add(description)
+                db.session.commit()
+                flash('Hard Goals successfully updated', 'succ')
+
+        for desc in servau:
+            Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
+            if Hg is None:
+                description = HardGoal(description=desc, project_id=project.id)
+                db.session.add(description)
+                db.session.commit()
+                flash('Hard Goals successfully updated', 'succ')
+
+        for desc in appco:
+            Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
+            if Hg is None:
+                description = HardGoal(description=desc, project_id=project.id)
+                db.session.add(description)
+                db.session.commit()
+                flash('Hard Goals successfully updated', 'succ')
+
+        for desc in servco:
+            Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
+            if Hg is None:
+                description = HardGoal(description=desc, project_id=project.id)
+                db.session.add(description)
+                db.session.commit()
+                flash('Hard Goals successfully updated', 'succ')
+
+        for desc in appin:
+            Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
+            if Hg is None:
+                description = HardGoal(description=desc, project_id=project.id)
+                db.session.add(description)
+                db.session.commit()
+                flash('Hard Goals successfully updated', 'succ')
+
+        for desc in servin:
+            Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
+            if Hg is None:
+                description = HardGoal(description=desc, project_id=project.id)
+                db.session.add(description)
+                db.session.commit()
+                flash('Hard Goals successfully updated', 'succ')
 
         return redirect(url_for('hard_goals', project=project.name))
 
-
-    # elements = len(gds)
-    # if request.method == 'POST':
-    #     elements += len(request.form.getlist('confidentiality')) + len(request.form.getlist(
-    #     'integrity')) + len(request.form.getlist('authenticity'))
-    #     print(request.form.getlist('confidentiality'), request.form.getlist('integrity'), request.form.getlist('authenticity'))
-    # else:
-    #     print('nope')
-    # if request.form.validate_on_submit():
-    #     print(request.form.getlist('confidentiality'))
     return render_template('hardgoals.html',
                            title=project.name,
                            project=project,

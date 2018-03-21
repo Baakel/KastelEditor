@@ -132,12 +132,12 @@
                             {% set service = [] %}
                             {% for hardgoal in hardgoals %}
                                 {% if hardgoal.applications != None %}
-                                    {% if "Application handles %s" %freq.description in hardgoal.applications %}
+                                    {% if freq.description in hardgoal.applications %}
                                         {% if apps.append(True) %} {% endif %}
                                     {% endif %}
                                 {% endif %}
                                 {% if hardgoal.services != None %}
-                                    {% if "Service handles %s" %freq.description in hardgoal.services %}
+                                    {% if freq.description in hardgoal.services %}
                                         {% if service.append(True) %} {% endif %}
                                     {% endif %}
                                 {% endif %}
@@ -160,23 +160,22 @@
         </div>
         <div class="row">
             <div class="col">
-                <button type="submit" class="btn btn-raised btn-primary">Submit</button>
+                <button type="submit" class="btn btn-raised btn-primary" name="subb" value="pressed">Update Soft Goals Matrix</button>
             </div>
         </div>
-    </form>
     <div class="row">
         <div class="col">
             <table class="table table-bordered table-hover">
                 <caption>Soft Goals Matrix</caption>
                 <thead>
                     <tr>
-                        <th scope="col">Soft Goals / Functional Requirements</th>
+                        <th class="bg-success" scope="col">Soft Goals / Functional Requirements</th>
                         {% for hgoal in hardgoals %}
                         {% if hgoal.applications != None %}
-                            <th scope="col">{{ hgoal.applications }}</th>
+                            <th class="bg-info" scope="col">App: {{ hgoal.applications }}</th>
                         {% endif %}
                         {% if hgoal.services != None %}
-                            <th scope="col">{{ hgoal.services }}</th>
+                            <th class="bg-info" scope="col">Service: {{ hgoal.services }}</th>
                         {% endif %}
                         {% endfor %}
                     </tr>
@@ -185,35 +184,95 @@
                     {% for hgoal in project.hard_goals %}
                     <tr>
                         {% if hgoal.authenticity != None %}
-                            <th scope="row">{{ hgoal.authenticity }}</th>
+                            <th class="bg-warning" scope="row">{{ hgoal.authenticity }}</th>
                             {% for req in hardgoals %}
+                                {% set appau = [] %}
+                                {% set servau = [] %}
+                                {% for reqs in hardgoals %}
+                                    {% if reqs.description != None %}
+                                        {% if "Application ensures the %s during the %s" %(hgoal.authenticity, req.applications) in reqs.description %}
+                                            {% if appau.append(True) %} {% endif %}
+                                        {% endif %}
+                                        {% if "Service ensures the %s during the %s" %(hgoal.authenticity, req.services) in reqs.description %}
+                                            {% if servau.append(True) %} {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
                                 {% if req.applications != None %}
-                                    <td class="text-center"><input type="checkbox" id="appa{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="appa{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% if appau %}
+                                        <td class="text-center"><input type="checkbox" id="appa{{ hgoal.id }}{{ req.id }}c" name="appau" value="Application ensures the {{ hgoal.authenticity }} during the {{ req.applications }}" checked><label for="appa{{ hgoal.id }}{{ req.id }}c">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% else %}
+                                        <td class="text-center"><input type="checkbox" id="appa{{ hgoal.id }}{{ req.id }}" name="appau" value="Application ensures the {{ hgoal.authenticity }} during the {{ req.applications }}"><label for="appa{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% endif %}
                                 {% endif %}
                                 {% if req.services != None %}
-                                    <td class="text-center"><input type="checkbox" id="serva{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="serva{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% if servau %}
+                                        <td class="text-center"><input type="checkbox" id="serva{{ hgoal.id }}{{ req.id }}c" name="servau" value="Service ensures the {{ hgoal.authenticity }} during the {{ req.services }}" checked><label for="serva{{ hgoal.id }}{{ req.id }}c">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% else %}
+                                        <td class="text-center"><input type="checkbox" id="serva{{ hgoal.id }}{{ req.id }}" name="servau" value="Service ensures the {{ hgoal.authenticity }} during the {{ req.services }}"><label for="serva{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% endif %}
                                 {% endif %}
                             {% endfor %}
                         {% endif %}
                         {% if hgoal.confidentiality != None %}
-                            <th scope="row">{{ hgoal.confidentiality }}</th>
+                            <th class="bg-warning" scope="row">{{ hgoal.confidentiality }}</th>
                             {% for req in hardgoals %}
+                                {% set appco = [] %}
+                                {% set servco = [] %}
+                                {% for reqs in hardgoals %}
+                                    {% if reqs.description != None %}
+                                        {% if "Application ensures the %s during the %s" %(hgoal.confidentiality, req.applications) in reqs.description %}
+                                            {% if appco.append(True) %} {% endif %}
+                                        {% endif %}
+                                        {% if "Service ensures the %s during the %s" %(hgoal.confidentiality, req.services) in reqs.description %}
+                                            {% if servco.append(True) %} {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
                                 {% if req.applications != None %}
-                                    <td class="text-center"><input type="checkbox" id="appc{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="appc{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% if appco %}
+                                        <td class="text-center"><input type="checkbox" id="appc{{ hgoal.id }}{{ req.id }}c" name="appco" value="Application ensures the {{ hgoal.confidentiality }} during the {{ req.applications }}" checked><label for="appc{{ hgoal.id }}{{ req.id }}c">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% else %}
+                                        <td class="text-center"><input type="checkbox" id="appc{{ hgoal.id }}{{ req.id }}" name="appco" value="Application ensures the {{ hgoal.confidentiality }} during the {{ req.applications }}"><label for="appc{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% endif %}
                                 {% endif %}
                                 {% if req.services != None %}
-                                    <td class="text-center"><input type="checkbox" id="servc{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="servc{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% if servco %}
+                                        <td class="text-center"><input type="checkbox" id="servc{{ hgoal.id }}{{ req.id }}c" name="servco" value="Service ensures the {{ hgoal.confidentiality }} during the {{ req.services }}" checked><label for="servc{{ hgoal.id }}{{ req.id }}c">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% else%}
+                                        <td class="text-center"><input type="checkbox" id="servc{{ hgoal.id }}{{ req.id }}" name="servco" value="Service ensures the {{ hgoal.confidentiality }} during the {{ req.services }}"><label for="servc{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% endif %}
                                 {% endif %}
                             {% endfor %}
                         {% endif %}
                         {% if hgoal.integrity != None %}
-                            <th scope="row">{{ hgoal.integrity }}</th>
+                            <th class="bg-warning" scope="row">{{ hgoal.integrity }}</th>
                             {% for req in hardgoals %}
+                                {% set appin = [] %}
+                                {% set servin = [] %}
+                                {% for reqs in hardgoals %}
+                                    {% if reqs.description != None %}
+                                        {% if "Application ensures the %s during the %s" %(hgoal.integrity, req.applications) in reqs.description %}
+                                            {% if appin.append(True) %} {% endif %}
+                                        {% endif %}
+                                        {% if "Service ensures the %s during the %s" %(hgoal.integrity, req.services) in reqs.description %}
+                                            {% if servin.append(True) %} {% endif %}
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
                                 {% if req.applications != None %}
-                                    <td class="text-center"><input type="checkbox" id="appi{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="appi{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% if appin %}
+                                        <td class="text-center"><input type="checkbox" id="appi{{ hgoal.id }}{{ req.id }}c" name="appin" value="Application ensures the {{ hgoal.integrity }} during the {{ req.applications }}" checked><label for="appi{{ hgoal.id }}{{ req.id }}c">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% else %}
+                                        <td class="text-center"><input type="checkbox" id="appi{{ hgoal.id }}{{ req.id }}" name="appin" value="Application ensures the {{ hgoal.integrity }} during the {{ req.applications }}"><label for="appi{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% endif %}
                                 {% endif %}
                                 {% if req.services != None %}
-                                    <td class="text-center"><input type="checkbox" id="servi{{ hgoal.id }}{{ req.id }}" name="HardGoal" value="HG{{ hgoal.id }}{{ req.id }}"><label for="servi{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% if servin %}
+                                        <td class="text-center"><input type="checkbox" id="servi{{ hgoal.id }}{{ req.id }}c" name="servin" value="Service ensures the {{ hgoal.integrity }} during the {{ req.services }}" checked><label for="servi{{ hgoal.id }}{{ req.id }}c">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% else %}
+                                        <td class="text-center"><input type="checkbox" id="servi{{ hgoal.id }}{{ req.id }}" name="servin" value="Service ensures the {{ hgoal.integrity }} during the {{ req.services }}"><label for="servi{{ hgoal.id }}{{ req.id }}">HG{{ hgoal.id }}{{ req.id }}</label></td>
+                                    {% endif %}
                                 {% endif %}
                             {% endfor %}
                         {% endif %}
@@ -223,5 +282,11 @@
             </table>
         </div>
     </div>
+    <div class="row">
+        <div class="col">
+            <button type="submit" class="btn btn-raised btn-success" name="sub2" value="pressed2">Update Hard Goals</button>
+        </div>
+    </div>
+    </form>
     </div>
 {% endblock %}

@@ -47,19 +47,19 @@
                                 {% endif %}
                             {% endfor %}
                             {% if conf %}
-                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}checked" name="confidentiality{{ good.id }}" value="Confidentiality" checked><label for="conf_{{ good.id }}checked">Already in DB</label></td>
+                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}checked" name="confidentiality{{ good.id }}" value="Confidentiality" checked><label for="conf_{{ good.id }}checked"></label></td>
                             {% else %}
-                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}" name="confidentiality{{ good.id }}" value="Confidentiality"><label for="conf_{{ good.id }}">Not in DB</label></td>
+                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}" name="confidentiality{{ good.id }}" value="Confidentiality"><label for="conf_{{ good.id }}"></label></td>
                             {% endif %}
                             {% if integrity %}
-                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}checked" name="integrity{{ good.id }}" value="Integrity" checked><label for="integ_{{ good.id }}checked">Already in DB</label></td>
+                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}checked" name="integrity{{ good.id }}" value="Integrity" checked><label for="integ_{{ good.id }}checked"></label></td>
                             {% else %}
-                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}" name="integrity{{ good.id }}" value="Integrity"><label for="integ_{{ good.id }}">Not in DB</label></td>
+                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}" name="integrity{{ good.id }}" value="Integrity"><label for="integ_{{ good.id }}"></label></td>
                             {% endif %}
                             {% if auth %}
-                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}checked" name="authenticity{{ good.id }}" value="Authenticity" checked><label for="auth_{{ good.id }}checked">Already in DB</label></td>
+                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}checked" name="authenticity{{ good.id }}" value="Authenticity" checked><label for="auth_{{ good.id }}checked"></label></td>
                             {% else %}
-                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}" name="authenticity{{ good.id }}" value="Authenticity"><label for="auth_{{ good.id }}">Not in DB</label></td>
+                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}" name="authenticity{{ good.id }}" value="Authenticity"><label for="auth_{{ good.id }}"></label></td>
                             {% endif %}
                         </tr>
                     {% endfor %}
@@ -143,14 +143,14 @@
                                 {% endif %}
                             {% endfor %}
                             {% if apps %}
-                                <td class="text-center"><input type="checkbox" id="apps_{{ freq.id }}checked" name="applications{{ freq.id }}" value="Application" checked><label for="apps_{{ freq.id }}checked">Already in DB</label></td>
+                                <td class="text-center"><input type="checkbox" id="apps_{{ freq.id }}checked" name="applications{{ freq.id }}" value="Application" checked><label for="apps_{{ freq.id }}checked"></label></td>
                             {% else %}
-                                <td class="text-center"><input type="checkbox" id="apps_{{ freq.id }}" name="applications{{ freq.id }}" value="Application"><label for="apps_{{ freq.id }}">Not in DB</label></td>
+                                <td class="text-center"><input type="checkbox" id="apps_{{ freq.id }}" name="applications{{ freq.id }}" value="Application"><label for="apps_{{ freq.id }}"></label></td>
                             {% endif %}
                             {% if service %}
-                                <td class="text-center"><input type="checkbox" id="service_{{ freq.id }}checked" name="services{{ freq.id }}" value="Service" checked><label for="service_{{ freq.id }}checked">Already in DB</label></td>
+                                <td class="text-center"><input type="checkbox" id="service_{{ freq.id }}checked" name="services{{ freq.id }}" value="Service" checked><label for="service_{{ freq.id }}checked"></label></td>
                             {% else %}
-                                <td class="text-center"><input type="checkbox" id="service_{{ freq.id }}" name="services{{ freq.id }}" value="Service"><label for="service_{{ freq.id }}">Not in DB</label></td>
+                                <td class="text-center"><input type="checkbox" id="service_{{ freq.id }}" name="services{{ freq.id }}" value="Service"><label for="service_{{ freq.id }}"></label></td>
                             {% endif %}
                         </tr>
                         {% endfor %}

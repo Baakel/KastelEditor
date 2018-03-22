@@ -168,7 +168,7 @@ def delete_project(project):
         for stkhld in stakeholders:
             db.session.delete(stkhld)
             db.session.commit()
-        softgoals = SoftGoal.query.filter_by(project_id=project.id).all()
+        softgoals = FunctionalRequirement.query.filter_by(project_id=project.id).all()
         for sftgl in softgoals:
             db.session.delete(sftgl)
             db.session.commit()
@@ -332,27 +332,30 @@ def hard_goals(project):
         for good in project.goods:
             for goal in request.form.getlist('authenticity%s' % good.id):
                 auth_desc = goal + " of " + good.description
+                cb_value = 'authenticity%s' % good.id
                 HG = HardGoal.query.filter_by(authenticity=auth_desc, project_id=project.id).first()
                 if HG is None:
-                    auth = HardGoal(authenticity=auth_desc, project_id=project.id)
+                    auth = HardGoal(authenticity=auth_desc, project_id=project.id, cb_value=cb_value)
                     db.session.add(auth)
                     db.session.commit()
                     flash('Protection Goals updated', 'succ')
 
             for goal in request.form.getlist('confidentiality%s' % good.id):
                 conf_desc = goal + " of " + good.description
+                cb_value = 'confidentiality%s' % good.id
                 HG = HardGoal.query.filter_by(confidentiality=conf_desc, project_id=project.id).first()
                 if HG is None:
-                    conf = HardGoal(confidentiality=conf_desc, project_id=project.id)
+                    conf = HardGoal(confidentiality=conf_desc, project_id=project.id, cb_value=cb_value)
                     db.session.add(conf)
                     db.session.commit()
                     flash('Protection Goals updated', 'succ')
 
             for goal in request.form.getlist('integrity%s' % good.id):
                 integ_desc = goal + " of " + good.description
+                cb_value = 'integrity%s' % good.id
                 HG = HardGoal.query.filter_by(integrity=integ_desc, project_id=project.id).first()
                 if HG is None:
-                    integ = HardGoal(integrity=integ_desc, project_id=project.id)
+                    integ = HardGoal(integrity=integ_desc, project_id=project.id, cb_value=cb_value)
                     db.session.add(integ)
                     db.session.commit()
                     flash('Protection Goals updated', 'succ')
@@ -371,21 +374,37 @@ def hard_goals(project):
         for freq in project.functional_req:
             for handler in request.form.getlist('applications%s' % freq.id):
                 freq_desc = freq.description
+                cb_value = 'applications%s' % freq.id
                 Hg = HardGoal.query.filter_by(applications=freq_desc, project_id=project.id).first()
                 if Hg is None:
-                    apps = HardGoal(applications=freq_desc, project_id=project.id)
+                    apps = HardGoal(applications=freq_desc, project_id=project.id, cb_value=cb_value)
                     db.session.add(apps)
                     db.session.commit()
                     flash('Functional Requirement %ss updated' %handler, 'succ')
 
             for handler in request.form.getlist('services%s' % freq.id):
                 freq_desc = freq.description
+                cb_value = 'services%s' % freq.id
                 Hg = HardGoal.query.filter_by(services=freq_desc, project_id=project.id).first()
                 if Hg is None:
-                    serv = HardGoal(services=freq_desc, project_id=project.id)
+                    serv = HardGoal(services=freq_desc, project_id=project.id, cb_value=cb_value)
                     db.session.add(serv)
                     db.session.commit()
                     flash('Functional Requirement %ss updated' %handler, 'succ')
+        current_req = []
+        for i in request.form:
+            current_req.append(i)
+        hardgoals = HardGoal.query.filter_by(project_id=project.id).all()
+        db_values = []
+        for hgoal in hardgoals:
+            if hgoal.cb_value:
+                db_values.append(hgoal.cb_value)
+
+        for val in db_values:
+            if val not in current_req:
+                HardGoal.query.filter_by(cb_value=val, project_id=project.id).delete()
+                db.session.commit()
+                flash('Item(s) removed from the database', 'error')
 
         return redirect(url_for('hard_goals', project=project.name))
     elif request.method == 'POST' and request.form.get('sub2') == 'pressed2':
@@ -395,54 +414,203 @@ def hard_goals(project):
         servco = request.form.getlist('servco')
         appin = request.form.getlist('appin')
         servin = request.form.getlist('servin')
+        for hgoal in project.hard_goals:
+            test = request.form.getlist('Hgoal%s' % hgoal.id)
+            if test:
+                hgoal.priority = True
+                db.session.add(hgoal)
+                db.session.commit()
+            else:
+                hgoal.priority = False
+                db.session.add(hgoal)
+                db.session.commit()
+
+        priorities = []
+        for hgoal in project.hard_goals:
+            priority = request.form.getlist('Hgoal%s' %hgoal.id)
+            if priority:
+                priorities.append(hgoal.id)
+
+        def check_priority(description):
+            for i in priorities:
+                prio = HardGoal.query.filter_by(id=i, project_id=project.id).first()
+                if prio.authenticity:
+                    if prio.authenticity in description:
+                        return True
+                elif prio.confidentiality:
+                    if prio.confidentiality in description:
+                        return True
+                elif prio.integrity:
+                    if prio.integrity in description:
+                        return True
+                else:
+                    return False
 
         for desc in appau:
             Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
-            if Hg is None:
-                description = HardGoal(description=desc, project_id=project.id)
-                db.session.add(description)
-                db.session.commit()
-                flash('Hard Goals successfully updated', 'succ')
+            if check_priority(desc):
+                if Hg is None:
+                    description = HardGoal(description=desc, priority=True, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = True
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
+            else:
+                if Hg is None:
+                    description = HardGoal(description=desc, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = False
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
 
         for desc in servau:
             Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
-            if Hg is None:
-                description = HardGoal(description=desc, project_id=project.id)
-                db.session.add(description)
-                db.session.commit()
-                flash('Hard Goals successfully updated', 'succ')
+            if check_priority(desc):
+                if Hg is None:
+                    description = HardGoal(description=desc, priority=True, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = True
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
+            else:
+                if Hg is None:
+                    description = HardGoal(description=desc, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = False
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
 
         for desc in appco:
             Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
-            if Hg is None:
-                description = HardGoal(description=desc, project_id=project.id)
-                db.session.add(description)
-                db.session.commit()
-                flash('Hard Goals successfully updated', 'succ')
+            if check_priority(desc):
+                if Hg is None:
+                    description = HardGoal(description=desc, priority=True, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = True
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
+            else:
+                if Hg is None:
+                    description = HardGoal(description=desc, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = False
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
 
         for desc in servco:
             Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
-            if Hg is None:
-                description = HardGoal(description=desc, project_id=project.id)
-                db.session.add(description)
-                db.session.commit()
-                flash('Hard Goals successfully updated', 'succ')
+            if check_priority(desc):
+                if Hg is None:
+                    description = HardGoal(description=desc, priority=True, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = True
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
+            else:
+                if Hg is None:
+                    description = HardGoal(description=desc, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = False
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
 
         for desc in appin:
             Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
-            if Hg is None:
-                description = HardGoal(description=desc, project_id=project.id)
-                db.session.add(description)
-                db.session.commit()
-                flash('Hard Goals successfully updated', 'succ')
+            if check_priority(desc):
+                if Hg is None:
+                    description = HardGoal(description=desc, priority=True, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = True
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
+            else:
+                if Hg is None:
+                    description = HardGoal(description=desc, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = False
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
 
         for desc in servin:
             Hg = HardGoal.query.filter_by(description=desc, project_id=project.id).first()
-            if Hg is None:
-                description = HardGoal(description=desc, project_id=project.id)
-                db.session.add(description)
+            if check_priority(desc):
+                if Hg is None:
+                    description = HardGoal(description=desc, priority=True, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = True
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
+            else:
+                if Hg is None:
+                    description = HardGoal(description=desc, project_id=project.id)
+                    db.session.add(description)
+                    db.session.commit()
+                    flash('Hard Goals successfully updated', 'succ')
+                else:
+                    Hg.priority = False
+                    db.session.add(Hg)
+                    db.session.commit()
+                    flash('Priorities updated', 'succ')
+
+        current_req = []
+        for x in ['appau', 'servau', 'appco', 'servco', 'appin', 'servin']:
+            for i in request.form.getlist(x):
+                current_req.append(i)
+        hardgoals = HardGoal.query.filter_by(project_id=project.id).all()
+        db_values = []
+        for hgoal in hardgoals:
+            if hgoal.description:
+                db_values.append(hgoal.description)
+
+        for val in db_values:
+            if val not in current_req:
+                HardGoal.query.filter_by(description=val, project_id=project.id).delete()
                 db.session.commit()
-                flash('Hard Goals successfully updated', 'succ')
+                flash('Hard Goal removed from the data base', 'error')
 
         return redirect(url_for('hard_goals', project=project.name))
 

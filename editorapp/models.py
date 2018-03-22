@@ -76,6 +76,7 @@ class HardGoal(db.Model):
     applications = db.Column(db.String(280))
     services = db.Column(db.String(280))
     priority = db.Column(db.Boolean(), default=False)
+    cb_value = db.Column(db.String(300))
     description = db.Column(db.String(500))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
 

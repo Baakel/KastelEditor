@@ -159,4 +159,12 @@
                 </div>
             </div>
     {% endif %}
+<script>
+    var data = {{ current_editors|safe }};
+    $(function() {
+        $("#revoke").autocomplete({
+            source: data
+        }).autocomplete("widget").addClass("fixed-height");
+    });
+</script>
 {% endblock %}

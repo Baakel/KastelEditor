@@ -101,8 +101,8 @@
                         {% endfor %}
                         <div class="row">
                             {% if g.user.id == project.creator %}
-                                <div class="col"><button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#editor">Add another editor</button></div>
-                                <div class="modal fade" id="editor" tabindex="-1" role="dialog" aria-labelledby="editorModalLabel" aria-hidden="true">
+                                <div class="col"><button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#addeditor">Add another editor</button></div>
+                                <div class="modal fade" id="addeditor" tabindex="-1" role="dialog" aria-labelledby="editorModalLabel" aria-hidden="true">
                                     <div class="modal-dialog" role="document">
                                         <div class="modal-content">
                                             <div class="modal-header">
@@ -113,7 +113,7 @@
                                             </div>
                                             <form action="" method="post" name="addeditor">
                                             {{ form.hidden_tag() }}
-                                                <div class="modal-body">
+                                                <div class="modal-body ui-front">
                                                     <div class="form-group">
                                                         {{ form2.editor.label(class_="form-control-label") }}
                                                         {{ form2.editor(class_="form-control", placeholder="Editor name") }}
@@ -139,7 +139,7 @@
                                             </div>
                                             <form action="" method="post" name="removeeditor">
                                             {{ form.hidden_tag() }}
-                                                <div class="modal-body">
+                                                <div class="modal-body ui-front">
                                                     <div class="form-group">
                                                         {{ form3.revoke.label(class_="form-control-label") }}
                                                         {{ form3.revoke(class_="form-control", placeholder="Editor name") }}
@@ -159,12 +159,25 @@
                 </div>
             </div>
     {% endif %}
+{% endblock %}
+{% block scripts %}
+<link href="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/start/jquery-ui.min.css" rel="stylesheet">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
 <script>
     var data = {{ current_editors|safe }};
     $(function() {
         $("#revoke").autocomplete({
             source: data
-        }).autocomplete("widget").addClass("fixed-height");
+        });
+    });
+</script>
+<script>
+    var data2 = {{ users|safe }};
+    $(function() {
+        $("#editor").autocomplete({
+            source: data2
+        });
     });
 </script>
 {% endblock %}

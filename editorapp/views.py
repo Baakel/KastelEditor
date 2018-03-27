@@ -98,8 +98,8 @@ def projects(name):
     form2 = EditorForm()
     form3 = AccessForm()
     current_editors = []
-    for edtr in project.editors:
-        current_editors.append(edtr.nickname)
+    users = []
+    usrs = Users.query.all()
     if form.validate_on_submit():
         projn = Projects.make_unique_name(form.project.data)
         projname = Projects(name=projn, creator=g.user.id)
@@ -160,6 +160,10 @@ def projects(name):
                                project=None,
                                user=g.user)
     elif g.user in project.editors:
+        for usr in usrs:
+            users.append(usr.nickname)
+        for edtr in project.editors:
+            current_editors.append(edtr.nickname)
         return render_template('projects.html',
                                title=project.name,
                                form=form,
@@ -167,7 +171,8 @@ def projects(name):
                                form3=form3,
                                project=project,
                                user=g.user,
-                               current_editors=current_editors)
+                               current_editors=current_editors,
+                               users=users)
     else:
         flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))

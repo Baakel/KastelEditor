@@ -14,14 +14,14 @@ You will also need the following packages installed _(They can also be found in 
 - Flask >= 0.12.1
 - GitHub_Flask >= 3.2.0
 - requests >= 2.9.1
-- flask_github >= 0.1.3
 - sqlalchemy_migrate >= 0.11.0
 
 ### Installing
 To set up your database run the `db_create.py` file.
 
 ## Usage
-To start the server run the `run.py` file. Your port 5000 needs to be free for this to run. After that you can connect to the server from *localhost:5000*. You will need to log in using your Github account.
+To start the server run the `run.py` file. Your port 5000 needs to be free for this to run. After that you can connect to the server from *localhost:5000* 
+You will need to log in using your Github account.
 
 ## Deployment
 _TODO_

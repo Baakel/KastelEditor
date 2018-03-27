@@ -27,6 +27,6 @@ To start the server run the `run.py` file. Your port 5000 needs to be free for t
 _TODO_
 
 ## Built With
-- [Python](https://www.python.org/)
-- [Flask](http://flask.pocoo.org/)
-- [SQLite](https://www.sqlite.org/index.html)
+- [Python 3.5](https://www.python.org/) - Language used
+- [Flask](http://flask.pocoo.org/) - Web framework used
+- [SQLite](https://www.sqlite.org/index.html) - Database used

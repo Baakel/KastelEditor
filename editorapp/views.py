@@ -100,6 +100,10 @@ def projects(name):
     current_editors = []
     users = []
     usrs = Users.query.all()
+    for usr in usrs:
+        users.append(usr.nickname)
+    for edtr in project.editors:
+        current_editors.append(edtr.nickname)
     if form.validate_on_submit():
         projn = Projects.make_unique_name(form.project.data)
         projname = Projects(name=projn, creator=g.user.id)
@@ -133,6 +137,8 @@ def projects(name):
             return redirect(url_for('projects', name=project.name))
     if form3.validate_on_submit():
         editor = Users.query.filter_by(nickname=form3.revoke.data).first()
+        print(editor)
+        print(editor.nickname)
         if editor is None:
             flash('User does not exist', 'error')
             return redirect(url_for('projects', name=project.name))
@@ -160,10 +166,6 @@ def projects(name):
                                project=None,
                                user=g.user)
     elif g.user in project.editors:
-        for usr in usrs:
-            users.append(usr.nickname)
-        for edtr in project.editors:
-            current_editors.append(edtr.nickname)
         return render_template('projects.html',
                                title=project.name,
                                form=form,

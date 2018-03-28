@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html style="height: 100%">
     <head>
         <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.0.0-beta.4/dist/css/bootstrap-material-design.min.css" integrity="sha384-R80DC0KVBO4GSTw+wZ5x2zn2pu4POSErBkf8/fSFhPXHxvHJydT0CSgAP2Yo2r4I" crossorigin="anonymous">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
+        <link href="https://fonts.googleapis.com/css?family=Lato:400,900" rel="stylesheet">
         <link rel="shortcut icon" type="image/x-icon" href="/static/img/kastel_logo.png"/>
         {% if title %}
         <title>{{ title}} - Kastel Editor</title>
@@ -10,7 +11,7 @@
         <title>Kastel Editor</title>
         {% endif %}
     </head>
-    <body>
+    <body class="bg-dark" style="height: 100%">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             {% if title !='Home' %}
                 {% if project != None %}
@@ -69,7 +70,19 @@
                 </ul>
             </div>
         </nav>
-        {% block content %}{% endblock %}
+        <div class="container-fluid" style="min-height: 100%; overflow: hidden;">
+            <div class="row">
+                <div class="col-1">
+                    <img src="/static/img/kastel_logo.png" class="rounded float-right"/>
+                </div>
+                <div class="col-10 bg-light" style="margin-bottom: -9999px; padding-bottom: 9999px;">
+                    {% block content %}{% endblock %}
+                </div>
+                <div class="col-1">
+
+                </div>
+            </div>
+        </div>
         <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
         <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U" crossorigin="anonymous"></script>
         <script src="https://unpkg.com/bootstrap-material-design@4.0.0-beta.4/dist/js/bootstrap-material-design.js" integrity="sha384-3xciOSDAlaXneEmyOo0ME/2grfpqzhhTcM4cE32Ce9+8DW/04AGoTACzQpphYGYe" crossorigin="anonymous"></script>

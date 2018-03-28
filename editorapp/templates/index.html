@@ -1,36 +1,28 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-2">
-                <img src="/static/img/kastel_logo.png" class="rounded float-right"/>
-            </div>
-            <div class="col-md-4">
-                {% for message in get_flashed_messages() %}
-                    <div class="alert-danger" role="alert">{{ message }}</div>
-                {% endfor %}
-                {% if g.user %}
-                    <h2>Hi, {{ g.user.nickname }}!</h2>
-                    <table>
-                        <tr>
-                            <th>Current Projects</th>
-                            <th> </th>
-                            <th>|</th>
-                            <th> </th>
-                            <th><a href="{{ url_for('projects', name='New Project') }}">Start a new project</a></th>
-                        </tr>
-                        {% for project in g.user.wprojects %}
-                        <tr>
-                            <td><a href="{{ url_for('projects', name=project.name)}}">{{ project.name }}</a></td>
-                        </tr>
-                        {% endfor %}
-                    </table>
-                {% else %}
-                    <h2>Login to work on a project</h2>
-                    <p><a href="{{ url_for('login') }}">Login with github</a></p>
-                {% endif %}
+    {% for message in get_flashed_messages() %}
+        <div class="alert-danger" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% if g.user %}
+    <div class="container-fluid mt-5">
+        <div class="row justify-content-center"><h1 style="font-family: 'Lato Heavy'; font-size: 50px"><b>Welcome, {{ g.user.nickname }}!</b></h1></div>
+        <div class="row justify-content-around">
+            <div class="col-4 mb-2 text-center"><h2><b>Current projects</b></h2></div>
+            <div class="col-4 mb-2 text-center"><a href="{{ url_for('projects', name='New Project') }}"><h2>Start a new project</h2></a></div>
+        </div>
+            {% for project in g.user.wprojects %}
+            <div class="row ml-5 mb-3"><a href="{{ url_for('projects', name=project.name) }}"><h3><i class="material-icons">business_center</i> {{ project.name }}</h3></a></div>
+            {% endfor %}
+    </div>
+    {% else %}
+    <div class="container-fluid" style="margin-top: 20%">
+        <div class="jumbotron jumbotron-fluid">
+            <div class="container">
+                <h1 class="display-4 text-center">To continue, please log in</h1>
+                <p class="lead text-center"><a href="{{ url_for('login') }}">Log in with github</a></p>
             </div>
         </div>
     </div>
+    {% endif %}
 {% endblock %}

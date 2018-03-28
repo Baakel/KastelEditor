@@ -21,9 +21,9 @@
                 </table>
             </form>
     {% else %}
-        <h1>Choose an option</h1>
+        <h1 class="mt-5 ml-5">Project Overview</h1>
         {% if g.user.id == project.creator %}
-        <button type="button" class="btn btn-outline-danger" data-toggle="modal" data-target="#sureModal">Delete Project</button>
+        <button type="button" class="btn btn-raised btn-danger" data-toggle="modal" data-target="#sureModal">Delete Project</button>
             <div class="modal fade" id="sureModal" tabindex="-1" role="dialog" aria-labelledby="sureModalLbl" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -38,7 +38,7 @@
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <a href="{{ url_for('delete_project', project=project.name) }}" class="btn btn-outline-danger" role="button" aria-pressed="true">Delete Project</a>
+                            <a href="{{ url_for('delete_project', project=project.name) }}" class="btn btn-raised btn-outline-danger" role="button" aria-pressed="true">Delete Project</a>
                         </div>
                     </div>
                 </div>
@@ -101,7 +101,7 @@
                         {% endfor %}
                         <div class="row">
                             {% if g.user.id == project.creator %}
-                                <div class="col"><button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#addeditor">Add another editor</button></div>
+                                <div class="col"><button type="button" class="btn btn-raised btn-primary" data-toggle="modal" data-target="#addeditor">Add another editor</button></div>
                                 <div class="modal fade" id="addeditor" tabindex="-1" role="dialog" aria-labelledby="editorModalLabel" aria-hidden="true">
                                     <div class="modal-dialog" role="document">
                                         <div class="modal-content">
@@ -127,7 +127,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col"><button type="button" class="btn btn-outline-warning" data-toggle="modal" data-target="#access">Remove an editor</button></div>
+                                <div class="col"><button type="button" class="btn btn-raised btn-outline-warning" data-toggle="modal" data-target="#access">Remove an editor</button></div>
                                 <div class="modal fade" id="access" tabindex="-1" role="dialog" aria-labelledby="accessModalLabel" aria-hidden="true">
                                     <div class="modal-dialog" role="document">
                                         <div class="modal-content">
@@ -147,7 +147,7 @@
                                                 </div>
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                    <button type="submit" class="btn btn-primary">Remove editor</button>
+                                                    <button type="submit" class="btn btn-warning">Remove editor</button>
                                                 </div>
                                             </form>
                                         </div>

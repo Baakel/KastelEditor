@@ -2,7 +2,7 @@
 
 {% block content %}
     {% if project == None %}
-        <h1>Choose a unique name for the project</h1>
+        <h1 class="mt-4 ml-2">Choose a unique name for the project</h1>
         {% for message in get_flashed_messages(category_filter=["succ"]) %}
             <div class="alert-success" role="alert">{{ message }}</div>
         {% endfor %}
@@ -11,14 +11,15 @@
         {% endfor %}
             <form action="" method="post" name="createproject">
                 {{ form.hidden_tag() }}
-                <table class="table">
-                    <tr>
-                        <td>{{ form.project(size=30) }} <button type="submit" class="btn btn-primary">Create</button></td>
-                    </tr>
-                    <tr>
-                        <td><div class="switch"><label>{{ form.law(type="checkbox") }} Add LAW as a Stakeholder</label></div></td>
-                    </tr>
-                </table>
+                <div class="container-fluid ml-5 mt-5">
+                    <div class="row">
+                        <div class="col"><div class="form-group">{{ form.project.label(class_="form-control-label") }}{{ form.project(class_="form-control", placeholder="Project Name") }}</div></div>
+                        <div class="col"><button type="submit" class="btn btn-raised btn-primary">Create</button></div>
+                    </div>
+                    <div class="row">
+                        <div class="switch"><label>{{ form.law(type="checkbox") }}<span class="bmd-switch-track"><div class="ripple-container"></div></span> Add the Law as a Stakeholder</label></div>
+                    </div>
+                </div>
             </form>
     {% else %}
         <h1 class="mt-5 ml-5">Project Overview</h1>

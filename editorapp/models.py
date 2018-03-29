@@ -1,5 +1,6 @@
 from editorapp import db, app
 from flask_login import LoginManager
+from flask_security import RoleMixin, UserMixin
 
 lm = LoginManager(app)
 
@@ -8,7 +9,24 @@ wprojects = db.Table('wprojects',
                      db.Column('project_id', db.Integer, db.ForeignKey('projects.id')))
 
 
-class Users(db.Model):
+roles_users = db.Table(
+    'roles_users',
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
+    db.Column('role_id', db.Integer, db.ForeignKey('role.id'))
+
+)
+
+
+class Role(db.Model, RoleMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True)
+    description = db.Column(db.String(255))
+
+    def __str__(self):
+        return self.name
+
+
+class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     oaccess_token = db.Column(db.String(64), unique=True)
     nickname = db.Column(db.String(64), index=True, unique=True)
@@ -17,6 +35,9 @@ class Users(db.Model):
                                 secondary=wprojects,
                                 backref=db.backref('editors', lazy='dynamic'),
                                 lazy='dynamic')
+    roles = db.relationship('Role',
+                            secondary=roles_users,
+                            backref=db.backref('users', lazy='dynamic'))
 
     @property
     def is_authenticated(self):
@@ -35,6 +56,10 @@ class Users(db.Model):
             return unicode(self.id)
         except NameError:
             return str(self.id)
+
+    def user_register(self, role):
+        self.roles.append(role)
+        return self
 
     def contribute(self, project):
         if not self.is_contributing(project):

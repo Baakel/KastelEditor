@@ -10,7 +10,7 @@ class StakeHoldersForm(FlaskForm):
 
 
 class ProjectForm(FlaskForm):
-    project = StringField('project', validators=[DataRequired()])
+    project = StringField('Create a project with a unique name:', validators=[DataRequired()])
     law = BooleanField('law', default=True)
     # lawcb = CheckboxInput()
     # lawi = Input(input_type='checkbox')

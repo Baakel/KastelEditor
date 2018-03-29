@@ -67,6 +67,16 @@
                                 <a class="nav-link disabled" href="#">Hard Goals</a>
                             </li>
                         {% endif %}
+                    {% else %}
+                        {% if access %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="/admin">Admin Panel</a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="/admin">{{ g.user.roles|string }}</a>
+                            </li>
+                        {% endif %}
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav float-right">

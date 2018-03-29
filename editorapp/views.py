@@ -2,7 +2,12 @@ from flask import render_template, url_for, flash, redirect, request, session, g
 from editorapp import app, db, github
 from flask_login import login_required
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, HardGoalsForm
-from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement, HardGoal
+from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement, HardGoal, Role
+from flask_security import Security, SQLAlchemyUserDatastore, current_user
+from flask_security.utils import hash_password
+import flask_admin
+from flask_admin.contrib import sqla
+from flask_admin import helpers as admin_helpers
 import requests
 
 
@@ -45,8 +50,16 @@ def test():
 @app.route('/')
 @app.route('/index')
 def index():
+    access = False
+    if g.user:
+        for role in g.user.roles:
+            if role == 'superuser':
+                access = True
+            else:
+                access = False
     return render_template('index.html',
-                           title='Home')
+                           title='Home',
+                           access=access)
 
 
 @app.route('/stakeholders/<project>', methods=['GET', 'POST'])
@@ -102,9 +115,11 @@ def projects(name):
     usrs = Users.query.all()
     for usr in usrs:
         users.append(usr.nickname)
-    for edtr in project.editors:
-        current_editors.append(edtr.nickname)
+    if project is not None:
+        for edtr in project.editors:
+            current_editors.append(edtr.nickname)
     if form.validate_on_submit():
+        print('im here')
         projn = Projects.make_unique_name(form.project.data)
         projname = Projects(name=projn, creator=g.user.id)
         db.session.add(projname)
@@ -137,8 +152,6 @@ def projects(name):
             return redirect(url_for('projects', name=project.name))
     if form3.validate_on_submit():
         editor = Users.query.filter_by(nickname=form3.revoke.data).first()
-        print(editor)
-        print(editor.nickname)
         if editor is None:
             flash('User does not exist', 'error')
             return redirect(url_for('projects', name=project.name))
@@ -245,7 +258,11 @@ def authorized(oauth_token):
     user = Users.query.filter_by(nickname=nickname).first()
     if user is None:
         user = Users(id=u_id, oaccess_token=oauth_token, nickname=nickname, contact=contact)
+        role = Role.query.filter_by(name='user').first()
         db.session.add(user)
+        db.session.commit()
+        r = user.user_register(role)
+        db.session.add(r)
         db.session.commit()
 
     session['user_id'] = user.id
@@ -655,3 +672,49 @@ def check_permission(project):
         return True
     else:
         return False
+
+
+# Setting up Flask-Security
+user_datastore = SQLAlchemyUserDatastore(db, Users, Role)
+security = Security(app, user_datastore)
+
+class MyModelView(sqla.ModelView):
+
+    def is_accessible(self):
+        if not current_user.is_active or not current_user.is_authenticated:
+            return False
+
+        if current_user.has_role('superuser'):
+            return True
+
+        return False
+
+    def _handle_view(self, name, **kwargs):
+        if not self.is_accessible():
+            if current_user.is_authenticated():
+                flash('You don\'t have permission to access this page.', 'error')
+                return redirect(url_for('index'))
+            else:
+                return redirect(url_for('security.login', next=request.url))
+
+
+admin = flask_admin.Admin(
+    app,
+    'Example: Authss',
+    base_template='bbmdb.html',
+    template_mode='bootstrap3'
+)
+
+admin.add_view(MyModelView(Role, db.session))
+admin.add_view(MyModelView(Users, db.session))
+admin.add_view(MyModelView(Projects, db.session))
+
+
+@security.context_processor
+def security_context_processor():
+    return dict(
+        admin_base_template=admin.base_template,
+        admin_view=admin.index_view,
+        h=admin_helpers,
+        get_url=url_for
+    )

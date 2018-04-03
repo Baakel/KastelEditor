@@ -11,6 +11,17 @@ from flask_admin import helpers as admin_helpers
 import requests
 
 
+@app.before_first_request
+def create_roles():
+    roles = Role.query.all()
+    if not roles:
+        user = Role(name='user', id=1)
+        admin = Role(name= 'superuser', id=2)
+        db.session.add(user)
+        db.session.add(admin)
+        db.session.commit()
+
+
 @app.errorhandler(401)
 def unauthorized_error(error):
     flash('Please log in first.')
@@ -258,7 +269,11 @@ def authorized(oauth_token):
     user = Users.query.filter_by(nickname=nickname).first()
     if user is None:
         user = Users(id=u_id, oaccess_token=oauth_token, nickname=nickname, contact=contact)
-        role = Role.query.filter_by(name='user').first()
+        alrdy_users = Users.query.first()
+        if not alrdy_users:
+            role = Role.query.filter_by(name='superuser').first()
+        else:
+            role= Role.query.filter_by(name='user').first()
         db.session.add(user)
         db.session.commit()
         r = user.user_register(role)
@@ -700,7 +715,7 @@ class MyModelView(sqla.ModelView):
 
 admin = flask_admin.Admin(
     app,
-    'Example: Authss',
+    'Kastel Editor',
     base_template='bbmdb.html',
     template_mode='bootstrap3'
 )

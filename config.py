@@ -17,7 +17,7 @@ GITHUB_AUTH_URL = 'https://github.com/login/oauth/'
 # Flask-Security configurations
 SECURITY_URL_PREFIX = "/admin"
 SECURITY_PASSWORD_HASH = "pbkdf2_sha512"
-SECURITY_PASSWORD_SALT = "ATGUOHAELKiubahiughaerGOJAEGj"
+SECURITY_PASSWORD_SALT = "NLzqitLwQmHlvjTbtmwpnOCbHcenkEbdGrgVDacqFYufykBM"
 
 # Override Flask-Security URL's because they don't put a / at the end
 

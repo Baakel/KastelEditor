@@ -2,4 +2,6 @@ tmp/*
 .idea/*
 test.db
 app.db
+*.pyc
+*.pyo
 !*.gitkeep

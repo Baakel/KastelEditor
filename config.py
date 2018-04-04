@@ -21,8 +21,9 @@ SECURITY_PASSWORD_SALT = "NLzqitLwQmHlvjTbtmwpnOCbHcenkEbdGrgVDacqFYufykBM"
 
 # Override Flask-Security URL's because they don't put a / at the end
 
-SECURITY_POST_LOGIN_VIEW = "/admin/"
+SECURITY_POST_LOGIN_VIEW = "/admin/index.html"
 SECURITY_POST_LOGOUT_VIEW = "/admin/"
+SECURITY_LOGIN_USER_TEMPLATE = "/admin/login.html"
 
 SECURITY_REGISTERABLE = False
 SECURITY_SEND_REGISTER_EMAIL = False

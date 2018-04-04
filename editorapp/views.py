@@ -2,7 +2,7 @@ from flask import render_template, url_for, flash, redirect, request, session, g
 from editorapp import app, db, github
 from flask_login import login_required
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, HardGoalsForm
-from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement, HardGoal, Role
+from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement, HardGoal, Role, BbMechanisms
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 from flask_security.utils import hash_password
 import flask_admin
@@ -12,14 +12,65 @@ import requests
 
 
 @app.before_first_request
-def create_roles():
-    roles = Role.query.all()
+def create_db_data():
+    roles = Role.query.first()
     if not roles:
         user = Role(name='user', id=1)
         admin = Role(name= 'superuser', id=2)
         db.session.add(user)
         db.session.add(admin)
         db.session.commit()
+    bbm = BbMechanisms.query.first()
+    if not bbm:
+        bbm_list = {'names':
+                        ['Authentication Procedure',
+                         'Asymmetric or Hybrid Encryption',
+                         'Cryptographic Hash Function',
+                         'Access Control',
+                         'Digital Signature',
+                         'Detection of Protection Worthy Image Areas',
+                         'Anonymization of Protection Worthy Image Areas',
+                         'Strong Authentication Procedure'],
+                    'usages':
+                        {'authenticity':
+                             [True,
+                              False,
+                              True,
+                              True,
+                              True,
+                              False,
+                              False,
+                              True],
+                         'confidentiality':
+                             [True,
+                              True,
+                              True,
+                              True,
+                              True,
+                              False,
+                              True,
+                              True],
+                         'integrity':
+                             [False,
+                              True,
+                              True,
+                              False,
+                              False,
+                              True,
+                              True,
+                              True]
+                         }
+                    }
+
+        for ind, name in enumerate(bbm_list['names']):
+            vals_dict = {}
+            for use, vals in bbm_list['usages'].items():
+                vals_dict[use] = vals[ind]
+            kw = {'name': name, **vals_dict}
+            bbmech = BbMechanisms(**kw)
+            db.session.add(bbmech)
+            db.session.commit()
+
 
 
 @app.errorhandler(401)
@@ -716,7 +767,7 @@ class MyModelView(sqla.ModelView):
 admin = flask_admin.Admin(
     app,
     'Kastel Editor',
-    base_template='bbmdb.html',
+    base_template='bbmdb.html', # Don't know why but this adds the user on top and the option to log out... not declaring this makes it go away
     template_mode='bootstrap3'
 )
 
@@ -731,5 +782,5 @@ def security_context_processor():
         admin_base_template=admin.base_template,
         admin_view=admin.index_view,
         h=admin_helpers,
-        get_url=url_for
+        get_url=url_for,
     )

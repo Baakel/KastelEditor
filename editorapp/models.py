@@ -131,3 +131,9 @@ class Projects(db.Model):
         return '<Projects %r>' % self.name
 
 
+class BbMechanisms(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), unique=True)
+    authenticity = db.Column(db.Boolean, default=False)
+    confidentiality = db.Column(db.Boolean, default=False)
+    integrity = db.Column(db.Boolean, default=False)

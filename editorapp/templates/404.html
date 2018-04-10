@@ -1,26 +1,12 @@
-<!DOCTYPE html>
-<html>
-    <head>
-    <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.0.0-beta.4/dist/css/bootstrap-material-design.min.css" integrity="sha384-R80DC0KVBO4GSTw+wZ5x2zn2pu4POSErBkf8/fSFhPXHxvHJydT0CSgAP2Yo2r4I" crossorigin="anonymous">
-        <script src="https://unpkg.com/bootstrap-material-design@4.0.0-beta.4/dist/js/bootstrap-material-design.js" integrity="sha384-3xciOSDAlaXneEmyOo0ME/2grfpqzhhTcM4cE32Ce9+8DW/04AGoTACzQpphYGYe" crossorigin="anonymous"></script>
-        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-        <script src="https://unpkg.com/popper.js@1.12.6/dist/umd/popper.js" integrity="sha384-fA23ZRQ3G/J53mElWqVJEGJzU0sTs+SvzG8fXVWP+kJQ1lwFAOkcUOysnlKJC33U" crossorigin="anonymous"></script>
-        {% if title %}
-        <title>{{ title}} - Kastel Editor</title>
-        {% else %}
-        <title>Kastel Editor</title>
-        {% endif %}
-    </head>
-    <body>
-        <div>
-            <a href="{{ url_for('index') }}">Home</a>
-            {% if g.user.is_authenticated %}
-                | <a href="{{url_for('logout') }}">Logout</a>
-            {% endif %}
-        </div>
-        <hr>
-        <h1>File Not Found</h1>
-        <p><a href="{{ url_for('index') }}">Back</a></p>
-    </body>
-</html>
+{% extends "base.html" %}
 
+{% block content %}
+<div class="container-fluid" style="margin-top: 20%">
+    <div class="jumbotron jumbotron-fluid">
+        <div class="container">
+            <h1 class="display-4 text-center">Error: 404</h1>
+            <p class="lead text-center">page not found</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

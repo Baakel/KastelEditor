@@ -4,7 +4,7 @@ from flask_login import login_required
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, HardGoalsForm
 from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement, HardGoal, Role, BbMechanisms
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
-from flask_security.utils import hash_password
+# from flask_security.utils import hash_password, verify_password, get_hmac
 import flask_admin
 from flask_admin.contrib import sqla
 from flask_admin import helpers as admin_helpers
@@ -93,8 +93,29 @@ def internal_error(error):
 @app.before_request
 def before_request():
     g.user = None
+    g.project = None
     if 'user_id' in session:
         g.user = Users.query.get(session['user_id'])
+    arguments = request.view_args
+    if arguments is not None:
+        if 'name' in arguments:
+            if arguments['name'] is not 'New Project':
+                g.page = arguments['name']
+                session['current_project'] = arguments['name']
+                g.project = Projects.query.filter_by(name=arguments['name']).first()
+            else:
+                g.page = 'Newproj'
+                session['current_project'] = 'New Project'
+        elif 'project' in arguments:
+            g.page = arguments['project']
+            session['current_project'] = arguments['project']
+            g.project = Projects.query.filter_by(name=arguments['project']).first()
+        else:
+            g.page = 'Noproj'
+            session['current_project'] = None
+    else:
+        g.page = 'Noproj'
+        session['current_project'] = None
 
 
 @app.route('/test', methods=['GET', 'POST'])
@@ -105,8 +126,7 @@ def test():
         print('did it')
         return redirect(url_for('test'))
     return render_template('test.html',
-                           form=form,
-                           project=None)
+                           form=form)
 
 
 @app.route('/')
@@ -181,7 +201,6 @@ def projects(name):
         for edtr in project.editors:
             current_editors.append(edtr.nickname)
     if form.validate_on_submit():
-        print('im here')
         projn = Projects.make_unique_name(form.project.data)
         projname = Projects(name=projn, creator=g.user.id)
         db.session.add(projname)
@@ -319,7 +338,7 @@ def authorized(oauth_token):
         contact = r.json()['email']
     user = Users.query.filter_by(nickname=nickname).first()
     if user is None:
-        user = Users(id=u_id, oaccess_token=oauth_token, nickname=nickname, contact=contact)
+        user = Users(id=u_id, nickname=nickname, contact=contact)
         alrdy_users = Users.query.first()
         if not alrdy_users:
             role = Role.query.filter_by(name='superuser').first()
@@ -738,6 +757,15 @@ def check_permission(project):
         return True
     else:
         return False
+
+
+@app.route('/bbm/<project>', methods=['GET', 'POST'])
+@login_required
+def bbm(project):
+    project = Projects.query.filter_by(name=project).first()
+    return render_template('bbm.html',
+                           title=project.name,
+                           project = project)
 
 
 # Setting up Flask-Security

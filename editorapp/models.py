@@ -28,7 +28,6 @@ class Role(db.Model, RoleMixin):
 
 class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    oaccess_token = db.Column(db.String(64), unique=True)
     nickname = db.Column(db.String(64), index=True, unique=True)
     contact = db.Column(db.String(64), index=True, unique=True)
     wprojects = db.relationship('Projects',

@@ -795,7 +795,7 @@ class MyModelView(sqla.ModelView):
 admin = flask_admin.Admin(
     app,
     'Kastel Editor',
-    base_template='bbmdb.html', # Don't know why but this adds the user on top and the option to log out... not declaring this makes it go away
+    base_template='bbmdb.html',
     template_mode='bootstrap3'
 )
 

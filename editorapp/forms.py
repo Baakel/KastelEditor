@@ -1,8 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, BooleanField, TextAreaField, SelectMultipleField
+from wtforms import StringField, BooleanField, TextAreaField, SelectMultipleField, SelectField
 from wtforms.validators import DataRequired
 from wtforms.widgets import CheckboxInput, ListWidget
-from .models import Good
 
 
 class StakeHoldersForm(FlaskForm):
@@ -61,5 +60,6 @@ class HardGoalsForm(FlaskForm):
     # test_case = HardGoalsFormMultiple('Label', choices=good_choices)
     pass
 
-# class EditorsList(FlaskForm):
-#     editor_list = SelectField(u'Editors', coerce=int)
+
+class BbmForm(FlaskForm):
+    choices = SelectField('Desired mechanism', validators=[DataRequired()])

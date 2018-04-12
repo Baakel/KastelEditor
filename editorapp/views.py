@@ -1,7 +1,8 @@
 from flask import render_template, url_for, flash, redirect, request, session, g
 from editorapp import app, db, github
 from flask_login import login_required
-from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, HardGoalsForm
+from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, \
+    HardGoalsForm, BbmForm
 from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement, HardGoal, Role, BbMechanisms
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 # from flask_security.utils import hash_password, verify_password, get_hmac
@@ -763,9 +764,19 @@ def check_permission(project):
 @login_required
 def bbm(project):
     project = Projects.query.filter_by(name=project).first()
+    form = BbmForm()
+    hard_goals = HardGoal.query.filter_by(project_id=project.id).all()
+    choices_tuples = [(str(hg.id), hg.description) for hg in hard_goals if hg.description is not None]
+    form.choices.choices = choices_tuples
+    if form.validate_on_submit():
+        print(form.choices)
+        print(form.data)
+    else:
+        print('not validating?')
     return render_template('bbm.html',
                            title=project.name,
-                           project = project)
+                           project = project,
+                           form=form)
 
 
 # Setting up Flask-Security

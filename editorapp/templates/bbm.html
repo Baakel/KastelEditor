@@ -2,6 +2,19 @@
 
 {% block content %}
 <div class="container-fluid">
-    <p>Place holder</p>
+    {% for message in get_flashed_messages(category_filter=["succ"]) %}
+        <div class="alert-success" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% for errors in get_flashed_messages(category_filter=["error"]) %}
+        <div class="alert-danger" role="alert">{{ errors }}</div>
+    {% endfor %}
+        <form action="" method="post" name="selectBBM">
+            {{ form.hidden_tag() }}
+            <table>
+                <tr>
+                    <td><div class="form-group">{{ form.choices.label(class_="form-control-label") }}{{ form.choices(class_="form-control") }}</div><button type="submit" class="btn btn-raised btn-primary">Add</button></td>
+                </tr>
+            </table>
+        </form>
 </div>
 {% endblock %}

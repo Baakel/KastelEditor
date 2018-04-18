@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, BooleanField, TextAreaField, SelectMultipleField, SelectField
+from wtforms import StringField, BooleanField, TextAreaField, SelectMultipleField, SelectField, FieldList, FormField
 from wtforms.validators import DataRequired
 from wtforms.widgets import CheckboxInput, ListWidget
 
@@ -62,4 +62,5 @@ class HardGoalsForm(FlaskForm):
 
 
 class BbmForm(FlaskForm):
-    choices = SelectField('Desired mechanism', validators=[DataRequired()])
+    selections = SelectField('Desired Mechanism', choices=[(1,'o'),(2,'t')], coerce=int, validators=[DataRequired()])
+        # SelectField('Desired Mechanism', coerce=int, validators=[DataRequired()])

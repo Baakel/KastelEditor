@@ -10,11 +10,30 @@
     {% endfor %}
         <form action="" method="post" name="selectBBM">
             {{ form.hidden_tag() }}
-            <table>
-                <tr>
-                    <td><div class="form-group">{{ form.choices.label(class_="form-control-label") }}{{ form.choices(class_="form-control") }}</div><button type="submit" class="btn btn-raised btn-primary">Add</button></td>
-                </tr>
-            </table>
+            <div class="container">
+                {% for hg in g.project.hard_goals %}
+                    {% if hg.description %}
+                        <div class="row">
+                            <div class="col">
+                                {{ hg.description }}
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label for="{{hg.id}}">Chosen Black Box Mechanism</label>
+                                    <select class="form-control" id="{{hg.id}}" name="hg.id={{ hg.id }}">
+                                        {% for choice in choices_tuples %}
+                                            <option value="{{ choice[0] }}">{{ choice[1] }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                <div class="row">
+                    <button type="submit" class="btn btn-primary btn-raised">Add</button>
+                </div>
+            </div>
         </form>
 </div>
 {% endblock %}

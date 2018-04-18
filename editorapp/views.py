@@ -764,20 +764,21 @@ def check_permission(project):
 @login_required
 def bbm(project):
     project = Projects.query.filter_by(name=project).first()
+    blackbox_mechanisms = BbMechanisms.query.all()
+    choices_tuples = [(bbm.id, bbm.name) for bbm in blackbox_mechanisms]
     form = BbmForm()
-    hard_goals = HardGoal.query.filter_by(project_id=project.id).all()
-    choices_tuples = [(str(hg.id), hg.description) for hg in hard_goals if hg.description is not None]
-    form.choices.choices = choices_tuples
-    if form.validate_on_submit():
-        print(form.choices)
-        print(form.data)
+    if request.method == 'POST':
+        # if form.validate_on_submit():
+        print(form.selections.data)
+        print(request.form)
     else:
         print('not validating?')
     return render_template('bbm.html',
                            title=project.name,
                            project = project,
-                           form=form)
-
+                           form=form,
+                           blackbox_mechanisms=blackbox_mechanisms,
+                           choices_tuples=choices_tuples)
 
 # Setting up Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, Users, Role)

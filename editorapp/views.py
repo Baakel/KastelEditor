@@ -771,6 +771,8 @@ def bbm(project):
         # if form.validate_on_submit():
         print(form.selections.data)
         print(request.form)
+
+        
     else:
         print('not validating?')
     return render_template('bbm.html',

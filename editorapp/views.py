@@ -1,8 +1,10 @@
 from flask import render_template, url_for, flash, redirect, request, session, g
 from editorapp import app, db, github
 from flask_login import login_required
+from wtforms import SelectField
+from wtforms.validators import DataRequired
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, \
-    HardGoalsForm, BbmForm
+    HardGoalsForm, BbmForm, FlaskForm
 from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement, HardGoal, Role, BbMechanisms
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 # from flask_security.utils import hash_password, verify_password, get_hmac
@@ -291,6 +293,10 @@ def delete_project(project):
         goods = Good.query.filter_by(project_id=project.id).all()
         for gd in goods:
             db.session.delete(gd)
+            db.session.commit()
+        hard_goals = HardGoal.query.filter_by(project_id=project.id).all()
+        for hg in hard_goals:
+            db.session.delete(hg)
             db.session.commit()
         for editor in project.editors:
             u = editor.revoke_access(project)
@@ -752,6 +758,7 @@ def hard_goals(project):
         flash('You don\'t have permission to access this project.')
         return redirect(url_for('index'))
 
+
 def check_permission(project):
     current_project = Projects.query.filter_by(name=project).first()
     if g.user in current_project.editors:
@@ -766,21 +773,32 @@ def bbm(project):
     project = Projects.query.filter_by(name=project).first()
     blackbox_mechanisms = BbMechanisms.query.all()
     choices_tuples = [(bbm.id, bbm.name) for bbm in blackbox_mechanisms]
+    table_list = [[],[],[]]
     form = BbmForm()
-    if request.method == 'POST':
-        # if form.validate_on_submit():
-        print(form.selections.data)
-        print(request.form)
+    class MultipleSelects(FlaskForm):
+        pass
 
-        
-    else:
-        print('not validating?')
+    hgoals = HardGoal.query.filter_by(project_id=project.id).all()
+    for hg in hgoals:
+        if hg.description:
+            table_list[0].append(hg.id)
+            table_list[1].append(hg.description)
+            setattr(MultipleSelects, 'sf{}'.format(hg.id), SelectField('Desired Mechanism', choices=choices_tuples, validators=[DataRequired()]))
+            table_list[2].append('sf{}'.format(hg.id))
+
+    print(table_list)
+    form2 = MultipleSelects()
+    print(form2._fields)
+    for field in form2._unbound_fields:
+        print(field)
     return render_template('bbm.html',
                            title=project.name,
-                           project = project,
+                           project=project,
                            form=form,
+                           form2=form2,
                            blackbox_mechanisms=blackbox_mechanisms,
-                           choices_tuples=choices_tuples)
+                           choices_tuples=choices_tuples,
+                           table_list=table_list)
 
 # Setting up Flask-Security
 user_datastore = SQLAlchemyUserDatastore(db, Users, Role)

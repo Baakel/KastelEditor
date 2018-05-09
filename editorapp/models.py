@@ -17,6 +17,11 @@ roles_users = db.Table(
 )
 
 
+hard_mechanism = db.Table('hard_mechanism',
+                          db.Column('hg_id', db.Integer, db.ForeignKey('hard_goal.id')),
+                          db.Column('bbmech_id', db.Integer, db.ForeignKey('bb_mechanisms.id')))
+
+
 class Role(db.Model, RoleMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True)
@@ -103,6 +108,22 @@ class HardGoal(db.Model):
     cb_value = db.Column(db.String(300))
     description = db.Column(db.String(500))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    bbmechanisms = db.relationship('BbMechanisms',
+                            secondary=hard_mechanism,
+                            backref=db.backref('hardgoals', lazy='dynamic'))
+
+    def alrdy_used(self, bbm):
+        return self.bbmechanisms.filter(hard_mechanism.c.bb_mechanisms.id == bbm.id).count() > 0
+
+    def add_bb(self, bbm):
+        if not self.alrdy_used(bbm):
+            self.bbmechanisms.append(bbm)
+            return self
+
+    def remove_bb(self, bbm):
+        if self.alrdy_used(bbm):
+            self.bbmechanisms.remove(bbm)
+            return self
 
 
 class Projects(db.Model):
@@ -111,7 +132,7 @@ class Projects(db.Model):
     name = db.Column(db.String(64), index=True, unique=True)
     hard_goals = db.relationship('HardGoal', backref='project', lazy='dynamic')
     functional_req = db.relationship('FunctionalRequirement', backref='project', lazy='dynamic')
-    stake_holders= db.relationship('Stakeholder', backref='project', lazy='dynamic')
+    stake_holders = db.relationship('Stakeholder', backref='project', lazy='dynamic')
     goods = db.relationship('Good', backref='project', lazy='dynamic')
 
     @staticmethod

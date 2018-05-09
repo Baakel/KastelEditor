@@ -11,25 +11,39 @@
         <form action="" method="post" name="selectBBM">
             {{ form.hidden_tag() }}
             <div class="container">
-                {% for hg in g.project.hard_goals %}
-                    {% if hg.description %}
-                        <div class="row">
-                            <div class="col">
-                                {{ hg.description }}
-                            </div>
-                            <div class="col">
-                                <div class="form-group">
-                                    <label for="{{hg.id}}">Chosen Black Box Mechanism</label>
-                                    <select class="form-control" id="{{hg.id}}" name="hg.id={{ hg.id }}">
-                                        {% for choice in choices_tuples %}
-                                            <option value="{{ choice[0] }}">{{ choice[1] }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    {% endif %}
+                <table class="table table-striped table-bordered table-hover mt-5">
+                    <thead class="thead-inverse">
+                        <tr>
+                            <th scope="col">Hard Goal</th>
+                            <th scope="col">Black Box Mechanism</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                {% for id,desc,field in table_list %}
+                    <tr>
+                        <td>{{ id }}</td>
+                        <td>{{ desc }}</td>
+                    </tr>
                 {% endfor %}
+                    </tbody>
+                </table>
+                <table class="table table-bordered table-striped table-hover mt-5">
+                    <thead class="thead-inverse">
+                        <tr>
+                            <th scope="col">FormFields</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set fieldn_dict = form2._fields %}
+                        {% for key in fieldn_dict %}
+                            <tr>
+                                <td>
+                                    {{ form2[key](class="form-control") }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
                 <div class="row">
                     <button type="submit" class="btn btn-primary btn-raised">Add</button>
                 </div>

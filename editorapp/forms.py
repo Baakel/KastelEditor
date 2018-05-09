@@ -62,5 +62,5 @@ class HardGoalsForm(FlaskForm):
 
 
 class BbmForm(FlaskForm):
-    selections = SelectField('Desired Mechanism', choices=[(1,'o'),(2,'t')], coerce=int, validators=[DataRequired()])
+    selections = SelectField('Desired Mechanism', coerce=int, validators=[DataRequired()])
         # SelectField('Desired Mechanism', coerce=int, validators=[DataRequired()])

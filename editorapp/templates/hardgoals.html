@@ -77,7 +77,7 @@
                     </thead>
                     <tbody>
                         {% for hgoal in hardgoals %}
-                        {% if hgoal.authenticity != None %}
+                        {% if hgoal.authenticity != None and hgoal.authenticity != "yes" %}
                             <tr>
                                 {% if hgoal.priority == True %}
                                     <td><b>{{ hgoal.authenticity }}</b></td>
@@ -88,7 +88,7 @@
                                 {% endif %}
                             </tr>
                         {% endif %}
-                        {% if hgoal.confidentiality != None %}
+                        {% if hgoal.confidentiality != None and hgoal.confidentiality != "yes" %}
                             <tr>
                                 {% if hgoal.priority == True %}
                                     <td><b>{{ hgoal.confidentiality }}</b></td>
@@ -99,7 +99,7 @@
                                 {% endif %}
                             </tr>
                         {% endif %}
-                        {% if hgoal.integrity != None %}
+                        {% if hgoal.integrity != None and hgoal.integrity != "yes" %}
                             <tr>
                                 {% if hgoal.priority == True %}
                                     <td><b>{{ hgoal.integrity }}</b></td>
@@ -183,7 +183,7 @@
                 <tbody>
                     {% for hgoal in project.hard_goals %}
                     <tr>
-                        {% if hgoal.authenticity != None %}
+                        {% if hgoal.authenticity != None and hgoal.authenticity != "yes" %}
                             <th class="bg-warning" scope="row">{{ hgoal.authenticity }}</th>
                             {% for req in hardgoals %}
                                 {% set appau = [] %}
@@ -214,7 +214,7 @@
                                 {% endif %}
                             {% endfor %}
                         {% endif %}
-                        {% if hgoal.confidentiality != None %}
+                        {% if hgoal.confidentiality != None and hgoal.confidentiality != "yes" %}
                             <th class="bg-warning" scope="row">{{ hgoal.confidentiality }}</th>
                             {% for req in hardgoals %}
                                 {% set appco = [] %}
@@ -245,7 +245,7 @@
                                 {% endif %}
                             {% endfor %}
                         {% endif %}
-                        {% if hgoal.integrity != None %}
+                        {% if hgoal.integrity != None and hgoal.integrity != "yes" %}
                             <th class="bg-warning" scope="row">{{ hgoal.integrity }}</th>
                             {% for req in hardgoals %}
                                 {% set appin = [] %}

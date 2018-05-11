@@ -23,6 +23,8 @@
                             {% for proj in g.user.wprojects %}
                             <a class="dropdown-item" href="{{ url_for('projects', name=proj.name )}}">{{ proj.name }}</a>
                             {% endfor %}
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{{ url_for('projects', name='New Project') }}">New Project</a>
                         </div>
                     </div>
                 {% else %}
@@ -39,7 +41,7 @@
                     {% if g.page != 'Noproj' %}
                         {% if g.project %}
                             <li class="nav-item active">
-                                <a class="nav-link" href="{{ url_for('projects', name=project.name) }}">Home<span class="sr-only">(current)</span></a>
+                                <a class="nav-link" href="{{ url_for('projects', name=project.name) }}">Overview<span class="sr-only">(current)</span></a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('stakeholders', project=project.name) }}">Stakeholders</a>
@@ -93,7 +95,7 @@
         <div class="container-fluid" style="min-height: 100%; overflow: hidden;">
             <div class="row">
                 <div class="col-1">
-                    <img src="/static/img/kastel_logo.png" class="rounded float-right"/>
+                    <a href="{{ url_for('index') }}"><img src="/static/img/kastel_logo.png" class="rounded float-right"/></a>
                 </div>
                 <div class="col-10 bg-light" style="margin-bottom: -9999px; padding-bottom: 9999px;">
                     {% block content %}{% endblock %}

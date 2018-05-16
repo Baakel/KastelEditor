@@ -296,6 +296,8 @@ def delete_project(project):
             db.session.commit()
         hard_goals = HardGoal.query.filter_by(project_id=project.id).all()
         for hg in hard_goals:
+            for bbm in hg.bbmechanisms:
+                hg.remove_bb(bbm)
             db.session.delete(hg)
             db.session.commit()
         for editor in project.editors:
@@ -744,6 +746,9 @@ def hard_goals(project):
 
             for val in db_values:
                 if val not in current_req:
+                    hardG = HardGoal.query.filter_by(description=val, project_id=project.id).first()
+                    for bbm in hardG.bbmechanisms:
+                        hardG.remove_bb(bbm)
                     HardGoal.query.filter_by(description=val, project_id=project.id).delete()
                     db.session.commit()
                     flash('Hard Goal {} removed from the data base'.format('"%s"' % val), 'error')
@@ -796,11 +801,13 @@ def bbm(project):
     form2 = MultipleSelects()
 
     if request.method == 'POST':
-        print(form2.data)
         for key,value in form2.data.items():
-            print(key,value)
-    else:
-        print('not posting')
+            if key != 'csrf_token':
+                hardG = HardGoal.query.filter_by(id=key).first()
+                blbxm = BbMechanisms.query.filter_by(id=value).first()
+                hardG.add_bb(blbxm)
+                db.session.commit()
+        flash('Black Box mechanisms updated', 'succ')
 
     return render_template('bbm.html',
                            title=project.name,

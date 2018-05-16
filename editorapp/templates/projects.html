@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block extracss %}
+<link rel="stylesheet" type="text/css" href="/static/css/scrolling.css">
+{% endblock %}
+
 {% block content %}
     {% if project == None %}
         <h1 class="mt-4 ml-2">Choose a unique name for the project</h1>
@@ -22,9 +26,9 @@
                 </div>
             </form>
     {% else %}
-        <h1 class="mt-5 ml-5">Project Overview</h1>
+        <h1 class="display-2 mt-5 ml-5 text-center">{{ project.name }}</h1>
         {% if g.user.id == project.creator %}
-        <button type="button" class="btn btn-raised btn-danger" data-toggle="modal" data-target="#sureModal">Delete Project</button>
+        <button type="button" class="btn btn-raised btn-danger ml-5 mt-2" data-toggle="modal" data-target="#sureModal">Delete Project</button>
             <div class="modal fade" id="sureModal" tabindex="-1" role="dialog" aria-labelledby="sureModalLbl" aria-hidden="true">
                 <div class="modal-dialog" role="document">
                     <div class="modal-content">
@@ -51,50 +55,43 @@
         {% for errors in get_flashed_messages(category_filter=["error"]) %}
             <div class="alert-danger" role="alert">{{ errors }}</div>
         {% endfor %}
-            <div class="container-fluid">
-                <div class="row align-items-start">
-                    <div class="col"><a href="{{ url_for('stakeholders', project=project.name) }}">Stakeholders</a>
-                        {% for stakeholder in project.stake_holders %}
-                        <div class="row border border-light" style="background-color: rgba(65,191,63,0.3)">
-                            <div class="col">{{ stakeholder.nickname }}</div>
+            <div class="container-fluid mt-4">
+                <div class="row">
+                    <div class="col-2">
+                        <div id="list-tab" class="list-group" role="tablist">
+                            <a class="list-group-item list-group-item-action active" id="list-stakeholders-list" data-toggle="list" href="#list-stakeholders" role="tab" aria-controls="stakeholders">Stakeholders</a>
+                            <a class="list-group-item list-group-item-action" id="list-func-req-list" data-toggle="list" href="#list-func-req" role="tab" aria-controls="func-req">Functional Requirements</a>
+                            <a class="list-group-item list-group-item-action" id="list-goods-list" data-toggle="list" href="#list-goods" role="tab" aria-controls="goods">Goods</a>
+                            <a class="list-group-item list-group-item-action" id="list-hg-list" data-toggle="list" href="#list-hg" role="tab" aria-controls="hg">Hard Goals</a>
+                            <a class="list-group-item list-group-item-action" id="list-bbm-list" data-toggle="list" href="#list-bbm" role="tab" aria-controls="bbm">Black Box Mechanisms</a>
                         </div>
-                        {% endfor %}
                     </div>
-                    <div class="col"><a href="{{ url_for('functional_req', project=project.name) }}">Functional Requirements</a>
-                        {% for freq in project.functional_req %}
-                                <div class="row border border-light" style="background-color: rgba(167,10,10,0.5)">
-                                    <div class="col">{{ freq.description }}</div>
-                                </div>
-                        {% endfor %}
-                    </div>
-                    <div class="col"><a href="{{ url_for('goods', project=project.name) }}">Goods</a>
-                        {% for good in project.goods %}
-                        <div class="row border border-light" style="background-color: rgba(255,255,0,0.4)">
-                            <div class="col">{{ good.description }}</div>
+                    <div class="col-8">
+                        <div class="tab-content" id="nav-tabContent">
+                            <div class="tab-pane fade show active" id="list-stakeholders" role="tabpanel" aria-labelledby="list-stakeholders-list">
+                                <h1>Stakeholders</h1>
+                                {% for sh in project.stake_holders %}
+                                    <div class="row">
+                                        <div class="col">{{ sh.nickname }}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="tab-pane fade" id="list-func-req" role="tabpanel" aria-labelledby="list-func-req-list">
+                                <h1>Functional Requirements</h1><p>Test</p>
+                            </div>
+                            <div class="tab-pane fade" id="list-goods" role="tabpanel" aria-labelledby="list-goods-list">
+                                <h1>Goods</h1><p>Test</p>
+                            </div>
+                            <div class="tab-pane fade" id="list-hg" role="tabpanel" aria-labelledby="list-hg-list">
+                                <h1>Hard Goals</h1><p>Test</p>
+                            </div>
+                            <div class="tab-pane fade" id="list-bbm" role="tabpanel" aria-labelledby="list-bbm-list">
+                                <h1>Black Box Mechanisms</h1><p>Test</p>
+                            </div>
                         </div>
-                        {% endfor %}
                     </div>
-                    <div class="col"><a href="{{ url_for('hard_goals', project=project.name) }}">Hard Goals</a>
-                        {% for hgoal in project.hard_goals %}
-                        {% if hgoal.description != None %}
-                            {% if hgoal.priority == True %}
-                                <div class="row border border-light" style="background-color: rgba(87,118,218,0.58)">
-                                    <div class="col"><b>{{ hgoal.description }}</b></div>
-                                </div>
-                            {% endif %}
-                        {% endif %}
-                        {% endfor %}
-                        {% for hgoal in project.hard_goals %}
-                        {% if hgoal.description != None %}
-                            {% if hgoal.priority != True %}
-                                <div class="row border border-light" style="background-color: rgba(87,196,218,0.58)">
-                                    <div class="col">{{ hgoal.description }}</div>
-                                </div>
-                            {% endif %}
-                        {% endif %}
-                        {% endfor %}
-                    </div>
-                    <div class="col" style="color: dodgerblue">Current Editors
+
+                    <div class="col-2" style="color: dodgerblue">Current Editors
                         {% for editor in project.editors %}
                             <div class="row">
                                 <div class="col" style="color: black">{{ editor.nickname }}</div>

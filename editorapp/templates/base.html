@@ -4,6 +4,7 @@
         <link rel="stylesheet" href="https://unpkg.com/bootstrap-material-design@4.0.0-beta.4/dist/css/bootstrap-material-design.min.css" integrity="sha384-R80DC0KVBO4GSTw+wZ5x2zn2pu4POSErBkf8/fSFhPXHxvHJydT0CSgAP2Yo2r4I" crossorigin="anonymous">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
         <link href="https://fonts.googleapis.com/css?family=Lato:400,900" rel="stylesheet">
+        {% block extracss %}{% endblock %}
         <link rel="shortcut icon" type="image/x-icon" href="/static/img/kastel_logo.png"/>
         {% if title %}
         <title>{{ title}} - Kastel Editor</title>

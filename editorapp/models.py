@@ -110,10 +110,11 @@ class HardGoal(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     bbmechanisms = db.relationship('BbMechanisms',
                             secondary=hard_mechanism,
-                            backref=db.backref('hardgoals', lazy='dynamic'))
+                            backref=db.backref('hardgoals', lazy='dynamic'),
+                            lazy='dynamic')
 
     def alrdy_used(self, bbm):
-        return self.bbmechanisms.filter(hard_mechanism.c.bb_mechanisms.id == bbm.id).count() > 0
+        return self.bbmechanisms.filter(hard_mechanism.c.bbmech_id == bbm.id).count() > 0
 
     def add_bb(self, bbm):
         if not self.alrdy_used(bbm):

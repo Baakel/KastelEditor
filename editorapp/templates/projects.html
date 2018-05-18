@@ -69,24 +69,138 @@
                     <div class="col-8">
                         <div class="tab-content" id="nav-tabContent">
                             <div class="tab-pane fade show active" id="list-stakeholders" role="tabpanel" aria-labelledby="list-stakeholders-list">
-                                <h1>Stakeholders</h1>
-                                {% for sh in project.stake_holders %}
-                                    <div class="row">
-                                        <div class="col">{{ sh.nickname }}</div>
-                                    </div>
-                                {% endfor %}
+                                <table class="table table-hover table-striped">
+                                    <thead class="thead-inverse">
+                                    <tr>
+                                        <th scope="col" class="text-center">Stakeholders</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for sh in project.stake_holders %}
+                                    <tr>
+                                        <td>{{ sh.nickname }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
                             <div class="tab-pane fade" id="list-func-req" role="tabpanel" aria-labelledby="list-func-req-list">
-                                <h1>Functional Requirements</h1><p>Test</p>
+                                <table class="table table-hover table-striped">
+                                    <thead class="thead-inverse">
+                                    <tr>
+                                        <th scope="col" class="text-center">Functional Requirements</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for fr in project.functional_req %}
+                                    <tr>
+                                        <td>{{ fr.description }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
                             <div class="tab-pane fade" id="list-goods" role="tabpanel" aria-labelledby="list-goods-list">
-                                <h1>Goods</h1><p>Test</p>
+                                <table class="table table-hover table-striped">
+                                    <thead class="thead-inverse">
+                                    <tr>
+                                        <th scope="col" class="text-center">Goods</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for gd in project.goods %}
+                                    <tr>
+                                        <td>{{ gd.description }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
                             <div class="tab-pane fade" id="list-hg" role="tabpanel" aria-labelledby="list-hg-list">
-                                <h1>Hard Goals</h1><p>Test</p>
+                                <table class="table table-hover table-striped">
+                                    <thead class="thead-inverse">
+                                    <tr>
+                                        <th scope="col" class="text-center">Hard Goals</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for hg in project.hard_goals %}
+                                        {% if hg.description %}
+                                            {% if hg.priority %}
+                                                <tr class="table-primary">
+                                                    <td>{{ hg.description }}</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% for hg in project.hard_goals %}
+                                        {% if hg.description %}
+                                            {% if hg.priority != True %}
+                                                <tr class="table-secondary">
+                                                    <td>{{ hg.description }}</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
                             <div class="tab-pane fade" id="list-bbm" role="tabpanel" aria-labelledby="list-bbm-list">
-                                <h1>Black Box Mechanisms</h1><p>Test</p>
+                                <table class="table table-hover">
+                                    <thead class="thead-inverse">
+                                    <tr>
+                                        <th scope="col" class="text-center">Black Box Mechanisms Used</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for hg in project.hard_goals %}
+                                        {% if hg.description %}
+                                            {% if hg.priority %}
+                                                <tr class="table-primary">
+                                                    <td>
+                                                        <a class="list-group-item list-group-item-action list-group-item-primary" data-toggle="collapse" href="#collapse{{ hg.id }}" role="button" aria-expanded="false" aria-controls="collapse{{ hg.id }}">{{ hg.description }}</a>
+                                                        <div class="collapse" id="collapse{{ hg.id }}">
+                                                            <div class="card card-body">
+                                                                <ul class="list-group">
+                                                                    {% for bbm in hg.bbmechanisms %}
+                                                                        <a class="list-group-item">
+                                                                            <i class="material-icons">check_circle</i>
+                                                                            {{ bbm.name }}
+                                                                        </a>
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% for hg in project.hard_goals %}
+                                        {% if hg.description %}
+                                            {% if hg.priority != True %}
+                                                <tr class="table-secondary">
+                                                    <td>
+                                                        <a class="list-group-item list-group-item-action list-group-item-secondary" data-toggle="collapse" href="#collapse{{ hg.id }}" role="button" aria-expanded="false" aria-controls="collapse{{ hg.id }}">{{ hg.description }}</a>
+                                                        <div class="collapse" id="collapse{{ hg.id }}">
+                                                            <div class="card card-body">
+                                                                <ul class="list-group">
+                                                                    {% for bbm in hg.bbmechanisms %}
+                                                                        <a class="list-group-item">
+                                                                            <i class="material-icons">check_circle</i>
+                                                                            {{ bbm.name }}
+                                                                        </a>
+                                                                    {% endfor %}
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>

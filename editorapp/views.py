@@ -263,6 +263,7 @@ def projects(name):
                                project=None,
                                user=g.user)
     elif g.user in project.editors:
+        bbms = BbMechanisms.query.all()
         return render_template('projects.html',
                                title=project.name,
                                form=form,
@@ -271,7 +272,8 @@ def projects(name):
                                project=project,
                                user=g.user,
                                current_editors=current_editors,
-                               users=users)
+                               users=users,
+                               bbms=bbms)
     else:
         flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
@@ -789,13 +791,18 @@ def bbm(project):
             table_list[0].append(count)
             count += 1
             table_list[1].append(hg.description)
+            bbms = [bbm.id for bbm in hg.bbmechanisms]
+            if bbms:
+                default_bbm = bbms[0]
+            else:
+                default_bbm = 1
             if hg.authenticity == 'yes':
                 choices_tuples = [(bbma.id, bbma.name) for bbma in blackbox_mechanisms if bbma.authenticity]
             if hg.confidentiality == 'yes':
                 choices_tuples = [(bbmc.id, bbmc.name) for bbmc in blackbox_mechanisms if bbmc.confidentiality]
             if hg.integrity == 'yes':
                 choices_tuples = [(bbmi.id, bbmi.name) for bbmi in blackbox_mechanisms if bbmi.authenticity]
-            setattr(MultipleSelects, str(hg.id), SelectField('Desired Mechanism', choices=choices_tuples, validators=[DataRequired()]))
+            setattr(MultipleSelects, str(hg.id), SelectField('Desired Mechanism', choices=choices_tuples, default=default_bbm, validators=[DataRequired()]))
             table_list[2].append('{}'.format(hg.id))
 
     form2 = MultipleSelects()

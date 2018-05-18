@@ -8,35 +8,93 @@
     {% for errors in get_flashed_messages(category_filter=["error"]) %}
         <div class="alert-danger" role="alert">{{ errors }}</div>
     {% endfor %}
-        <form action="" method="post" name="selectBBM">
-            {{ form2.hidden_tag() }}
-            <div class="container-fluid">
-                <table class="table table-striped table-bordered table-hover mt-5">
-                    <thead class="thead-inverse">
-                        <tr>
-                            <th scope="col">Hard Goal</th>
-                            <th scope="col">Black Box Mechanism</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                {% for table_index in table_list[0] %}
+    <h1 class="display-2 text-center mt-5">Select a Black Box Mechanism for each Hard Goal</h1>
+    <form action="" method="post" name="selectBBM">
+        {{ form2.hidden_tag() }}
+        <div class="container-fluid">
+            <table class="table table-striped table-bordered table-hover mt-5">
+                <thead class="thead-inverse">
                     <tr>
-                        {% for col in table_list[1:] %}
-                            {% if loop.index == 1 %}
-                                <td>{{ col[table_index] }}</td>
-                            {% endif %}
-                            {% if loop.index == 2 %}
-                                <td>{{ form2[col[table_index]](class="form-control") }}</td>
-                            {% endif %}
-                        {% endfor %}
+                        <th scope="col">Hard Goal</th>
+                        <th scope="col">Black Box Mechanism</th>
                     </tr>
-                {% endfor %}
-                    </tbody>
-                </table>
-                <div class="row">
-                    <button type="submit" class="btn btn-primary btn-raised">Add</button>
-                </div>
+                </thead>
+                <tbody>
+            {% for table_index in table_list[0] %}
+                <tr>
+                    {% for col in table_list[1:] %}
+                        {% if loop.index == 1 %}
+                            <td>{{ col[table_index] }}</td>
+                        {% endif %}
+                        {% if loop.index == 2 %}
+                            <td>{{ form2[col[table_index]](class="form-control") }}</td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+                </tbody>
+            </table>
+            <div class="row ml-1">
+                <button type="submit" class="btn btn-primary btn-raised">Add</button>
             </div>
-        </form>
+        </div>
+    </form>
+    <table class="table table-hover">
+        <thead class="thead-inverse">
+        <tr>
+            <th scope="col" class="text-center">Black Box Mechanisms Used</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for hg in project.hard_goals %}
+            {% if hg.description %}
+                {% if hg.priority %}
+                    <tr class="table-primary">
+                        <td>
+                            <a class="list-group-item list-group-item-action list-group-item-primary" data-toggle="collapse" href="#collapse{{ hg.id }}" role="button" aria-expanded="false" aria-controls="collapse{{ hg.id }}">{{ hg.description }}</a>
+                            <div class="collapse" id="collapse{{ hg.id }}">
+                                <div class="card card-body">
+                                    <ul class="list-group">
+                                        {% for bbm in hg.bbmechanisms %}
+                                            <a class="list-group-item">
+                                                <i class="material-icons">lens</i>
+                                                {{ bbm.name }}
+                                                <button type="button" class="btn btn-link btn-danger"><i class="material-icons">clear</i></button>
+                                            </a>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        {% for hg in project.hard_goals %}
+            {% if hg.description %}
+                {% if hg.priority != True %}
+                    <tr class="table-secondary">
+                        <td>
+                            <a class="list-group-item list-group-item-action list-group-item-secondary" data-toggle="collapse" href="#collapse{{ hg.id }}" role="button" aria-expanded="false" aria-controls="collapse{{ hg.id }}">{{ hg.description }}</a>
+                            <div class="collapse" id="collapse{{ hg.id }}">
+                                <div class="card card-body">
+                                    <ul class="list-group">
+                                        {% for bbm in hg.bbmechanisms %}
+                                            <a class="list-group-item">
+                                                <i class="material-icons">lens</i>
+                                                {{ bbm.name }}
+                                                <button type="button" class="btn btn-link btn-danger"><i class="material-icons">clear</i></button>
+                                            </a>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+        </tbody>
+    </table>
 </div>
 {% endblock %}

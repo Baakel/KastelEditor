@@ -35,10 +35,11 @@
                 </tbody>
             </table>
             <div class="row ml-1">
-                <button type="submit" class="btn btn-primary btn-raised">Add</button>
+                <button type="submit" class="btn btn-primary btn-raised" name="sub" value="pressed">Add</button>
             </div>
         </div>
     </form>
+    <form method="post" action="">
     <table class="table table-hover">
         <thead class="thead-inverse">
         <tr>
@@ -59,7 +60,7 @@
                                             <a class="list-group-item">
                                                 <i class="material-icons">lens</i>
                                                 {{ bbm.name }}
-                                                <button type="button" class="btn btn-link btn-danger"><i class="material-icons">clear</i></button>
+                                                <button type="submit" class="btn btn-link btn-danger" name="rmbbm" value="{{ hg.id }}-{{ bbm.id }}"><i class="material-icons">clear</i></button>
                                             </a>
                                         {% endfor %}
                                     </ul>
@@ -83,7 +84,7 @@
                                             <a class="list-group-item">
                                                 <i class="material-icons">lens</i>
                                                 {{ bbm.name }}
-                                                <button type="button" class="btn btn-link btn-danger"><i class="material-icons">clear</i></button>
+                                                <button type="submit" class="btn btn-link btn-danger" name="rmbbm" value="{{ hg.id }}-{{ bbm.id }}"><i class="material-icons">clear</i></button>
                                             </a>
                                         {% endfor %}
                                     </ul>
@@ -96,5 +97,6 @@
         {% endfor %}
         </tbody>
     </table>
+    </form>
 </div>
 {% endblock %}

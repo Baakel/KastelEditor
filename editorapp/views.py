@@ -181,7 +181,7 @@ def removesh(project, desc):
     if g.user in project.editors:
         Stakeholder.query.filter_by(nickname=desc, project_id=project.id).delete()
         db.session.commit()
-        flash('Stakeholder removed', 'error')
+        flash('Stakeholder "{}" removed'.format(desc), 'error')
         return redirect(url_for('stakeholders', project=project.name))
     else:
         flash('You don\'t have permission to access this project.')
@@ -412,7 +412,7 @@ def removeg(project, desc):
     if g.user in project.editors:
         Good.query.filter_by(description=desc, project_id=project.id).delete()
         db.session.commit()
-        flash('Good removed', 'error')
+        flash('Good "{}" removed'.format(desc), 'error')
         return redirect(url_for('goods', project=project.name))
     else:
         flash('You don\'t have permission to access this project')
@@ -453,7 +453,7 @@ def removefr(project, desc):
     if g.user in project.editors:
         FunctionalRequirement.query.filter_by(description=desc, project_id=project.id).delete()
         db.session.commit()
-        flash('Functional Requirement removed', 'error')
+        flash('Functional Requirement "{}" removed'.format(desc), 'error')
         return redirect(url_for('functional_req', project=project.name))
     else:
         flash('You don\'t have permission to access this project.')
@@ -807,7 +807,7 @@ def bbm(project):
 
     form2 = MultipleSelects()
 
-    if request.method == 'POST':
+    if request.method == 'POST' and request.form.get('sub') == 'pressed':
         for key,value in form2.data.items():
             if key != 'csrf_token':
                 hardG = HardGoal.query.filter_by(id=key).first()
@@ -815,6 +815,15 @@ def bbm(project):
                 hardG.add_bb(blbxm)
                 db.session.commit()
         flash('Black Box mechanisms updated', 'succ')
+    elif request.method == 'POST' and request.form.get('sub') != 'pressed':
+        if request.form.get('rmbbm'):
+            data = request.form.get('rmbbm').split('-')
+            hg = HardGoal.query.filter_by(id=data[0]).first()
+            blbm = BbMechanisms.query.filter_by(id=data[1]).first()
+            hg.remove_bb(blbm)
+            db.session.commit()
+            flash('Black Box Mechanism "{}" successfully removed for Hard Goal "{}"'.format(blbm.name, hg.description), 'succ')
+            return redirect(url_for('bbm', project=project.name))
 
     return render_template('bbm.html',
                            title=project.name,

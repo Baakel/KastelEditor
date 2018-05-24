@@ -205,68 +205,81 @@
                         </div>
                     </div>
 
-                    <div class="col-2" style="color: dodgerblue">Current Editors
-                        {% for editor in project.editors %}
-                            <div class="row">
-                                <div class="col" style="color: black">{{ editor.nickname }}</div>
-                            </div>
-                        {% endfor %}
-                        <div class="row">
-                            {% if g.user.id == project.creator %}
-                                <div class="col"><button type="button" class="btn btn-raised btn-primary" data-toggle="modal" data-target="#addeditor">Add another editor</button></div>
-                                <div class="modal fade" id="addeditor" tabindex="-1" role="dialog" aria-labelledby="editorModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="editorModalLabel">Type the name of the editor</h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
-                                            </div>
-                                            <form action="" method="post" name="addeditor">
-                                            {{ form.hidden_tag() }}
-                                                <div class="modal-body ui-front">
-                                                    <div class="form-group">
-                                                        {{ form2.editor.label(class_="form-control-label") }}
-                                                        {{ form2.editor(class_="form-control", placeholder="Editor name") }}
+                    <div class="col-2">
+                    <table class="table">
+                        <thead class="text-center">
+                            <tr class="bg-primary">
+                                <th scope="col" class="text-light">Current Editors</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for editor in project.editors %}
+                                <tr>
+                                    <td>{{ editor.nickname }}</td>
+                                </tr>
+                            {% endfor %}
+                            <tr>
+                                <td>
+                                    <div class="row">
+                                        {% if g.user.id == project.creator %}
+                                            <div class="col"><button type="button" class="btn btn-raised btn-primary" data-toggle="modal" data-target="#addeditor">Add another editor</button></div>
+                                            <div class="modal fade" id="addeditor" tabindex="-1" role="dialog" aria-labelledby="editorModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="editorModalLabel">Type the name of the editor</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <form action="" method="post" name="addeditor">
+                                                        {{ form.hidden_tag() }}
+                                                            <div class="modal-body ui-front">
+                                                                <div class="form-group">
+                                                                    {{ form2.editor.label(class_="form-control-label") }}
+                                                                    {{ form2.editor(class_="form-control", placeholder="Editor name") }}
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                                <button type="submit" class="btn btn-primary">Add editor</button>
+                                                            </div>
+                                                        </form>
                                                     </div>
                                                 </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                    <button type="submit" class="btn btn-primary">Add editor</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col"><button type="button" class="btn btn-raised btn-outline-warning" data-toggle="modal" data-target="#access">Remove an editor</button></div>
-                                <div class="modal fade" id="access" tabindex="-1" role="dialog" aria-labelledby="accessModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog" role="document">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="accessModalLabel">Type the name of the editor</h5>
-                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                    <span aria-hidden="true">&times;</span>
-                                                </button>
                                             </div>
-                                            <form action="" method="post" name="removeeditor">
-                                            {{ form.hidden_tag() }}
-                                                <div class="modal-body ui-front">
-                                                    <div class="form-group">
-                                                        {{ form3.revoke.label(class_="form-control-label") }}
-                                                        {{ form3.revoke(class_="form-control", placeholder="Editor name") }}
+                                            <div class="col"><button type="button" class="btn btn-raised btn-outline-warning" data-toggle="modal" data-target="#access">Remove an editor</button></div>
+                                            <div class="modal fade" id="access" tabindex="-1" role="dialog" aria-labelledby="accessModalLabel" aria-hidden="true">
+                                                <div class="modal-dialog" role="document">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="accessModalLabel">Type the name of the editor</h5>
+                                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                                <span aria-hidden="true">&times;</span>
+                                                            </button>
+                                                        </div>
+                                                        <form action="" method="post" name="removeeditor">
+                                                        {{ form.hidden_tag() }}
+                                                            <div class="modal-body ui-front">
+                                                                <div class="form-group">
+                                                                    {{ form3.revoke.label(class_="form-control-label") }}
+                                                                    {{ form3.revoke(class_="form-control", placeholder="Editor name") }}
+                                                                </div>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                                <button type="submit" class="btn btn-warning">Remove editor</button>
+                                                            </div>
+                                                        </form>
                                                     </div>
                                                 </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                    <button type="submit" class="btn btn-warning">Remove editor</button>
-                                                </div>
-                                            </form>
-                                        </div>
+                                            </div>
+                                        {% endif %}
                                     </div>
-                                </div>
-                            {% endif %}
-                        </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                     </div>
                 </div>
             </div>

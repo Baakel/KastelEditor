@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Add a new Functional Requirements</h1>
+    <h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ project.name }} Functional Requirements</h1>
     {% for message in get_flashed_messages(category_filter=["succ"]) %}
         <div class="alert-success" role="alert">{{ message }}</div>
     {% endfor %}
@@ -10,20 +10,21 @@
     {% endfor %}
         <form action="" method="post" name="addsgoals">
             {{ form.hidden_tag() }}
-            <table>
+        <div class="container">
+            <table class="table table-hover">
                 <tr>
-                    <td><div class="form-group">{{ form.freq.label(class_="form-control-label") }}{{ form.freq(class_="form-control", size=140, placeholder="describe your requirements") }} <button type="submit" class="btn btn-raised btn-primary">Add</button></div></td>
+                    <td colspan="2"><div class="form-group mb-4">{{ form.freq.label(class_="form-control-label") }}{{ form.freq(class_="form-control", size=140, placeholder="describe your requirements") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
                 </tr>
-                <tr><td></td></tr>
-                <tr>
-                    <th>Current Functional Requirements</th>
+                <tr class="thead-inverse text-center mt-5">
+                    <th colspan="2">Current Functional Requirements</th>
                 </tr>
                 {% for freq in project.functional_req %}
                         <tr>
                             <td>{{ freq.description }}</td>
-                            <td><a href="{{ url_for('removefr', project=project.name, desc=freq.description) }}">Remove</a></td>
+                            <td class="text-right"><a class="text-danger" href="{{ url_for('removefr', project=project.name, desc=freq.description) }}">Remove</a></td>
                         </tr>
                 {% endfor %}
             </table>
+        </div>
         </form>
 {% endblock %}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Add a new Good</h1>
+    <h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ project.name }} Goods</h1>
     {% for message in get_flashed_messages(category_filter=["succ"]) %}
         <div class="alert-success" role="alert">{{ message }}</div>
     {% endfor %}
@@ -10,20 +10,21 @@
     {% endfor %}
         <form action="" method="post" name="addgood">
             {{ form.hidden_tag() }}
-            <table>
+        <div class="container">
+            <table class="table table-hover">
                 <tr>
-                    <td><div class="form-group">{{ form.goods.label(class_="form-control-label") }}{{ form.goods(class_="form-control", placeholder="Good") }}</div><button type="submit" class="btn btn-raised btn-primary">Add</button></td>
+                    <td colspan="2"><div class="form-group mb-4">{{ form.goods.label(class_="form-control-label") }}{{ form.goods(class_="form-control", placeholder="Good") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
                 </tr>
-                <tr><td></td></tr>
-                <tr>
-                    <th>Current Goods</th>
+                <tr class="text-center thead-inverse mt-5">
+                    <th colspan="2">Current Goods</th>
                 </tr>
                 {% for good in project.goods %}
                 <tr>
                     <td>{{ good.description }}</td>
-                    <td><a href="{{ url_for('removeg', project=project.name, desc=good.description) }}">Remove</a></td>
+                    <td class="text-right"><a class="text-danger" href="{{ url_for('removeg', project=project.name, desc=good.description) }}">Remove</a></td>
                 </tr>
                 {% endfor %}
             </table>
+        </div>
         </form>
 {% endblock %}

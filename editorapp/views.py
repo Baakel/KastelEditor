@@ -5,7 +5,8 @@ from wtforms import SelectField
 from wtforms.validators import DataRequired
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, \
     HardGoalsForm, BbmForm, FlaskForm
-from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement, HardGoal, Role, BbMechanisms
+from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement,\
+    HardGoal, Role, BbMechanisms,  Assumptions, SubService
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 # from flask_security.utils import hash_password, verify_password, get_hmac
 import flask_admin
@@ -73,6 +74,21 @@ def create_db_data():
             bbmech = BbMechanisms(**kw)
             db.session.add(bbmech)
             db.session.commit()
+
+    assumptions = Assumptions.query.first()
+    if not assumptions:
+        assumptions = [
+            'Process Security',
+            'Implementation Correctness',
+            'Compiler Correctness',
+            'Signature Key Trustworthiness',
+            'Authentification Characteristics Authenticity'
+        ]
+
+        for assumption in assumptions:
+            a = Assumptions(name=assumption)
+            db.session.add(a)
+        db.session.commit()
 
 
 
@@ -425,21 +441,37 @@ def functional_req(project):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
         form = FunctionalRequirementsForm()
-        if form.validate_on_submit():
-            fr = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
-            if fr is None:
-                freq = FunctionalRequirement(description=form.freq.data, project_id=project.id)
-                db.session.add(freq)
-                db.session.commit()
-                flash('Functional Requirement Added to the Database', 'succ')
-                return redirect(url_for('functional_req', project=project.name))
+        if request.method == 'POST' and request.form.get('freqbtn'):
+            if form.freq.data is not '':
+                fr = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
+                if fr is None:
+                    freq = FunctionalRequirement(description=form.freq.data, project_id=project.id)
+                    db.session.add(freq)
+                    db.session.commit()
+                    flash('Functional Requirement Added to the Database', 'succ')
+                    return redirect(url_for('functional_req', project=project.name))
+                else:
+                    flash('Functional Requirement already exists', 'error')
             else:
-                flash('Functional Requirement already exists', 'error')
-        freqs = FunctionalRequirement.query.filter_by(project_id=project.id).all()
+                flash('Functional Requirement field can\'t be empty', 'error')
+
+        elif request.method == 'POST' and request.form.get('servbtn'):
+            if form.subserv.data is not '':
+                sub = SubService.query.filter_by(name=form.subserv.data, project_id=project.id).first()
+                if sub is None:
+                    sb = SubService(name=form.subserv.data, project_id=project.id)
+                    db.session.add(sb)
+                    db.session.commit()
+                    flash('Service Added to the Database', 'succ')
+                    return redirect(url_for('functional_req', project=project.name))
+                else:
+                    flash('Service Already Exists', 'error')
+            else:
+                flash('Service Field can\'t be empty', 'error')
+
         return render_template('funcreq.html',
                                title=project.name,
                                form=form,
-                               freqs=freqs,
                                project=project)
     else:
         flash('You don\'t have permission to access this project.')
@@ -867,6 +899,7 @@ admin = flask_admin.Admin(
 admin.add_view(MyModelView(Role, db.session))
 admin.add_view(MyModelView(Users, db.session))
 admin.add_view(MyModelView(Projects, db.session))
+admin.add_view(MyModelView(BbMechanisms, db.session))
 
 
 @security.context_processor

@@ -11,20 +11,62 @@
         <form action="" method="post" name="addsgoals">
             {{ form.hidden_tag() }}
         <div class="container">
-            <table class="table table-hover">
+            <table class="table">
                 <tr>
-                    <td colspan="2"><div class="form-group mb-4">{{ form.freq.label(class_="form-control-label") }}{{ form.freq(class_="form-control", size=140, placeholder="describe your requirements") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
+                    <td><div class="form-group mb-4">{{ form.freq.label(class_="form-control-label") }}{{ form.freq(class_="form-control", size=140, placeholder="describe your requirements") }}</div><button type="submit" name="freqbtn" value="pressed" class="btn btn-raised btn-primary mb-5">Add</button></td>
+                    <td><div class="form-group mb-4">{{ form.subserv.label(class_='form-control-label') }}{{ form.subserv(class_='form-control', size=140, placeholder="Service") }}</div><button type="submit" name="servbtn" value="pressed2" class="btn btn-raised btn-info mb-5">Add</button></td>
                 </tr>
-                <tr class="thead-inverse text-center mt-5">
-                    <th colspan="2">Current Functional Requirements</th>
-                </tr>
-                {% for freq in project.functional_req %}
+            </table>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover">
+                    <tr class="thead-inverse text-center mt-5">
+                        <th colspan="2">Current Functional Requirements</th>
+                    </tr>
+                    {% for freq in project.functional_req %}
+                            <tr>
+                                <td>{{ freq.description }}</td>
+                                <td class="text-right"><a class="text-danger" href="{{ url_for('removefr', project=project.name, desc=freq.description) }}">Remove</a></td>
+                            </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <div class="col">
+                <table class="table table-hover">
+                    <tr class="thead-inverse text-center mt-5">
+                        <th colspan="2">Current Sub-Services</th>
+                    </tr>
+                    {% for serv in project.sub_services %}
+                        <tr>
+                            <td>{{ serv.name }}</td>
+                            <td class="text-right"><a class="text-danger" href="#">Remove</a></td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <table class="table table-hover">
+                <thead class="thead-inverse">
+                    <tr>
+                        <th class="text-light">Functional Requirement / Sub-Service</th>
+                        {% for serv in project.sub_services %}
+                            <th class="bg-info text-light">{{ serv.name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for freq in project.functional_req %}
                         <tr>
                             <td>{{ freq.description }}</td>
-                            <td class="text-right"><a class="text-danger" href="{{ url_for('removefr', project=project.name, desc=freq.description) }}">Remove</a></td>
+                            {% for serv in project.sub_services %}
+                            <td><input title="{{ serv.name }}" type="checkbox"></td>
+                            {% endfor %}
                         </tr>
-                {% endfor %}
+                    {% endfor %}
+                </tbody>
             </table>
+        </div>
         </div>
         </form>
 {% endblock %}

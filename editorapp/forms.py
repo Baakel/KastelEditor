@@ -21,6 +21,7 @@ class GoodsForm(FlaskForm):
 
 class FunctionalRequirementsForm(FlaskForm):
     freq = StringField('Add a functional requirement:', validators=[DataRequired()])
+    subserv = StringField('Add a Service to Handle the requirements', validators=[DataRequired()])
 
 
 class EditorForm(FlaskForm):

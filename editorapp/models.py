@@ -21,6 +21,14 @@ hard_mechanism = db.Table('hard_mechanism',
                           db.Column('hg_id', db.Integer, db.ForeignKey('hard_goal.id')),
                           db.Column('bbmech_id', db.Integer, db.ForeignKey('bb_mechanisms.id')))
 
+bb_assumptions = db.Table('bb_assumptions',
+                          db.Column('bb_id', db.Integer, db.ForeignKey('bb_mechanisms.id')),
+                          db.Column('assumptions_id', db.Integer, db.ForeignKey('assumptions.id')))
+
+freq_serv = db.Table('freq_serv',
+                     db.Column('fr_id', db.Integer, db.ForeignKey('functional_requirement.id')),
+                     db.Column('serv_id', db.Integer, db.ForeignKey('sub_service.id')))
+
 
 class Role(db.Model, RoleMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -95,6 +103,28 @@ class FunctionalRequirement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(280))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    services = db.relationship('SubService',
+                               secondary=freq_serv,
+                               backref=db.backref('functionalreqs', lazy='dynamic'),
+                               lazy='dynamic')
+    def alrdy_used(self, serv):
+        return self.services.filter(freq_serv.c.serv_id == serv.id).count() > 0
+
+    def add_bb(self, serv):
+        if not self.alrdy_used(serv):
+            self.services.append(serv)
+            return self
+
+    def remove_bb(self, serv):
+        if self.alrdy_used(serv):
+            self.services.remove(serv)
+            return self
+
+
+class SubService(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80))
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
 
 
 class HardGoal(db.Model):
@@ -135,6 +165,7 @@ class Projects(db.Model):
     functional_req = db.relationship('FunctionalRequirement', backref='project', lazy='dynamic')
     stake_holders = db.relationship('Stakeholder', backref='project', lazy='dynamic')
     goods = db.relationship('Good', backref='project', lazy='dynamic')
+    sub_services = db.relationship('SubService', backref='project', lazy='dynamic')
 
     @staticmethod
     def make_unique_name(name):
@@ -152,9 +183,31 @@ class Projects(db.Model):
         return '<Projects %r>' % self.name
 
 
+class Assumptions(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120))
+
+
 class BbMechanisms(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True)
     authenticity = db.Column(db.Boolean, default=False)
     confidentiality = db.Column(db.Boolean, default=False)
     integrity = db.Column(db.Boolean, default=False)
+    assumptions = db.relationship('Assumptions',
+                                   secondary=bb_assumptions,
+                                   backref=db.backref('bb_mechanisms', lazy='dynamic'),
+                                   lazy='dynamic')
+
+    def alrdy_used(self, ass):
+        return self.assumptions.filter(bb_assumptions.c.assumptions_id == ass.id).count() > 0
+
+    def add_bb(self, ass):
+        if not self.alrdy_used(ass):
+            self.assumptions.append(ass)
+            return self
+
+    def remove_bb(self, ass):
+        if self.alrdy_used(ass):
+            self.assumptions.remove(ass)
+            return self

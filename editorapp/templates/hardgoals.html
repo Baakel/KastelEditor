@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Current hard goals</h1>
+    <h1 class="display-2 text-center mt-5 mb-5">Current hard goals</h1>
     {% for message in get_flashed_messages(category_filter=["succ"]) %}
         <div class="alert-success" role="alert">{{ message }}</div>
     {% endfor %}
@@ -287,6 +287,63 @@
             <button type="submit" class="btn btn-raised btn-success" name="sub2" value="pressed2">Update Hard Goals</button>
         </div>
     </div>
+
+    <div class="row">
+        <div class="col">
+            <table class="table table-hover table-bordered">
+                <caption>Soft Goals Matrix</caption>
+                <thead>
+                    <tr>
+                        <th scope="col" class="bg-success text-light">Soft Goals / Functional Requirements</th>
+                        {% for fr in project.functional_req %}
+                            {% for serv in fr.services %}
+                                <th class="bg-info text-light" scope="col">{{ serv.name }}: {{ fr.description }}</th>
+                            {% endfor %}
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                {% for hgoal in project.hard_goals %}
+                    {% if hgoal.authenticity and hgoal.description == None %}
+                    <tr>
+                        <th scope="row" class="bg-warning">{{ hgoal.authenticity }}</th>
+                        {% for fr in project.functional_req %}
+                            {% for serv in fr.services %}
+                                <td class="text-center"><input type="checkbox" id="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ hgoal.authenticity }}"><label for="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ hgoal.id }}{{ fr.id }}</label></td>
+                            {% endfor %}
+                        {% endfor %}
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+                {% for hgoal in project.hard_goals %}
+                    {% if hgoal.confidentiality and hgoal.description == None %}
+                    <tr>
+                        <th scope="row" class="bg-warning">{{ hgoal.confidentiality }}</th>
+                        {% for fr in project.functional_req %}
+                            {% for serv in fr.services %}
+                                <td class="text-center"><input type="checkbox" id="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ hgoal.confidentiality }}"><label for="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ hgoal.id }}{{ fr.id }}</label></td>
+                            {% endfor %}
+                        {% endfor %}
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+                {% for hgoal in project.hard_goals %}
+                    {% if hgoal.integrity and hgoal.description == None %}
+                    <tr>
+                        <th scope="row" class="bg-warning">{{ hgoal.integrity }}</th>
+                        {% for fr in project.functional_req %}
+                            {% for serv in fr.services %}
+                                <td class="text-center"><input type="checkbox" id="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ hgoal.integrity }}"><label for="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ hgoal.id }}{{ fr.id }}</label></td>
+                            {% endfor %}
+                        {% endfor %}
+                    </tr>
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     </form>
     </div>
 {% endblock %}

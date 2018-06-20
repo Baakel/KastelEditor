@@ -6,7 +6,7 @@ from wtforms.validators import DataRequired
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, \
     HardGoalsForm, BbmForm, FlaskForm
 from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement,\
-    HardGoal, Role, BbMechanisms,  Assumptions, SubService
+    HardGoal, Role, BbMechanisms,  Assumptions, SubService, freq_serv
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 # from flask_security.utils import hash_password, verify_password, get_hmac
 import flask_admin
@@ -468,6 +468,31 @@ def functional_req(project):
                     flash('Service Already Exists', 'error')
             else:
                 flash('Service Field can\'t be empty', 'error')
+        elif request.method == 'POST' and request.form.get('updatech'):
+            chbx_list = request.form.getlist('chbpx')
+            freqs = FunctionalRequirement.query.filter_by(project_id=project.id).all()
+            current_services_list = []
+            for fr in freqs:
+                for serv in fr.services:
+                    if serv in fr.services:
+                        curr_serv = '{}-{}'.format(fr.id, serv.id)
+                        current_services_list.append(curr_serv)
+            for item in chbx_list:
+                if item in current_services_list:
+                    current_services_list.remove(item)
+                freq_id, serv_id = item.split('-')
+                frq = FunctionalRequirement.query.filter_by(id=freq_id).first()
+                serv = SubService.query.filter_by(id=serv_id).first()
+                frq.add_serv(serv)
+                db.session.commit()
+                for remaining in current_services_list:
+                    rem_freq_id, rem_serv_id = remaining.split('-')
+                    rem_frq = FunctionalRequirement.query.filter_by(id=rem_freq_id).first()
+                    rem_serv = SubService.query.filter_by(id=rem_serv_id).first()
+                    rem_frq.remove_serv(rem_serv)
+                    db.session.commit()
+            flash('Functional Requirements and Sub-services Table Updated', 'succ')
+            return redirect(url_for('functional_req', project=project.name))
 
         return render_template('funcreq.html',
                                title=project.name,
@@ -483,9 +508,32 @@ def functional_req(project):
 def removefr(project, desc):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
+        fr = FunctionalRequirement.query.filter_by(description=desc, project_id=project.id).first()
+        for serv in fr.services:
+            fr.remove_serv(serv)
+        db.session.commit()
         FunctionalRequirement.query.filter_by(description=desc, project_id=project.id).delete()
         db.session.commit()
         flash('Functional Requirement "{}" removed'.format(desc), 'error')
+        return redirect(url_for('functional_req', project=project.name))
+    else:
+        flash('You don\'t have permission to access this project.')
+        return redirect(url_for('index'))
+
+
+@app.route('/removesub/<project>/<id>', methods=['GET', 'POST'])
+@login_required
+def removesub(project, id):
+    project = Projects.query.filter_by(name=project).first()
+    if g.user in project.editors:
+        ss = SubService.query.filter_by(id=id, project_id=project.id).first()
+        name = ss.name
+        for serv in ss.functionalreqs:
+            serv.remove_serv(ss)
+        db.session.commit()
+        SubService.query.filter_by(id=id, project_id=project.id).delete()
+        db.session.commit()
+        flash('Sub-Service "{}" removed'.format(name), 'error')
         return redirect(url_for('functional_req', project=project.name))
     else:
         flash('You don\'t have permission to access this project.')
@@ -543,26 +591,26 @@ def hard_goals(project):
                     db.session.add(hgoal)
                     db.session.commit()
 
-            for freq in project.functional_req:
-                for handler in request.form.getlist('applications%s' % freq.id):
-                    freq_desc = freq.description
-                    cb_value = 'applications%s' % freq.id
-                    Hg = HardGoal.query.filter_by(applications=freq_desc, project_id=project.id).first()
-                    if Hg is None:
-                        apps = HardGoal(applications=freq_desc, project_id=project.id, cb_value=cb_value)
-                        db.session.add(apps)
-                        db.session.commit()
-                        flash('Functional Requirement %ss updated' %handler, 'succ')
-
-                for handler in request.form.getlist('services%s' % freq.id):
-                    freq_desc = freq.description
-                    cb_value = 'services%s' % freq.id
-                    Hg = HardGoal.query.filter_by(services=freq_desc, project_id=project.id).first()
-                    if Hg is None:
-                        serv = HardGoal(services=freq_desc, project_id=project.id, cb_value=cb_value)
-                        db.session.add(serv)
-                        db.session.commit()
-                        flash('Functional Requirement %ss updated' %handler, 'succ')
+            # for freq in project.functional_req:
+            #     for handler in request.form.getlist('applications%s' % freq.id):
+            #         freq_desc = freq.description
+            #         cb_value = 'applications%s' % freq.id
+            #         Hg = HardGoal.query.filter_by(applications=freq_desc, project_id=project.id).first()
+            #         if Hg is None:
+            #             apps = HardGoal(applications=freq_desc, project_id=project.id, cb_value=cb_value)
+            #             db.session.add(apps)
+            #             db.session.commit()
+            #             flash('Functional Requirement %ss updated' %handler, 'succ')
+            #
+            #     for handler in request.form.getlist('services%s' % freq.id):
+            #         freq_desc = freq.description
+            #         cb_value = 'services%s' % freq.id
+            #         Hg = HardGoal.query.filter_by(services=freq_desc, project_id=project.id).first()
+            #         if Hg is None:
+            #             serv = HardGoal(services=freq_desc, project_id=project.id, cb_value=cb_value)
+            #             db.session.add(serv)
+            #             db.session.commit()
+            #             flash('Functional Requirement %ss updated' %handler, 'succ')
             current_req = []
             for i in request.form:
                 current_req.append(i)

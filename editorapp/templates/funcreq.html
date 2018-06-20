@@ -39,7 +39,7 @@
                     {% for serv in project.sub_services %}
                         <tr>
                             <td>{{ serv.name }}</td>
-                            <td class="text-right"><a class="text-danger" href="#">Remove</a></td>
+                            <td class="text-right"><a class="text-danger" href="{{ url_for('removesub', project=project.name, id=serv.id) }}">Remove</a></td>
                         </tr>
                     {% endfor %}
                 </table>
@@ -60,10 +60,17 @@
                         <tr>
                             <td>{{ freq.description }}</td>
                             {% for serv in project.sub_services %}
-                            <td><input title="{{ serv.name }}" type="checkbox"></td>
+                                {% if serv in freq.services %}
+                                    <td><input title="{{ serv.name }}" name="chbpx" value="{{ freq.id }}-{{ serv.id }}" type="checkbox" checked></td>
+                                {% else %}
+                                    <td><input title="{{ serv.name }}" name="chbpx" value="{{ freq.id }}-{{ serv.id }}" type="checkbox"></td>
+                                {% endif %}
                             {% endfor %}
                         </tr>
                     {% endfor %}
+                    <tr>
+                        <td colspan="3"><button type="submit" name="updatech" value="pressed3" class="btn btn-raised btn-success">Store changes</button> </td>
+                    </tr>
                 </tbody>
             </table>
         </div>

@@ -110,12 +110,12 @@ class FunctionalRequirement(db.Model):
     def alrdy_used(self, serv):
         return self.services.filter(freq_serv.c.serv_id == serv.id).count() > 0
 
-    def add_bb(self, serv):
+    def add_serv(self, serv):
         if not self.alrdy_used(serv):
             self.services.append(serv)
             return self
 
-    def remove_bb(self, serv):
+    def remove_serv(self, serv):
         if self.alrdy_used(serv):
             self.services.remove(serv)
             return self

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="containter mt-5 ml-5 mr-5">
+    <form action="" name="bbmechs">
+        <table class="table table-bordered">
+            <thead class="thead-inverse text-center">
+            <tr>
+                <th class="text-light">Hard Goal</th>
+                <th class="text-light">Black Box Mechanisms</th>
+{#                <th class="text-light">Assumptions</th>#}
+            </tr>
+            </thead>
+            <tbody>
+            {% for hgoal in project.hard_goals %}
+                {% if hgoal.description != None %}
+                    <tr>
+                        {% if hgoal.priority %}
+                            <td class="align-middle table-primary"><b>{{ hgoal.description }}</b></td>
+                        {% else %}
+                            <td class="align-middle table-secondary">{{ hgoal.description }}</td>
+                        {% endif %}
+                        <td>
+                            <table class="table table-hover">
+                                <tbody>
+                                {% for bbm in bbms %}
+                                    {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="{{ hgoal.id }}_{{ bbm.id }}"><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </td>
+{#                        <td>#}
+{#                            <table class="table table-hover">#}
+{#                                <tbody id="annahmen{{ hgoal.id }}">#}
+{##}
+{#                                </tbody>#}
+{#                            </table>#}
+{#                        </td>#}
+                    </tr>
+                {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+{#    <script type="application/javascript">#}
+{#        $(document).ready(function () {#}
+{#            {% for hgoal in project.hard_goals %}#}
+{#                {% for bbm in bbms %}#}
+{#                    {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}#}
+{#                        caja{{ hgoal.id }}_{{ bbm.id }} = document.getElementsByName('{{ hgoal.id }}_{{ bbm.id }}');#}
+{#                        caja{{ hgoal.id }}_{{ bbm.id }}[0].addEventListener('change', function(e){#}
+{#                            if (caja{{ hgoal.id }}_{{ bbm.id }}[0].checked) {#}
+{#                                tabla = document.getElementById('annahmen{{ hgoal.id }}');#}
+{#                                console.log(tabla);#}
+{#                                input_field = document.createElement('tr');#}
+{#                                input_field.innerHTML = '<td><input type="text" name="annahmeinput" id="ahn_{{ hgoal.id|safe }}_{{ bbm.id|safe }}"></td>';#}
+{#                                tabla.appendChild(input_field)#}
+{#                            } else {#}
+{##}
+{#                                document.getElementById('ahn_{{ hgoal.id|safe }}_{{ bbm.id|safe }}').parentElement.parentElement.remove()#}
+{#                            }#}
+{#                        });#}
+{#                    {% endif %}#}
+{#                {% endfor %}#}
+{#            {% endfor %}#}
+{#        })#}
+{#    </script>#}
+{% endblock %}

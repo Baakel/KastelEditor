@@ -75,21 +75,20 @@ def create_db_data():
             db.session.add(bbmech)
             db.session.commit()
 
-    assumptions = Assumptions.query.first()
-    if not assumptions:
-        assumptions = [
-            'Process Security',
-            'Implementation Correctness',
-            'Compiler Correctness',
-            'Signature Key Trustworthiness',
-            'Authentification Characteristics Authenticity'
-        ]
+    # assumptions = Assumptions.query.first()
+    # if not assumptions:
+    #     assumptions = [
+    #         'Process Security',
+    #         'Implementation Correctness',
+    #         'Compiler Correctness',
+    #         'Signature Key Trustworthiness',
+    #         'Authentification Characteristics Authenticity'
+    #     ]
 
-        for assumption in assumptions:
-            a = Assumptions(name=assumption)
-            db.session.add(a)
-        db.session.commit()
-
+        # for assumption in assumptions:
+        #     a = Assumptions(name=assumption)
+        #     db.session.add(a)
+        # db.session.commit()
 
 
 @app.errorhandler(401)
@@ -270,7 +269,7 @@ def projects(name):
             db.session.commit()
             flash('Access revoked for user ' + editor.nickname, 'succ')
             return redirect(url_for('projects', name=project.name))
-    if project == None:
+    if project is None:
         return render_template('projects.html',
                                title=name,
                                form=form,
@@ -314,6 +313,9 @@ def delete_project(project):
             db.session.commit()
         hard_goals = HardGoal.query.filter_by(project_id=project.id).all()
         for hg in hard_goals:
+            assumptions = Assumptions.query.filter_by(project_id=project.id, hg_id=hg.id).all()
+            for ass in assumptions:
+                Assumptions.query.filter_by(id=ass.id).delete()
             for bbm in hg.bbmechanisms:
                 hg.remove_bb(bbm)
             db.session.delete(hg)
@@ -540,6 +542,16 @@ def removesub(project, id):
         return redirect(url_for('index'))
 
 
+@app.route('/removeass/<project>/<id>', methods=['GET', 'POST'])
+@login_required
+def removeass(project, id):
+    project = Projects.query.filter_by(name=project).first()
+    if g.user in project.editors:
+        Assumptions.query.filter_by(project_id=project.id, id=id).delete()
+        db.session.commit()
+    return redirect(url_for('assumptions', project=project.name))
+
+
 @app.route('/hard_goals/<project>', methods=['GET', 'POST'])
 @login_required
 def hard_goals(project):
@@ -675,6 +687,12 @@ def hard_goals(project):
                     db.session.commit()
             else:
                 for remaining_hg in hardgs:
+                    hg = HardGoal.query.filter_by(project_id=project.id, description=remaining_hg).first()
+                    assumptions = Assumptions.query.filter_by(project_id=project.id, hg_id=hg.id).all()
+                    for ass in assumptions:
+                        Assumptions.query.filter_by(id=ass.id).delete()
+                    for bbm in hg.bbmechanisms:
+                        hg.remove_bb(bbm)
                     HardGoal.query.filter_by(project_id=project.id, description=remaining_hg).delete()
                     db.session.commit()
             flash('Hard Goals Database Updated', 'succ')
@@ -764,13 +782,70 @@ def bbmech(project):
     project = Projects.query.filter_by(name=project).first()
     if access:
         bbms = BbMechanisms.query.all()
+        current_bbms = {}
+        for hg in project.hard_goals:
+            bbms_list = []
+            for bbm in hg.bbmechanisms:
+                bbms_list.append(bbm)
+            current_bbms[hg.id] = bbms_list
+        if request.method == 'POST':
+            for item in request.form:
+                item_parts = item.split('_')
+                hg = HardGoal.query.filter_by(id=item_parts[0]).first()
+                bbm = BbMechanisms.query.filter_by(id=item_parts[1]).first()
+                for key, value in current_bbms.items():
+                    if key == hg.id and bbm in value:
+                        value.remove(bbm)
+                    elif key == hg.id and bbm not in value:
+                        hg.add_bb(bbm)
+                        db.session.commit()
+            for key, values in current_bbms.items():
+                if values:
+                    for val in values:
+                        hg = HardGoal.query.filter_by(id=key).first()
+                        assumptions = Assumptions.query.filter_by(project_id=project.id, hg_id=hg.id).all()
+                        for ass in assumptions:
+                            Assumptions.query.filter_by(id=ass.id).delete()
+                        hg.remove_bb(val)
+            db.session.commit()
+            flash('Black Box Mechanisms updated', 'succ')
+            return redirect(url_for('bbmech', project=project.name))
         return render_template('bbmech.html',
                                title=project.name,
                                project=project,
+                               current_bbms=current_bbms,
                                bbms=bbms)
     else:
         flash('You don\'t have permission to access this project', 'error')
-        return redirect(abort(404))
+        return redirect(url_for('index'))
+
+
+@app.route('/bbmech/<project>/assumptions', methods=['GET', 'POST'])
+@login_required
+def assumptions(project):
+    access = check_permission(project)
+    project = Projects.query.filter_by(name=project).first()
+    if access:
+        current_hardgoals_gen = (hg for hg in project.hard_goals if hg.description)
+        current_hardgoals = []
+        for hg in current_hardgoals_gen:
+            current_hardgoals.append(hg)
+        if request.method == 'POST':
+            for key, value in request.form.items():
+                print(key, value)
+                if 'inp' in key and value:
+                    key_parts = key.split('-')
+                    assumption = Assumptions(name=value, bbm_id=key_parts[2], hg_id=key_parts[1], project_id=project.id)
+                    db.session.add(assumption)
+                    db.session.commit()
+            return redirect(url_for('assumptions', project=project.name))
+        return render_template('assumptions.html',
+                               title=project.name,
+                               project=project,
+                               current_hardgoals=current_hardgoals)
+    else:
+        flash('You don\'t have permission to access this project', 'error')
+        return redirect(url_for('index'))
 
 
 # Setting up Flask-Security

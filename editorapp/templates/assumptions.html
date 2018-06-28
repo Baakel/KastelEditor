@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container-fluid mt-5">
+    <form action="" method="post" name="assumptions">
+        <table class="table table-bordered">
+            <caption>Add assumptions for every Hard Goal</caption>
+            <thead class="thead-inverse text-center">
+            <tr>
+                <th class="text-light">Hard Goals</th>
+                <th class="text-light">Black-Box Mechanism</th>
+                <th class="text-light">Separate Assumptions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {%  for hgoal in current_hardgoals %}
+                {% if hgoal.priority %}
+                    {% for bbm in hgoal.bbmechanisms %}
+                        <tr class="table-primary">
+                            <td class="align-middle"><b>{{ hgoal.description }}</b></td>
+                            <td class="align-middle"><b>{{ bbm.name }}</b></td>
+                            <td>
+                                <table class="table table-hover">
+                                    <tbody>
+                                    {% for ass in project.assumptions %}
+                                        {% if ass.bbm_id == bbm.id and ass.hg_id == hgoal.id %}
+                                        <tr class="table-primary">
+                                            <td><b>{{ ass.name }}</b></td>
+                                            <td><a class="btn btn-sm btn-raised btn-danger" href="{{ url_for('removeass', project=project.name, id=ass.id) }}">Remove</a></td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <tr class="table-primary">
+                                        <td><input type="text" class="form-control" name="inp-{{ hgoal.id }}-{{ bbm.id }}" id="inp-{{ hgoal.id }}-{{ bbm.id }}-last" placeholder="Add an assumption"></td>
+                                        <td><button type="submit" class="btn btn-sm btn-raised btn-primary" name="{{ hgoal.id }}-{{ bbm.id }}" value="btn-sub-press">Add</button></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            {%  for hgoal in current_hardgoals %}
+                {% if not hgoal.priority %}
+                    {% for bbm in hgoal.bbmechanisms %}
+                        <tr class="table-secondary">
+                            <td class="align-middle">{{ hgoal.description }}</td>
+                            <td class="align-middle">{{ bbm.name }}</td>
+                            <td>
+                                <table class="table table-hover">
+                                    <tbody>
+                                    {% for ass in project.assumptions %}
+                                        {% if ass.bbm_id == bbm.id and ass.hg_id == hgoal.id %}
+                                        <tr class="table-secondary">
+                                            <td>{{ ass.name }}</td>
+                                            <td><a class="btn btn-sm btn-raised btn-danger" href="{{ url_for('removeass', project=project.name, id=ass.id) }}">Remove</a></td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <tr class="table-secondary">
+                                        <td><input type="text" class="form-control" name="inp-{{ hgoal.id }}-{{ bbm.id }}" id="inp-{{ hgoal.id }}-{{ bbm.id }}-last" placeholder="Add an assumption"></td>
+                                        <td><button type="submit" class="btn btn-sm btn-raised btn-primary" name="{{ hgoal.id }}-{{ bbm.id }}" value="btn-sub-press">Add</button></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            </tbody>
+        </table>
+    </form>
+    </div>
+{% endblock %}

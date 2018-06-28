@@ -21,9 +21,9 @@ hard_mechanism = db.Table('hard_mechanism',
                           db.Column('hg_id', db.Integer, db.ForeignKey('hard_goal.id')),
                           db.Column('bbmech_id', db.Integer, db.ForeignKey('bb_mechanisms.id')))
 
-bb_assumptions = db.Table('bb_assumptions',
-                          db.Column('bb_id', db.Integer, db.ForeignKey('bb_mechanisms.id')),
-                          db.Column('assumptions_id', db.Integer, db.ForeignKey('assumptions.id')))
+# bb_assumptions = db.Table('bb_assumptions',
+#                           db.Column('bb_id', db.Integer, db.ForeignKey('bb_mechanisms.id')),
+#                           db.Column('assumptions_id', db.Integer, db.ForeignKey('assumptions.id')))
 
 freq_serv = db.Table('freq_serv',
                      db.Column('fr_id', db.Integer, db.ForeignKey('functional_requirement.id')),
@@ -166,6 +166,7 @@ class Projects(db.Model):
     stake_holders = db.relationship('Stakeholder', backref='project', lazy='dynamic')
     goods = db.relationship('Good', backref='project', lazy='dynamic')
     sub_services = db.relationship('SubService', backref='project', lazy='dynamic')
+    assumptions = db.relationship('Assumptions', backref='project', lazy='dynamic')
 
     @staticmethod
     def make_unique_name(name):
@@ -186,6 +187,9 @@ class Projects(db.Model):
 class Assumptions(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    bbm_id = db.Column(db.Integer)
+    hg_id = db.Column(db.Integer)
 
 
 class BbMechanisms(db.Model):
@@ -194,20 +198,20 @@ class BbMechanisms(db.Model):
     authenticity = db.Column(db.Boolean, default=False)
     confidentiality = db.Column(db.Boolean, default=False)
     integrity = db.Column(db.Boolean, default=False)
-    assumptions = db.relationship('Assumptions',
-                                   secondary=bb_assumptions,
-                                   backref=db.backref('bb_mechanisms', lazy='dynamic'),
-                                   lazy='dynamic')
-
-    def alrdy_used(self, ass):
-        return self.assumptions.filter(bb_assumptions.c.assumptions_id == ass.id).count() > 0
-
-    def add_bb(self, ass):
-        if not self.alrdy_used(ass):
-            self.assumptions.append(ass)
-            return self
-
-    def remove_bb(self, ass):
-        if self.alrdy_used(ass):
-            self.assumptions.remove(ass)
-            return self
+    # assumptions = db.relationship('Assumptions',
+    #                                secondary=bb_assumptions,
+    #                                backref=db.backref('bb_mechanisms', lazy='dynamic'),
+    #                                lazy='dynamic')
+    #
+    # def alrdy_used(self, ass):
+    #     return self.assumptions.filter(bb_assumptions.c.assumptions_id == ass.id).count() > 0
+    #
+    # def add_bb(self, ass):
+    #     if not self.alrdy_used(ass):
+    #         self.assumptions.append(ass)
+    #         return self
+    #
+    # def remove_bb(self, ass):
+    #     if self.alrdy_used(ass):
+    #         self.assumptions.remove(ass)
+    #         return self

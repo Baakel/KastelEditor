@@ -57,7 +57,10 @@
                                 <a class="nav-link" href="{{ url_for('hard_goals', project=project.name) }}">Hard Goals</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('bbm', project=project.name) }}">BBM</a>
+                                <a class="nav-link" href="{{ url_for('bbmech', project=project.name) }}">BBM</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('assumptions', project=project.name) }}">Assumptions</a>
                             </li>
                         {% else %}
                             <li class="nav-item">

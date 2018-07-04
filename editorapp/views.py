@@ -6,7 +6,7 @@ from wtforms.validators import DataRequired
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, \
     HardGoalsForm, BbmForm, FlaskForm
 from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement,\
-    HardGoal, Role, BbMechanisms,  Assumptions, SubService, freq_serv
+    HardGoal, Role, BbMechanisms,  Assumptions, SubService, freq_serv, hard_mechanism
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 # from flask_security.utils import hash_password, verify_password, get_hmac
 import flask_admin
@@ -84,11 +84,11 @@ def create_db_data():
     #         'Signature Key Trustworthiness',
     #         'Authentification Characteristics Authenticity'
     #     ]
-
-        # for assumption in assumptions:
-        #     a = Assumptions(name=assumption)
-        #     db.session.add(a)
-        # db.session.commit()
+    #
+    #     for assumption in assumptions:
+    #         a = Assumptions(name=assumption)
+    #         db.session.add(a)
+    #     db.session.commit()
 
 
 @app.errorhandler(401)
@@ -683,6 +683,12 @@ def hard_goals(project):
                     if final_string in hardgs:
                         hardgs.remove(final_string)
                 for remaining_hg in hardgs:
+                    hg = HardGoal.query.filter_by(project_id=project.id, description=remaining_hg).first()
+                    assumptions = Assumptions.query.filter_by(project_id=project.id, hg_id=hg.id).all()
+                    for ass in assumptions:
+                        Assumptions.query.filter_by(id=ass.id).delete()
+                    for bbm in hg.bbmechanisms:
+                        hg.remove_bb(bbm)
                     HardGoal.query.filter_by(project_id=project.id, description=remaining_hg).delete()
                     db.session.commit()
             else:
@@ -789,24 +795,23 @@ def bbmech(project):
                 bbms_list.append(bbm)
             current_bbms[hg.id] = bbms_list
         if request.method == 'POST':
-            for item in request.form:
-                item_parts = item.split('_')
-                hg = HardGoal.query.filter_by(id=item_parts[0]).first()
-                bbm = BbMechanisms.query.filter_by(id=item_parts[1]).first()
-                for key, value in current_bbms.items():
-                    if key == hg.id and bbm in value:
-                        value.remove(bbm)
-                    elif key == hg.id and bbm not in value:
+            for index, value in request.form.items():
+                hg = HardGoal.query.filter_by(id=index).first()
+                bbm = BbMechanisms.query.filter_by(id=value).first()
+                for key, val in current_bbms.items():
+                    if key == hg.id and bbm in val:
+                        val.remove(bbm)
+                    elif key == hg.id and bbm not in val:
                         hg.add_bb(bbm)
                         db.session.commit()
             for key, values in current_bbms.items():
                 if values:
-                    for val in values:
+                    for valu in values:
                         hg = HardGoal.query.filter_by(id=key).first()
                         assumptions = Assumptions.query.filter_by(project_id=project.id, hg_id=hg.id).all()
                         for ass in assumptions:
                             Assumptions.query.filter_by(id=ass.id).delete()
-                        hg.remove_bb(val)
+                        hg.remove_bb(valu)
             db.session.commit()
             flash('Black Box Mechanisms updated', 'succ')
             return redirect(url_for('bbmech', project=project.name))
@@ -828,6 +833,7 @@ def assumptions(project):
     if access:
         current_hardgoals_gen = (hg for hg in project.hard_goals if hg.description)
         current_hardgoals = []
+        hard_mechanism.select()
         for hg in current_hardgoals_gen:
             current_hardgoals.append(hg)
         if request.method == 'POST':

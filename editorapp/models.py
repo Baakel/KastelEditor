@@ -140,6 +140,8 @@ class HardGoal(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     bbmechanisms = db.relationship('BbMechanisms',
                             secondary=hard_mechanism,
+                            # primaryjoin=(hard_mechanism.c.hg_id == id),
+                            # secondaryjoin=(hard_mechanism.c.bbmech_id == id),
                             backref=db.backref('hardgoals', lazy='dynamic'),
                             lazy='dynamic')
 

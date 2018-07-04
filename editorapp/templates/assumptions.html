@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
+    {% for message in get_flashed_messages(category_filter=["succ"]) %}
+        <div class="alert-success" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% for errors in get_flashed_messages(category_filter=["error"]) %}
+        <div class="alert-danger" role="alert">{{ errors }}</div>
+    {% endfor %}
     <div class="container-fluid mt-5">
     <form action="" method="post" name="assumptions">
         <table class="table table-bordered">
@@ -15,37 +21,37 @@
             <tbody>
             {%  for hgoal in current_hardgoals %}
                 {% if hgoal.priority %}
+                    <tr class="table-primary">
+                        <td class="align-middle"><b>{{ hgoal.description }}</b></td>
                     {% for bbm in hgoal.bbmechanisms %}
-                        <tr class="table-primary">
-                            <td class="align-middle"><b>{{ hgoal.description }}</b></td>
-                            <td class="align-middle"><b>{{ bbm.name }}</b></td>
-                            <td>
-                                <table class="table table-hover">
-                                    <tbody>
-                                    {% for ass in project.assumptions %}
-                                        {% if ass.bbm_id == bbm.id and ass.hg_id == hgoal.id %}
-                                        <tr class="table-primary">
-                                            <td><b>{{ ass.name }}</b></td>
-                                            <td><a class="btn btn-sm btn-raised btn-danger" href="{{ url_for('removeass', project=project.name, id=ass.id) }}">Remove</a></td>
-                                        </tr>
-                                        {% endif %}
-                                    {% endfor %}
+                        <td class="align-middle"><b>{{ bbm.name }}</b></td>
+                        <td>
+                            <table class="table table-hover">
+                                <tbody>
+                                {% for ass in project.assumptions %}
+                                    {% if ass.bbm_id == bbm.id and ass.hg_id == hgoal.id %}
                                     <tr class="table-primary">
-                                        <td><input type="text" class="form-control" name="inp-{{ hgoal.id }}-{{ bbm.id }}" id="inp-{{ hgoal.id }}-{{ bbm.id }}-last" placeholder="Add an assumption"></td>
-                                        <td><button type="submit" class="btn btn-sm btn-raised btn-primary" name="{{ hgoal.id }}-{{ bbm.id }}" value="btn-sub-press">Add</button></td>
+                                        <td><b>{{ ass.name }}</b></td>
+                                        <td><a class="btn btn-sm btn-raised btn-danger" href="{{ url_for('removeass', project=project.name, id=ass.id) }}">Remove</a></td>
                                     </tr>
-                                    </tbody>
-                                </table>
-                            </td>
-                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                                <tr class="table-primary">
+                                    <td><input type="text" class="form-control" name="inp-{{ hgoal.id }}-{{ bbm.id }}" id="inp-{{ hgoal.id }}-{{ bbm.id }}-last" placeholder="Add an assumption"></td>
+                                    <td><button type="submit" class="btn btn-sm btn-raised btn-primary" name="{{ hgoal.id }}-{{ bbm.id }}" value="btn-sub-press">Add</button></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </td>
                     {% endfor %}
+                    </tr>
                 {% endif %}
             {% endfor %}
             {%  for hgoal in current_hardgoals %}
                 {% if not hgoal.priority %}
-                    {% for bbm in hgoal.bbmechanisms %}
-                        <tr class="table-secondary">
-                            <td class="align-middle">{{ hgoal.description }}</td>
+                    <tr class="table-secondary">
+                        <td class="align-middle">{{ hgoal.description }}</td>
+                        {% for bbm in hgoal.bbmechanisms %}
                             <td class="align-middle">{{ bbm.name }}</td>
                             <td>
                                 <table class="table table-hover">
@@ -65,8 +71,8 @@
                                     </tbody>
                                 </table>
                             </td>
-                        </tr>
-                    {% endfor %}
+                        {% endfor %}
+                    </tr>
                 {% endif %}
             {% endfor %}
             </tbody>

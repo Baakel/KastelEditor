@@ -1,10 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
+    {% for message in get_flashed_messages(category_filter=["succ"]) %}
+        <div class="alert-success" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% for errors in get_flashed_messages(category_filter=["error"]) %}
+        <div class="alert-danger" role="alert">{{ errors }}</div>
+    {% endfor %}
     <div class="containter mt-5 ml-5 mr-5">
     <form action="" name="bbmechs" method="post">
         <table class="table table-bordered">
-        <caption>Hard Goals and Black Box Mechanisms relationship table</caption>
+        <caption>Hard Goals and Black Box Mechanisms relationship table (To delete a selection press ctrl and click the radio button)</caption>
             <thead class="thead-inverse text-center">
             <tr>
                 <th class="text-light">Hard Goal</th>
@@ -26,7 +32,7 @@
                                             {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}
                                             <tr>
                                                 <td>
-                                                    <input type="checkbox" name="{{ hgoal.id }}_{{ bbm.id }}" checked><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
+                                                    <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}" checked><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
                                                 </td>
                                             </tr>
                                             {% endif %}
@@ -35,7 +41,7 @@
                                             {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}
                                             <tr>
                                                 <td>
-                                                    <input type="checkbox" name="{{ hgoal.id }}_{{ bbm.id }}"><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
+                                                    <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}"><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
                                                 </td>
                                             </tr>
                                             {% endif %}
@@ -61,20 +67,20 @@
                                     {% for key, values in current_bbms.items() %}
                                         {% if key == hgoal.id and bbm in values %}
                                             {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}
-                                            <tr>
-                                                <td>
-                                                    <input type="checkbox" name="{{ hgoal.id }}_{{ bbm.id }}" checked><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
-                                                </td>
-                                            </tr>
+                                                <tr>
+                                                    <td>
+                                                        <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}" checked><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
+                                                    </td>
+                                                </tr>
+                                                {% endif %}
                                             {% endif %}
-                                        {% endif %}
-                                        {% if key == hgoal.id and bbm not in values %}
-                                            {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}
-                                            <tr>
-                                                <td>
-                                                    <input type="checkbox" name="{{ hgoal.id }}_{{ bbm.id }}"><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
-                                                </td>
-                                            </tr>
+                                            {% if key == hgoal.id and bbm not in values %}
+                                                {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}
+                                                <tr>
+                                                    <td>
+                                                        <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}"><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
+                                                    </td>
+                                                </tr>
                                             {% endif %}
                                         {% endif %}
                                     {% endfor %}
@@ -94,6 +100,15 @@
     </form>
     </div>
 {% endblock %}
-
 {% block scripts %}
+<script type="text/javascript">
+    radios = document.getElementsByTagName('input');
+    for (i=0; i<radios.length; i++) {
+        radios[i].addEventListener("click", function(e) {
+            if (e.ctrlKey) {
+                this.checked = false;
+            }
+         })
+    }
+</script>
 {% endblock %}

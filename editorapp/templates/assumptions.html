@@ -26,20 +26,20 @@
                     {% for bbm in hgoal.bbmechanisms %}
                         <td class="align-middle"><b>{{ bbm.name }}</b></td>
                         <td>
-                            <table class="table table-hover">
+                            <table class="table">
                                 <tbody>
-                                {% for ass in project.assumptions %}
-                                    {% if ass.bbm_id == bbm.id and ass.hg_id == hgoal.id %}
+                                {% for ass in bbm.assumptions %}
+{#                                    {% if ass.bbm_id == bbm.id and ass.hg_id == hgoal.id %}#}
                                     <tr class="table-primary">
                                         <td><b>{{ ass.name }}</b></td>
-                                        <td><a class="btn btn-sm btn-raised btn-danger" href="{{ url_for('removeass', project=project.name, id=ass.id) }}">Remove</a></td>
+{#                                        <td><a class="btn btn-sm btn-raised btn-danger" href="{{ url_for('removeass', project=project.name, id=ass.id) }}">Remove</a></td>#}
                                     </tr>
-                                    {% endif %}
+{#                                    {% endif %}#}
                                 {% endfor %}
-                                <tr class="table-primary">
-                                    <td><input type="text" class="form-control" name="inp-{{ hgoal.id }}-{{ bbm.id }}" id="inp-{{ hgoal.id }}-{{ bbm.id }}-last" placeholder="Add an assumption"></td>
-                                    <td><button type="submit" class="btn btn-sm btn-raised btn-primary" name="{{ hgoal.id }}-{{ bbm.id }}" value="btn-sub-press">Add</button></td>
-                                </tr>
+{#                                <tr class="table-primary">#}
+{#                                    <td><input type="text" class="form-control" name="inp-{{ hgoal.id }}-{{ bbm.id }}" id="inp-{{ hgoal.id }}-{{ bbm.id }}-last" placeholder="Add an assumption"></td>#}
+{#                                    <td><button type="submit" class="btn btn-sm btn-raised btn-primary" name="{{ hgoal.id }}-{{ bbm.id }}" value="btn-sub-press">Add</button></td>#}
+{#                                </tr>#}
                                 </tbody>
                             </table>
                         </td>
@@ -54,20 +54,20 @@
                         {% for bbm in hgoal.bbmechanisms %}
                             <td class="align-middle">{{ bbm.name }}</td>
                             <td>
-                                <table class="table table-hover">
+                                <table class="table">
                                     <tbody>
-                                    {% for ass in project.assumptions %}
-                                        {% if ass.bbm_id == bbm.id and ass.hg_id == hgoal.id %}
+                                    {% for ass in bbm.assumptions %}
+{#                                        {% if ass.bbm_id == bbm.id and ass.hg_id == hgoal.id %}#}
                                         <tr class="table-secondary">
                                             <td>{{ ass.name }}</td>
-                                            <td><a class="btn btn-sm btn-raised btn-danger" href="{{ url_for('removeass', project=project.name, id=ass.id) }}">Remove</a></td>
+{#                                            <td><a class="btn btn-sm btn-raised btn-danger" href="{{ url_for('removeass', project=project.name, id=ass.id) }}">Remove</a></td>#}
                                         </tr>
-                                        {% endif %}
+{#                                        {% endif %}#}
                                     {% endfor %}
-                                    <tr class="table-secondary">
-                                        <td><input type="text" class="form-control" name="inp-{{ hgoal.id }}-{{ bbm.id }}" id="inp-{{ hgoal.id }}-{{ bbm.id }}-last" placeholder="Add an assumption"></td>
-                                        <td><button type="submit" class="btn btn-sm btn-raised btn-primary" name="{{ hgoal.id }}-{{ bbm.id }}" value="btn-sub-press">Add</button></td>
-                                    </tr>
+{#                                    <tr class="table-secondary">#}
+{#                                        <td><input type="text" class="form-control" name="inp-{{ hgoal.id }}-{{ bbm.id }}" id="inp-{{ hgoal.id }}-{{ bbm.id }}-last" placeholder="Add an assumption"></td>#}
+{#                                        <td><button type="submit" class="btn btn-sm btn-raised btn-primary" name="{{ hgoal.id }}-{{ bbm.id }}" value="btn-sub-press">Add</button></td>#}
+{#                                    </tr>#}
                                     </tbody>
                                 </table>
                             </td>

@@ -168,12 +168,12 @@ class Projects(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     creator = db.Column(db.Integer)
     name = db.Column(db.String(64), index=True, unique=True)
+    final_assumptions = db.Column(db.Boolean)
     hard_goals = db.relationship('HardGoal', backref='project', lazy='dynamic')
     functional_req = db.relationship('FunctionalRequirement', backref='project', lazy='dynamic')
     stake_holders = db.relationship('Stakeholder', backref='project', lazy='dynamic')
     goods = db.relationship('Good', backref='project', lazy='dynamic')
     sub_services = db.relationship('SubService', backref='project', lazy='dynamic')
-    assumptions = db.relationship('Assumptions', backref='project', lazy='dynamic')
 
     @staticmethod
     def make_unique_name(name):
@@ -194,9 +194,6 @@ class Projects(db.Model):
 class Assumptions(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
-    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
-    bbm_id = db.Column(db.Integer)
-    hg_id = db.Column(db.Integer)
 
 
 class BbMechanisms(db.Model):

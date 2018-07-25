@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+  {% block extracss %}
+  <link rel="stylesheet" href="/static/js/Treant/Treant.css" type="text/css">
+  <link rel="stylesheet" href="/static/js/Treant/vendor/perfect-scrollbar/perfect-scrollbar.css" type="text/css">
+  <link rel="stylesheet" href="/static/css/tree.css" type="text/css">
+  {% endblock %}
+  {% block content %}
+  <div class="chart align-middle" id="tree-simple"></div>
+  {% endblock %}
+  {% block scripts %}
+  <script src="/static/js/Treant/vendor/raphael.js"></script>
+  <script src="/static/js/Treant/Treant.js"></script>
+  <script src="/static/js/Treant/vendor/jquery.min.js"></script>
+  <script src="/static/js/Treant/vendor/jquery.easing.js"></script>
+  <script src="/static/js/Treant/vendor/jquery.mousewheel.js"></script>
+
+  <script>
+
+    var getChart = $.get('/testdata', {'project': '{{ project.name }}'});
+
+    getChart.done(function(object) {
+      var chart = new Treant(object);
+    });
+
+  </script>
+  {% endblock %}

@@ -1,4 +1,5 @@
-from flask import render_template, url_for, flash, redirect, request, session, g, abort
+from random import sample
+from flask import render_template, url_for, flash, redirect, request, session, g, abort, jsonify
 from editorapp import app, db, github
 from flask_login import login_required
 from wtforms import SelectField
@@ -181,15 +182,145 @@ def before_request():
         session['current_project'] = None
 
 
-@app.route('/test', methods=['GET', 'POST'])
-def test():
-    form = HardGoalsForm()
-    if form.validate_on_submit():
-        print(form.test_case.data)
-        print('did it')
-        return redirect(url_for('test'))
-    return render_template('test.html',
-                           form=form)
+@app.route('/tree/<project>', methods=['GET', 'POST'])
+def tree(project):
+    proj = Projects.query.filter_by(name=project).first()
+    return render_template('tree.html',
+                           project=proj,
+                           title=proj.name)
+
+
+
+@app.route('/testdata')
+def testdata():
+    proj = request.args.get('project')
+    project = Projects.query.filter_by(name=proj).first()
+    dictionary = {
+        'chart': {
+            'container': '#tree-simple',
+            'animateOnInt': True,
+            'node': {
+                'collapsable': False,
+                'HTMLclass': 'proj'
+            },
+            'animation': {
+                'nodeAnimation': 'easeInOutSine',
+                'nodeSpeed': 700
+            },
+            'rootOrientation': 'WEST',
+            'connectors': {
+                'type': 'curve'
+            },
+            'drawLineThrough': True
+        },
+        'nodeStructure': {
+            'text': {'name': project.name, 'desc': 'Project'},
+            'children': [
+
+            ]
+        }
+
+    }
+    auth_gen = (sg for sg in project.hard_goals if sg.authenticity and sg.description == None)
+    for softg in auth_gen:
+        curr_dict = { 'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
+                      'children': [],
+                      'HTMLclass': 'yellow',
+                      'collapsable': True}
+        auth_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.authenticity in hg.description)
+        for hardg in auth_hg_gen:
+            if hardg.priority:
+                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                           'children': [],
+                           'HTMLclass': 'blue'}
+            else:
+                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                           'children': [],
+                           'HTMLclass': 'grey'}
+            for bbm in hardg.bbmechanisms:
+                bbm_dict = { 'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
+                             'children': [],
+                             'HTMLclass': 'dark',
+                             'collapsable': True}
+                for ass in bbm.assumptions:
+                    ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
+                                'children': [],
+                                'HTMLclass': 'green'}
+                    bbm_dict['children'].append(ass_dict)
+
+                hg_dict['children'].append(bbm_dict)
+
+            curr_dict['children'].append(hg_dict)
+
+        dictionary['nodeStructure']['children'].append(curr_dict)
+
+    conf_gen = (sg for sg in project.hard_goals if sg.confidentiality and sg.description == None)
+    for softg in conf_gen:
+        curr_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
+                     'children': [],
+                     'HTMLclass': 'yellow',
+                     'collapsable': True}
+        conf_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.confidentiality in hg.description)
+        for hardg in conf_hg_gen:
+            if hardg.priority:
+                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                           'children': [],
+                           'HTMLclass': 'blue'}
+            else:
+                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                           'children': [],
+                           'HTMLclass': 'grey'}
+            for bbm in hardg.bbmechanisms:
+                bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
+                            'children': [],
+                            'HTMLclass': 'dark',
+                            'collapsable': True}
+                for ass in bbm.assumptions:
+                    ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
+                                'children': [],
+                                'HTMLclass': 'green'}
+                    bbm_dict['children'].append(ass_dict)
+
+                hg_dict['children'].append(bbm_dict)
+
+            curr_dict['children'].append(hg_dict)
+
+        dictionary['nodeStructure']['children'].append(curr_dict)
+
+    int_gen = (sg for sg in project.hard_goals if sg.integrity and sg.description == None)
+    for softg in int_gen:
+        curr_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
+                     'children': [],
+                     'HTMLclass': 'yellow',
+                     'collapsable': True}
+        int_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.integrity in hg.description)
+        for hardg in int_hg_gen:
+            if hardg.priority:
+                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                           'children': [],
+                           'HTMLclass': 'blue'}
+            else:
+                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                           'children': [],
+                           'HTMLclass': 'grey'}
+            for bbm in hardg.bbmechanisms:
+                bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
+                            'children': [],
+                            'HTMLclass': 'dark',
+                            'collapsable': True}
+                for ass in bbm.assumptions:
+                    ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
+                                'children': [],
+                                'HTMLclass': 'green'}
+                    bbm_dict['children'].append(ass_dict)
+
+                hg_dict['children'].append(bbm_dict)
+
+            curr_dict['children'].append(hg_dict)
+
+        dictionary['nodeStructure']['children'].append(curr_dict)
+    return jsonify(dictionary)
+    # return jsonify({'results': sample(range(1,10), 5)})
 
 
 @app.route('/')
@@ -699,7 +830,7 @@ def hard_goals(project):
 
         elif request.method == 'POST' and request.form.get('sub2') == 'pressed2':
             callback_list = request.form.getlist('hglist')
-            if callback_list != []:
+            if callback_list:
                 for item in callback_list:
                     item_parts = item.split('¡')
                     final_string = '{} ensures the {} during the {}'.format(item_parts[0], item_parts[2], item_parts[1])
@@ -766,7 +897,7 @@ def bbm(project):
     project = Projects.query.filter_by(name=project).first()
     blackbox_mechanisms = BbMechanisms.query.all()
     choices_tuples = [(bbm.id, bbm.name) for bbm in blackbox_mechanisms]
-    table_list = [[],[],[]]
+    table_list = [[], [], []]
     count = 0
     class MultipleSelects(FlaskForm):
         pass
@@ -866,25 +997,28 @@ def bbmech(project):
 def assumptions(project):
     access = check_permission(project)
     project = Projects.query.filter_by(name=project).first()
-    bbms = BbMechanisms.query.all()
-    assumptions_list = []
-    for bbm in bbms:
-        for ass in bbm.assumptions:
-            assumptions_list.append(ass)
+    hgoal_bbm__dict = {}
     if access:
         current_hardgoals_gen = (hg for hg in project.hard_goals if hg.description)
         current_hardgoals = []
-        # hard_mechanism.select()
         for hg in current_hardgoals_gen:
             current_hardgoals.append(hg)
+            hgoal_bbm__dict[hg] = []
+            for bbm in hg.bbmechanisms:
+                hgoal_bbm__dict[hg].append(bbm)
+        empty_hgoals = []
+        for key, values in hgoal_bbm__dict.items():
+            if not values:
+                empty_hgoals.append(key)
         if request.method == 'POST':
-            pass
+            project.final_assumptions = True
+            db.session.commit()
             return redirect(url_for('assumptions', project=project.name))
         return render_template('assumptions.html',
                                title=project.name,
                                project=project,
                                current_hardgoals=current_hardgoals,
-                               assumptions_list=assumptions_list)
+                               empty_hgoals=empty_hgoals)
     else:
         flash('You don\'t have permission to access this project', 'error')
         return redirect(url_for('index'))
@@ -925,6 +1059,7 @@ admin.add_view(MyModelView(Role, db.session))
 admin.add_view(MyModelView(Users, db.session))
 admin.add_view(MyModelView(Projects, db.session))
 admin.add_view(MyModelView(BbMechanisms, db.session))
+admin.add_view(MyModelView(Assumptions, db.session))
 
 
 @security.context_processor

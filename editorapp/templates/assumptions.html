@@ -21,6 +21,7 @@
             <tbody>
             {%  for hgoal in current_hardgoals %}
                 {% if hgoal.priority %}
+                    {% if hgoal not in empty_hgoals %}
                     <tr class="table-primary">
                         <td class="align-middle"><b>{{ hgoal.description }}</b></td>
                     {% for bbm in hgoal.bbmechanisms %}
@@ -29,26 +30,27 @@
                             <table class="table">
                                 <tbody>
                                 {% for ass in bbm.assumptions %}
-{#                                    {% if ass.bbm_id == bbm.id and ass.hg_id == hgoal.id %}#}
                                     <tr class="table-primary">
                                         <td><b>{{ ass.name }}</b></td>
-{#                                        <td><a class="btn btn-sm btn-raised btn-danger" href="{{ url_for('removeass', project=project.name, id=ass.id) }}">Remove</a></td>#}
                                     </tr>
-{#                                    {% endif %}#}
                                 {% endfor %}
-{#                                <tr class="table-primary">#}
-{#                                    <td><input type="text" class="form-control" name="inp-{{ hgoal.id }}-{{ bbm.id }}" id="inp-{{ hgoal.id }}-{{ bbm.id }}-last" placeholder="Add an assumption"></td>#}
-{#                                    <td><button type="submit" class="btn btn-sm btn-raised btn-primary" name="{{ hgoal.id }}-{{ bbm.id }}" value="btn-sub-press">Add</button></td>#}
-{#                                </tr>#}
                                 </tbody>
                             </table>
                         </td>
                     {% endfor %}
                     </tr>
+                    {% else %}
+                    <tr class="table-danger">
+                        <td class="align-middle"><b>{{ hgoal.description }}</b></td>
+                        <td><b>No Black Box Mechanism Selected</b></td>
+                        <td><b>Missing Black Box Mechanism</b></td>
+                    </tr>
+                    {% endif %}
                 {% endif %}
             {% endfor %}
             {%  for hgoal in current_hardgoals %}
                 {% if not hgoal.priority %}
+                    {% if hgoal not in empty_hgoals %}
                     <tr class="table-secondary">
                         <td class="align-middle">{{ hgoal.description }}</td>
                         {% for bbm in hgoal.bbmechanisms %}
@@ -57,26 +59,27 @@
                                 <table class="table">
                                     <tbody>
                                     {% for ass in bbm.assumptions %}
-{#                                        {% if ass.bbm_id == bbm.id and ass.hg_id == hgoal.id %}#}
                                         <tr class="table-secondary">
                                             <td>{{ ass.name }}</td>
-{#                                            <td><a class="btn btn-sm btn-raised btn-danger" href="{{ url_for('removeass', project=project.name, id=ass.id) }}">Remove</a></td>#}
                                         </tr>
-{#                                        {% endif %}#}
                                     {% endfor %}
-{#                                    <tr class="table-secondary">#}
-{#                                        <td><input type="text" class="form-control" name="inp-{{ hgoal.id }}-{{ bbm.id }}" id="inp-{{ hgoal.id }}-{{ bbm.id }}-last" placeholder="Add an assumption"></td>#}
-{#                                        <td><button type="submit" class="btn btn-sm btn-raised btn-primary" name="{{ hgoal.id }}-{{ bbm.id }}" value="btn-sub-press">Add</button></td>#}
-{#                                    </tr>#}
                                     </tbody>
                                 </table>
                             </td>
                         {% endfor %}
                     </tr>
+                    {% else %}
+                    <tr class="table-danger">
+                        <td class="align-middle">{{ hgoal.description }}</td>
+                        <td>No Black Box Mechanism Selected</td>
+                        <td>Missing Black Box Mechanism</td>
+                    </tr>
+                    {% endif %}
                 {% endif %}
             {% endfor %}
             </tbody>
         </table>
+    <button class="btn btn-raised btn-success btn-lg" type="submit" name="sub">Accept Assumptions as is</button>
     </form>
     </div>
 {% endblock %}

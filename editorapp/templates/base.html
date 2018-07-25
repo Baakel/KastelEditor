@@ -62,6 +62,11 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('assumptions', project=project.name) }}">Assumptions</a>
                             </li>
+                          {% if g.project.final_assumptions %}
+                            <li>
+                                <a class="nav-link" href="{{ url_for('tree', project=project.name) }}">Project Diagram</a>
+                            </li>
+                          {% endif %}
                         {% else %}
                             <li class="nav-item">
                                 <a class="nav-link disabled" href="#">Stakeholders</a>

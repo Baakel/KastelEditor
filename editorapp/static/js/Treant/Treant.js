@@ -131,9 +131,6 @@
                 return ( raw? $element.get( 0 ): $element );
             }
             else {
-                // todo: getElementsByName()
-                // todo: getElementsByTagName()
-                // todo: getElementsByTagNameNS()
                 if ( selector.charAt( 0 ) === '#' ) {
                     return parentEl.getElementById( selector.substring( 1 ) );
                 }
@@ -1212,7 +1209,6 @@
             if ( parentId >= 0 ) {
                 var parent = this.get( parentId );
 
-                // todo: refactor into separate private method
                 if ( nodeStructure.position ) {
                     if ( nodeStructure.position === 'left' ) {
                         parent.children.push( node.id );
@@ -1328,7 +1324,7 @@
             this.stackParentId = stackParentId;
 
             // pseudo node is a node with width=height=0, it is invisible, but necessary for the correct positioning of the tree
-            this.pseudo = nodeStructure === 'pseudo' || nodeStructure['pseudo']; // todo: surely if nodeStructure is a scalar then the rest will error:
+            this.pseudo = nodeStructure === 'pseudo' || nodeStructure['pseudo'];
 
             this.meta = nodeStructure.meta || {};
             this.image = nodeStructure.image || null;
@@ -1707,7 +1703,6 @@
                 this.positioned = true;
             }
             else {
-                // todo: fix flashy bug when a node is manually hidden and tree.redraw is called.
                 if ( $ ) {
                     $( this.nodeDOM ).animate(
                         oNewState, config.animation.nodeSpeed, config.animation.nodeAnimation,

@@ -202,6 +202,7 @@ class BbMechanisms(db.Model):
     authenticity = db.Column(db.Boolean, default=False)
     confidentiality = db.Column(db.Boolean, default=False)
     integrity = db.Column(db.Boolean, default=False)
+    extra_hg = db.Column(db.String(280))
     assumptions = db.relationship('Assumptions',
                                    secondary=bb_assumptions,
                                    backref=db.backref('bb_mechanisms', lazy='dynamic'),

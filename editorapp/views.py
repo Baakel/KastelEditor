@@ -73,6 +73,8 @@ def create_db_data():
                 vals_dict[use] = vals[ind]
             kw = {'name': name, **vals_dict}
             bbmech = BbMechanisms(**kw)
+            if bbmech.name == 'Asymmetric or Hybrid Encryption':
+                bbmech.extra_hg = 'Authenticity of the Encrypted Material'
             db.session.add(bbmech)
             db.session.commit()
 
@@ -185,9 +187,13 @@ def before_request():
 @app.route('/tree/<project>', methods=['GET', 'POST'])
 def tree(project):
     proj = Projects.query.filter_by(name=project).first()
-    return render_template('tree.html',
-                           project=proj,
-                           title=proj.name)
+    if proj.final_assumptions:
+        return render_template('tree.html',
+                               project=proj,
+                               title=proj.name)
+    else:
+        flash('Assumptions need to be accepted first', 'error')
+        return redirect(url_for('assumptions', project=proj.name))
 
 
 
@@ -718,14 +724,14 @@ def removesub(project, id):
         return redirect(url_for('index'))
 
 
-@app.route('/removeass/<project>/<id>', methods=['GET', 'POST'])
-@login_required
-def removeass(project, id):
-    project = Projects.query.filter_by(name=project).first()
-    if g.user in project.editors:
-        Assumptions.query.filter_by(project_id=project.id, id=id).delete()
-        db.session.commit()
-    return redirect(url_for('assumptions', project=project.name))
+# @app.route('/removeass/<project>/<id>', methods=['GET', 'POST'])
+# @login_required
+# def removeass(project, id):
+#     project = Projects.query.filter_by(name=project).first()
+#     if g.user in project.editors:
+#         Assumptions.query.filter_by(project_id=project.id, id=id).delete()
+#         db.session.commit()
+#     return redirect(url_for('assumptions', project=project.name))
 
 
 @app.route('/hard_goals/<project>', methods=['GET', 'POST'])
@@ -871,6 +877,8 @@ def hard_goals(project):
                         hg.remove_bb(bbm)
                     HardGoal.query.filter_by(project_id=project.id, description=remaining_hg).delete()
                     db.session.commit()
+            project.final_assumptions = False
+            db.session.commit()
             flash('Hard Goals Database Updated', 'succ')
             return redirect(url_for('hard_goals', project=project.name))
 
@@ -930,6 +938,7 @@ def bbm(project):
                 hardG = HardGoal.query.filter_by(id=key).first()
                 blbxm = BbMechanisms.query.filter_by(id=value).first()
                 hardG.add_bb(blbxm)
+                project.final_assumptions = False
                 db.session.commit()
         flash('Black Box mechanisms updated', 'succ')
     elif request.method == 'POST' and request.form.get('sub') != 'pressed':
@@ -979,6 +988,7 @@ def bbmech(project):
                     for valu in values:
                         hg = HardGoal.query.filter_by(id=key).first()
                         hg.remove_bb(valu)
+            project.final_assumptions = False
             db.session.commit()
             flash('Black Box Mechanisms updated', 'succ')
             return redirect(url_for('bbmech', project=project.name))
@@ -1010,10 +1020,18 @@ def assumptions(project):
         for key, values in hgoal_bbm__dict.items():
             if not values:
                 empty_hgoals.append(key)
-        if request.method == 'POST':
-            project.final_assumptions = True
-            db.session.commit()
-            return redirect(url_for('assumptions', project=project.name))
+        if request.method == 'POST' and request.form.get('sub'):
+
+                print(request.data)
+                project.final_assumptions = True
+                db.session.commit()
+                return redirect(url_for('assumptions', project=project.name))
+
+        elif request.method == 'POST' and request.form.get('ehg'):
+            cb_values = request.form.get('ehg').split('-')
+            hg = HardGoal.query.filter_by(id=cb_values[1]).first()
+            bbm = BbMechanisms.query.filter_by(id=cb_values[0]).first()
+            print(bbm.extra_hg, hg.description)
         return render_template('assumptions.html',
                                title=project.name,
                                project=project,

@@ -34,6 +34,12 @@
                                         <td><b>{{ ass.name }}</b></td>
                                     </tr>
                                 {% endfor %}
+                                {% if bbm.extra_hg %}
+                                  <tr class="table-primary">
+                                    <td><b>A new Hardgoal with "{{ bbm.extra_hg }}" needs to be created</b>
+                                    <button type="submit" class="btn btn-raised btn-primary btn-sm" name="ehg" value="{{ bbm.id }}-{{ hgoal.id }}">Add</button></td>
+                                  </tr>
+                                {% endif %}
                                 </tbody>
                             </table>
                         </td>
@@ -79,7 +85,7 @@
             {% endfor %}
             </tbody>
         </table>
-    <button class="btn btn-raised btn-success btn-lg" type="submit" name="sub">Accept Assumptions as is</button>
+    <button class="btn btn-raised btn-success btn-lg" type="submit" name="sub" value="pressed">Accept Assumptions as is</button>
     </form>
     </div>
 {% endblock %}

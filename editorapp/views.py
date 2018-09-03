@@ -823,7 +823,7 @@ def hard_goals(project):
             hardgoals = HardGoal.query.filter_by(project_id=project.id).all()
             db_values = []
             for hgoal in hardgoals:
-                if hgoal.cb_value:
+                if hgoal.cb_value and not hgoal.extra_hg:
                     db_values.append(hgoal.cb_value)
 
             for val in db_values:
@@ -866,16 +866,24 @@ def hard_goals(project):
                         hardgs.remove(final_string)
                 for remaining_hg in hardgs:
                     hg = HardGoal.query.filter_by(project_id=project.id, description=remaining_hg).first()
-                    for bbm in hg.bbmechanisms:
-                        hg.remove_bb(bbm)
-                    HardGoal.query.filter_by(project_id=project.id, description=remaining_hg).delete()
+                    if hg:
+                        if not hg.extra_hg:
+                            for bbm in hg.bbmechanisms:
+                                hg.remove_bb(bbm)
+                            if hg.original_hg:
+                                HardGoal.query.filter_by(id=hg.original_hg).delete()
+                        HardGoal.query.filter_by(project_id=project.id, description=remaining_hg).delete()
                     db.session.commit()
             else:
                 for remaining_hg in hardgs:
                     hg = HardGoal.query.filter_by(project_id=project.id, description=remaining_hg).first()
-                    for bbm in hg.bbmechanisms:
-                        hg.remove_bb(bbm)
-                    HardGoal.query.filter_by(project_id=project.id, description=remaining_hg).delete()
+                    if hg:
+                        if not hg.extra_hg:
+                            for bbm in hg.bbmechanisms:
+                                hg.remove_bb(bbm)
+                            if hg.original_hg:
+                                HardGoal.query.filter_by(id=hg.original_hg).delete()
+                            HardGoal.query.filter_by(project_id=project.id, description=remaining_hg).delete()
                     db.session.commit()
             project.final_assumptions = False
             db.session.commit()
@@ -1022,7 +1030,6 @@ def assumptions(project):
                 empty_hgoals.append(key)
         if request.method == 'POST' and request.form.get('sub'):
 
-                print(request.data)
                 project.final_assumptions = True
                 db.session.commit()
                 return redirect(url_for('assumptions', project=project.name))
@@ -1031,7 +1038,31 @@ def assumptions(project):
             cb_values = request.form.get('ehg').split('-')
             hg = HardGoal.query.filter_by(id=cb_values[1]).first()
             bbm = BbMechanisms.query.filter_by(id=cb_values[0]).first()
-            print(bbm.extra_hg, hg.description)
+            new_hg_start = hg.description.find('during the ')
+            new_hg_service = hg.description.find('ensures the ')
+            new_hg = hg.description[:new_hg_service] + 'ensures the ' + bbm.extra_hg + ' ' + hg.description[new_hg_start:]
+            if 'authenticity' in  bbm.extra_hg.lower():
+                n_hg = HardGoal(authenticity='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id)
+                db.session.add(n_hg)
+                db.session.commit()
+                hg.extra_hg_used = True
+                hg.original_hg = n_hg.id
+            elif 'confidentiality' in bbm.extra_hg.lower():
+                n_hg = HardGoal(confidentiality='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id)
+                db.session.add(n_hg)
+                db.session.commit()
+                hg.extra_hg_used = True
+                hg.original_hg = n_hg.id
+            elif 'integrity' in bbm.extra_hg.lower():
+                n_hg = HardGoal(integrity='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id)
+                db.session.add(n_hg)
+                db.session.commit()
+                hg.extra_hg_used = True
+                hg.original_hg = n_hg.id
+            project.final_assumptions = False
+            db.session.commit()
+            return redirect(url_for('assumptions', project=project.name))
+
         return render_template('assumptions.html',
                                title=project.name,
                                project=project,

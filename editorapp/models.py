@@ -137,6 +137,9 @@ class HardGoal(db.Model):
     priority = db.Column(db.Boolean(), default=False)
     cb_value = db.Column(db.String(300))
     description = db.Column(db.String(500))
+    extra_hg_used = db.Column(db.Boolean)
+    extra_hg = db.Column(db.Boolean)
+    original_hg = db.Column(db.Integer)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     bbmechanisms = db.relationship('BbMechanisms',
                             secondary=hard_mechanism,

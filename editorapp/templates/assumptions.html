@@ -10,7 +10,7 @@
     <div class="container-fluid mt-5">
     <form action="" method="post" name="assumptions">
         <table class="table table-bordered">
-            <caption>Add assumptions for every Hard Goal</caption>
+            <caption>Review Project and confirm current state of the project</caption>
             <thead class="thead-inverse text-center">
             <tr>
                 <th class="text-light">Hard Goals</th>
@@ -34,7 +34,7 @@
                                         <td><b>{{ ass.name }}</b></td>
                                     </tr>
                                 {% endfor %}
-                                {% if bbm.extra_hg %}
+                                {% if bbm.extra_hg and not hgoal.extra_hg_used %}
                                   <tr class="table-primary">
                                     <td><b>A new Hardgoal with "{{ bbm.extra_hg }}" needs to be created</b>
                                     <button type="submit" class="btn btn-raised btn-primary btn-sm" name="ehg" value="{{ bbm.id }}-{{ hgoal.id }}">Add</button></td>
@@ -85,7 +85,9 @@
             {% endfor %}
             </tbody>
         </table>
-    <button class="btn btn-raised btn-success btn-lg" type="submit" name="sub" value="pressed">Accept Assumptions as is</button>
+    {% if not project.final_assumptions %}
+      <button class="btn btn-raised btn-success btn-lg" type="submit" name="sub" value="pressed">Accept Assumptions as is</button>
+    {% endif %}
     </form>
     </div>
 {% endblock %}

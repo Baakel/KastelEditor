@@ -1,19 +1,53 @@
 {% extends "base.html" %}
 
 {% block content %}
-    {% for message in get_flashed_messages() %}
-        <div class="alert-danger" role="alert">{{ message }}</div>
+    {% for message in get_flashed_messages(category_filter=["succ"]) %}
+        <div class="alert-success" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% for errors in get_flashed_messages(category_filter=["error"]) %}
+        <div class="alert-danger" role="alert">{{ errors }}</div>
     {% endfor %}
     {% if g.user %}
     <div class="container-fluid mt-5">
-        <div class="row justify-content-center"><h1 style="font-family: 'Lato Heavy'; font-size: 50px"><b>Welcome, {{ g.user.nickname }}!</b></h1></div>
-        <div class="row justify-content-around">
-            <div class="col-4 mb-2 text-center"><h2><b>Current projects</b></h2></div>
-            <div class="col-4 mb-2 text-center"><a href="{{ url_for('projects', name='New Project') }}"><h2>Start a new project</h2></a></div>
+        <div class="row justify-content-center"><h1 class="display-2"><b>Welcome, {{ g.user.nickname }}!</b></h1></div>
+        <div class="row">
+          <div class="col-sm">
+            <table class="table table-hover table-striped">
+              <thead class="thead-inverse">
+              <tr>
+                <th scope="col" colspan="2" class="text-center">My Projects</th>
+              </tr>
+              </thead>
+              <tbody>
+              {% for project in g.user.wprojects %}
+              <tr>
+                <td>{{ project.name }}</td>
+                <td class="text-right"><a href="{{ url_for('projects', name=project.name) }}">Edit</a></td>
+              </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          <div class="col-sm">
+            <table class="table table-hover table-striped">
+              <thead class="thead-inverse">
+              <tr>
+                <th scope="col" colspan="2" class="text-center">Public Projects</th>
+              </tr>
+              </thead>
+              <tbody>
+              {% for project in projects_list %}
+                {% if project.public %}
+                <tr>
+                  <td>{{ project.name }}</td>
+                  <td class="text-right"><a href="{{ url_for('projects', name=project.name) }}">View</a></td>
+                </tr>
+                {% endif %}
+              {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
-            {% for project in g.user.wprojects %}
-            <div class="row ml-5 mb-3"><a href="{{ url_for('projects', name=project.name) }}"><h3><i class="material-icons">business_center</i> {{ project.name }}</h3></a></div>
-            {% endfor %}
     </div>
     {% else %}
     <div class="container-fluid" style="margin-top: 20%">

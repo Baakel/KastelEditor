@@ -14,7 +14,7 @@
             <table class="table">
                 <tr>
                     <td><div class="form-group mb-4">{{ form.freq.label(class_="form-control-label") }}{{ form.freq(class_="form-control", size=140, placeholder="describe your requirements") }}</div><button type="submit" name="freqbtn" value="pressed" class="btn btn-raised btn-primary mb-5">Add</button></td>
-                    <td><div class="form-group mb-4">{{ form.subserv.label(class_='form-control-label') }}{{ form.subserv(class_='form-control', size=140, placeholder="Service") }}</div><button type="submit" name="servbtn" value="pressed2" class="btn btn-raised btn-info mb-5">Add</button></td>
+                    <td><div class="form-group mb-4">{{ form.subserv.label(class_='form-control-label') }}{{ form.subserv(class_='form-control', size=140, placeholder="Component") }}</div><button type="submit" name="servbtn" value="pressed2" class="btn btn-raised btn-info mb-5">Add</button></td>
                 </tr>
             </table>
         <div class="row">
@@ -34,7 +34,7 @@
             <div class="col">
                 <table class="table table-hover">
                     <tr class="thead-inverse text-center mt-5">
-                        <th colspan="2">Current Sub-Services</th>
+                        <th colspan="2">Current Sub-Component</th>
                     </tr>
                     {% for serv in project.sub_services %}
                         <tr>
@@ -49,7 +49,7 @@
             <table class="table table-hover">
                 <thead class="thead-inverse">
                     <tr>
-                        <th class="text-light">Functional Requirement / Sub-Service</th>
+                        <th class="text-light">Functional Requirement / Sub-Component</th>
                         {% for serv in project.sub_services %}
                             <th class="bg-info text-light">{{ serv.name }}</th>
                         {% endfor %}

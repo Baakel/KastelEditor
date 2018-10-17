@@ -61,7 +61,7 @@
                         <div id="list-tab" class="list-group" role="tablist">
                             <a class="list-group-item list-group-item-action active" id="list-stakeholders-list" data-toggle="list" href="#list-stakeholders" role="tab" aria-controls="stakeholders">Stakeholders</a>
                             <a class="list-group-item list-group-item-action" id="list-func-req-list" data-toggle="list" href="#list-func-req" role="tab" aria-controls="func-req">Functional Requirements</a>
-                            <a class="list-group-item list-group-item-action" id="list-goods-list" data-toggle="list" href="#list-goods" role="tab" aria-controls="goods">Goods</a>
+                            <a class="list-group-item list-group-item-action" id="list-goods-list" data-toggle="list" href="#list-goods" role="tab" aria-controls="goods">Assets</a>
                             <a class="list-group-item list-group-item-action" id="list-hg-list" data-toggle="list" href="#list-hg" role="tab" aria-controls="hg">Hard Goals</a>
                             <a class="list-group-item list-group-item-action" id="list-bbm-list" data-toggle="list" href="#list-bbm" role="tab" aria-controls="bbm">Black Box Mechanisms</a>
                         </div>
@@ -104,7 +104,7 @@
                                 <table class="table table-hover table-striped">
                                     <thead class="thead-inverse">
                                     <tr>
-                                        <th scope="col" class="text-center">Goods</th>
+                                        <th scope="col" class="text-center">Assets</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -278,6 +278,21 @@
                                     </div>
                                 </td>
                             </tr>
+                            {% for editor in project.editors %}
+                              {% if g.user.id == editor.id %}
+                              <tr>
+                                {% if project.public %}
+                                  <td>
+                                    <a href="{{ url_for('make_public_project', project=project.name) }}" class="btn btn-raised btn-info">Make Private</a>
+                                  </td>
+                                {% else %}
+                                  <td>
+                                    <a href="{{ url_for('make_public_project', project=project.name) }}" class="btn btn-raised btn-info">Make Public</a>
+                                  </td>
+                                {% endif %}
+                              </tr>
+                              {% endif %}
+                            {% endfor %}
                         </tbody>
                     </table>
                     </div>

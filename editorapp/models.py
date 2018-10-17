@@ -36,7 +36,7 @@ class Role(db.Model, RoleMixin):
     description = db.Column(db.String(255))
 
     def __str__(self):
-        return self.name
+        return '{}'.format(self.name)
 
 
 class Users(db.Model, UserMixin):
@@ -86,17 +86,26 @@ class Users(db.Model, UserMixin):
     def is_contributing(self, project):
         return self.wprojects.filter(wprojects.c.project_id == project.id).count() > 0
 
+    def __repr__(self):
+        return '{}'.format(self.nickname)
+
 
 class Stakeholder(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nickname = db.Column(db.String(64))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
 
+    def __repr__(self):
+        return '{}'.format(self.nickname)
+
 
 class Good(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(140))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+
+    def __repr__(self):
+        return '{}'.format(self.description)
 
 
 class FunctionalRequirement(db.Model):
@@ -120,11 +129,17 @@ class FunctionalRequirement(db.Model):
             self.services.remove(serv)
             return self
 
+    def __repr__(self):
+        return '{}'.format(self.description)
+
 
 class SubService(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+
+    def __repr__(self):
+        return '{}'.format(self.name)
 
 
 class HardGoal(db.Model):
@@ -161,10 +176,19 @@ class HardGoal(db.Model):
             self.bbmechanisms.remove(bbm)
             return self
 
+    def __repr__(self):
+        if self.description is not None:
+            return '{}'.format(self.description)
+        else:
+            return '<Hard Goal Place Holder {} NOT TO BE USED OR REMOVED>'.format(self.id)
+
 
 class ExtraHardGoal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(280))
+
+    def __repr__(self):
+        return '{}'.format(self.description)
 
 
 class Projects(db.Model):
@@ -172,6 +196,7 @@ class Projects(db.Model):
     creator = db.Column(db.Integer)
     name = db.Column(db.String(64), index=True, unique=True)
     final_assumptions = db.Column(db.Boolean)
+    public = db.Column(db.Boolean)
     hard_goals = db.relationship('HardGoal', backref='project', lazy='dynamic')
     functional_req = db.relationship('FunctionalRequirement', backref='project', lazy='dynamic')
     stake_holders = db.relationship('Stakeholder', backref='project', lazy='dynamic')
@@ -198,6 +223,9 @@ class Assumptions(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120))
 
+    def __repr__(self):
+        return '{}'.format(self.name)
+
 
 class BbMechanisms(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -223,3 +251,6 @@ class BbMechanisms(db.Model):
         if self.alrdy_used(ass):
             self.assumptions.remove(ass)
             return self
+
+    def __repr__(self):
+        return '{}'.format(self.name)

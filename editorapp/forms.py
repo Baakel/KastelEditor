@@ -16,12 +16,12 @@ class ProjectForm(FlaskForm):
 
 
 class GoodsForm(FlaskForm):
-    goods = StringField('Add a good:', validators=[DataRequired()])
+    goods = StringField('Add an asset:', validators=[DataRequired()])
 
 
 class FunctionalRequirementsForm(FlaskForm):
     freq = StringField('Add a functional requirement:', validators=[DataRequired()])
-    subserv = StringField('Add a Service to Handle the requirements', validators=[DataRequired()])
+    subserv = StringField('Add a Component to Handle the requirements', validators=[DataRequired()])
 
 
 class EditorForm(FlaskForm):

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ project.name }} Goods</h1>
+    <h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ project.name }} Assets</h1>
     {% for message in get_flashed_messages(category_filter=["succ"]) %}
         <div class="alert-success" role="alert">{{ message }}</div>
     {% endfor %}
@@ -13,10 +13,10 @@
         <div class="container">
             <table class="table table-hover">
                 <tr>
-                    <td colspan="2"><div class="form-group mb-4">{{ form.goods.label(class_="form-control-label") }}{{ form.goods(class_="form-control", placeholder="Good") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
+                    <td colspan="2"><div class="form-group mb-4">{{ form.goods.label(class_="form-control-label") }}{{ form.goods(class_="form-control", placeholder="Asset") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
                 </tr>
                 <tr class="text-center thead-inverse mt-5">
-                    <th colspan="2">Current Goods</th>
+                    <th colspan="2">Current Assets</th>
                 </tr>
                 {% for good in project.goods %}
                 <tr>

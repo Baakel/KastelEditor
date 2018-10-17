@@ -11,6 +11,7 @@ from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequiremen
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 # from flask_security.utils import hash_password, verify_password, get_hmac
 import flask_admin
+from flask_admin.contrib.sqla.form import InlineModelConverter
 from flask_admin.contrib import sqla
 from flask_admin import helpers as admin_helpers
 import requests
@@ -187,14 +188,9 @@ def before_request():
 @app.route('/tree/<project>', methods=['GET', 'POST'])
 def tree(project):
     proj = Projects.query.filter_by(name=project).first()
-    if proj.final_assumptions:
-        return render_template('tree.html',
+    return render_template('tree.html',
                                project=proj,
                                title=proj.name)
-    else:
-        flash('Assumptions need to be accepted first', 'error')
-        return redirect(url_for('assumptions', project=proj.name))
-
 
 
 @app.route('/testdata')
@@ -339,9 +335,12 @@ def index():
                 access = True
             else:
                 access = False
+
+        projects_list = Projects.query.all()
     return render_template('index.html',
                            title='Home',
-                           access=access)
+                           access=access,
+                           projects_list=projects_list)
 
 
 @app.route('/stakeholders/<project>', methods=['GET', 'POST'])
@@ -459,7 +458,7 @@ def projects(name):
                                form3=form3,
                                project=None,
                                user=g.user)
-    elif g.user in project.editors:
+    elif g.user in project.editors or project.public:
         bbms = BbMechanisms.query.all()
         return render_template('projects.html',
                                title=project.name,
@@ -474,6 +473,23 @@ def projects(name):
     else:
         flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
+
+
+@app.route('/project/<project>/public')
+@login_required
+def make_public_project(project):
+    project = Projects.query.filter_by(name=project).first()
+    if g.user.id == project.creator:
+        if project.public:
+            project.public = False
+            db.session.commit()
+        else:
+            project.public = True
+            db.session.commit()
+        return redirect(url_for('projects', name=project.name))
+    else:
+        flash('You don\'t have permission to do that', 'error')
+        return redirect(url_for('projects', name=project.name))
 
 
 @app.route('/project/<project>', methods=['DELETE', 'GET'])
@@ -1097,6 +1113,34 @@ class MyModelView(sqla.ModelView):
                 return redirect(url_for('security.login', next=request.url))
 
 
+class MyModelViewBbMech(sqla.ModelView):
+
+    # form_ajax_refs = {
+    #     'assumptions': QueryAjaxModelLoader('assumptions', db.session, Assumptions, fields=['name'])
+    # }
+
+    edit_modal = True
+
+    # can_view_details = True
+
+    def is_accessible(self):
+        if not current_user.is_active or not current_user.is_authenticated:
+            return False
+
+        if current_user.has_role('superuser'):
+            return True
+
+        return False
+
+    def _handle_view(self, name, **kwargs):
+        if not self.is_accessible():
+            if current_user.is_authenticated():
+                flash('You don\'t have permission to access this page.', 'error')
+                return redirect(url_for('index'))
+            else:
+                return redirect(url_for('security.login', next=request.url))
+
+
 admin = flask_admin.Admin(
     app,
     'Kastel Editor',
@@ -1107,7 +1151,7 @@ admin = flask_admin.Admin(
 admin.add_view(MyModelView(Role, db.session))
 admin.add_view(MyModelView(Users, db.session))
 admin.add_view(MyModelView(Projects, db.session))
-admin.add_view(MyModelView(BbMechanisms, db.session))
+admin.add_view(MyModelViewBbMech(BbMechanisms, db.session))
 admin.add_view(MyModelView(Assumptions, db.session))
 
 

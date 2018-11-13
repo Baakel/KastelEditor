@@ -17,11 +17,13 @@ class ProjectForm(FlaskForm):
 
 class GoodsForm(FlaskForm):
     goods = StringField('Add an asset:', validators=[DataRequired()])
+    stakeholders_list = SelectField()
 
 
 class FunctionalRequirementsForm(FlaskForm):
     freq = StringField('Add a functional requirement:', validators=[DataRequired()])
-    subserv = StringField('Add a Component to Handle the requirements', validators=[DataRequired()])
+    subserv = StringField('Add a Component to Handle the requirements')
+    subservice_multiple_select = SelectField()
 
 
 class EditorForm(FlaskForm):

@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block content %}
@@ -15,7 +16,8 @@
             <table class="table table-hover table-striped">
               <thead class="thead-inverse">
               <tr>
-                <th scope="col" colspan="2" class="text-center">My Projects</th>
+                <th scope="col" class="text-right">My Projects</th>
+                <th scope="col" class="text-right"><a class="btn btn-raised btn-secondary btn-sm" href="{{ url_for('projects', name='New Project') }}">New Project</a></th>
               </tr>
               </thead>
               <tbody>

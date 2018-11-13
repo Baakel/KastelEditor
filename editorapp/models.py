@@ -30,6 +30,11 @@ freq_serv = db.Table('freq_serv',
                      db.Column('serv_id', db.Integer, db.ForeignKey('sub_service.id')))
 
 
+good_stakeholder = db.Table('good_stakeholder',
+                            db.Column('good_id', db.Integer, db.ForeignKey('good.id')),
+                            db.Column('stakeholder_id', db.Integer, db.ForeignKey('stakeholder.id')))
+
+
 class Role(db.Model, RoleMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80), unique=True)
@@ -103,6 +108,23 @@ class Good(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(140))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    stakeholders = db.relationship('Stakeholder',
+                                   secondary=good_stakeholder,
+                                   backref=db.backref('goods', lazy='dynamic'),
+                                   lazy='dynamic')
+
+    def alrdy_used(self, sh):
+        return self.stakeholders.filter(good_stakeholder.c.stakeholder_id == sh.id).count() > 0
+
+    def add_stakeholder(self, sh):
+        if not self.alrdy_used(sh):
+            self.stakeholders.append(sh)
+            return self
+
+    def remove_stakeholder(self, sh):
+        if self.alrdy_used(sh):
+            self.stakeholders.remove(sh)
+            return self
 
     def __repr__(self):
         return '{}'.format(self.description)

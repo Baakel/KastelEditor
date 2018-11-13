@@ -11,10 +11,16 @@
         <form action="" method="post" name="addgood">
             {{ form.hidden_tag() }}
         <div class="container">
-            <table class="table table-hover">
+            <table class="table">
                 <tr>
-                    <td colspan="2"><div class="form-group mb-4">{{ form.goods.label(class_="form-control-label") }}{{ form.goods(class_="form-control", placeholder="Asset") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
+                    <td><div class="form-group mb-4">{{ form.goods.label(class_="form-control-label") }}{{ form.goods(class_="form-control", placeholder="Asset") }}</div></td>
+                    <td><div class="form-group">{{ form['stakeholders_list'].label(class_="form-control-label") }}{{ form['stakeholders_list'](class_='form-control', id='selectfield') }}</div></td>
                 </tr>
+                <tr>
+                  <td><button type="submit" name="add" value="adding" class="btn btn-raised btn-primary mb-5">Add</button></td>
+                </tr>
+            </table>
+            <table class="table table-hover">
                 <tr class="text-center thead-inverse mt-5">
                     <th colspan="2">Current Assets</th>
                 </tr>
@@ -24,6 +30,33 @@
                     <td class="text-right"><a class="text-danger" href="{{ url_for('removeg', project=project.name, desc=good.description) }}">Remove</a></td>
                 </tr>
                 {% endfor %}
+            </table>
+            <table class="table table-hover">
+                <thead class="thead-inverse">
+                    <tr>
+                        <th class="text-light">Asset / Stakeholder</th>
+                        {% for stakeholder in project.stake_holders %}
+                            <th class="bg-info text-light">{{ stakeholder.nickname }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for good in project.goods %}
+                        <tr>
+                            <td>{{ good.description }}</td>
+                            {% for stakeholder in project.stake_holders %}
+                                {% if stakeholder in good.stakeholders %}
+                                    <td><input title="{{ stakeholder.nickname }}" name="chbpx" value="{{ good.id }}-{{ stakeholder.id }}" type="checkbox" checked></td>
+                                {% else %}
+                                    <td><input title="{{ stakeholder.nickname }}" name="chbpx" value="{{ good.id }}-{{ stakeholder.id }}" type="checkbox"></td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    <tr>
+                        <td colspan="3"><button type="submit" name="update" value="pressed3" class="btn btn-raised btn-success">Update relationship Matrix</button> </td>
+                    </tr>
+                </tbody>
             </table>
         </div>
         </form>

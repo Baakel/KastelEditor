@@ -15,6 +15,7 @@ from flask_admin.contrib.sqla.form import InlineModelConverter
 from flask_admin.contrib import sqla
 from flask_admin import helpers as admin_helpers
 import requests
+import json
 
 
 @app.before_first_request
@@ -185,6 +186,93 @@ def before_request():
         session['current_project'] = None
 
 
+@app.route('/<project>/export')
+def export(project):
+    proj = Projects.query.filter_by(name=project).first()
+    project_dict = {}
+    project_dict['Project'] = proj.name
+    creator = Users.query.filter_by(id=proj.creator).first()
+    project_dict['Project Creator'] = creator.nickname
+    project_dict['Contact Info'] = creator.contact
+    editor_list = []
+    for i, editor in enumerate(proj.editors):
+        # editor_list['{}'.format(i)] = str(editor)
+        editor_list.append(str(editor))
+    project_dict['Project Editors'] = editor_list
+    project_dict['Public'] = proj.public
+    project_dict['Final Assumptions Signed'] = proj.final_assumptions
+    assets = []
+    for asset in proj.goods:
+        assets.append(str(asset))
+    project_dict['Assets'] = assets
+    stakeholders = []
+    for stakeholder in proj.stake_holders:
+        stakeholders.append(stakeholder.nickname)
+    project_dict['Stakeholders'] = stakeholders
+    asset_stakeholder_relationship = {}
+    for asset in proj.goods:
+        for stakeholder in asset.stakeholders:
+            asset_stakeholder_relationship[asset.description] = str(stakeholder)
+    project_dict['Asset and Stakeholder Relationships'] = asset_stakeholder_relationship
+    functional_requirements = []
+    for fr in proj.functional_req:
+        functional_requirements.append(str(fr))
+    project_dict['Functional Requirements'] = functional_requirements
+    functional_requirements_services_relationship = {}
+    for fr in proj.functional_req:
+        for serv in fr.services:
+            functional_requirements_services_relationship[fr.description] = str(serv)
+    project_dict['Functional Requirements and Services Relationships'] = functional_requirements_services_relationship
+    soft_goals = [sg for sg in proj.hard_goals if not sg.description]
+    soft_goals_dict = {}
+    for sg in soft_goals:
+        if sg.integrity:
+            soft_goals_dict[sg.integrity] = {'priority': sg.priority, 'cb_value': sg.cb_value}
+    for sg in soft_goals:
+        if sg.authenticity:
+            soft_goals_dict[sg.authenticity] = {'priority': sg.priority, 'cb_value': sg.cb_value}
+    for sg in soft_goals:
+        if sg.confidentiality:
+            soft_goals_dict[sg.confidentiality] = {'priority': sg.priority, 'cb_value': sg.cb_value}
+    project_dict['Soft Goals'] = soft_goals_dict
+    hard_goals = [hg for hg in proj.hard_goals if hg.description]
+    hard_goals_dict = {}
+    for hg in hard_goals:
+        if hg.authenticity:
+            if hg.original_hg:
+                original = HardGoal.query.filter_by(id=hg.original_hg).first()
+                hard_goals_dict[hg.description] = {
+                    'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                    'extra_hg': hg.extra_hg, 'original_hg': original.description}
+            else:
+                hard_goals_dict[hg.description] = {
+                    'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                    'extra_hg': hg.extra_hg, 'original_hg': None}
+        if hg.confidentiality:
+            if hg.original_hg:
+                original = HardGoal.query.filter_by(id=hg.original_hg).first()
+                hard_goals_dict[hg.description] = {
+                    'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                    'extra_hg': hg.extra_hg, 'original_hg': original.description}
+            else:
+                hard_goals_dict[hg.description] = {
+                    'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                    'extra_hg': hg.extra_hg, 'original_hg': None}
+        if hg.integrity:
+            if hg.original_hg:
+                original = HardGoal.query.filter_by(id=hg.original_hg).first()
+                hard_goals_dict[hg.description] = {
+                    'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                    'extra_hg': hg.extra_hg, 'original_hg': original.description}
+            else:
+                hard_goals_dict[hg.description] = {
+                    'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                    'extra_hg': hg.extra_hg, 'original_hg': None}
+    project_dict['Hard Goals'] = hard_goals_dict
+    print(project_dict)
+    return jsonify(project_dict)
+
+
 @app.route('/tree/<project>', methods=['GET', 'POST'])
 def tree(project):
     proj = Projects.query.filter_by(name=project).first()
@@ -337,6 +425,8 @@ def index():
                 access = False
 
         projects_list = Projects.query.all()
+    else:
+        projects_list = []
     return render_template('index.html',
                            title='Home',
                            access=access,
@@ -375,9 +465,14 @@ def stakeholders(project):
 def removesh(project, desc):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
+        sh = Stakeholder.query.filter_by(nickname=desc, project_id=project.id).first()
+        name = sh.nickname
+        for sth in sh.goods:
+            sth.remove_stakeholder(sh)
+        db.session.commit()
         Stakeholder.query.filter_by(nickname=desc, project_id=project.id).delete()
         db.session.commit()
-        flash('Stakeholder "{}" removed'.format(desc), 'error')
+        flash('Stakeholder "{}" removed'.format(name), 'error')
         return redirect(url_for('stakeholders', project=project.name))
     else:
         flash('You don\'t have permission to access this project.')
@@ -599,17 +694,59 @@ def logout():
 def goods(project):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
+        choices = [(sh.id, sh.nickname) for sh in Stakeholder.query.filter_by(project_id=project.id)]
+        choices.insert(0, ('x', 'No Stakeholder'))
+        # choices.insert(1, (0, 'Add a new Component'))
+        setattr(GoodsForm, 'stakeholders_list',
+                SelectField('Select a Stakeholder to whom the asset is important', default='x', choices=choices))
         form = GoodsForm()
-        if form.validate_on_submit():
-            gd = Good.query.filter_by(description=form.goods.data, project_id=project.id).first()
-            if gd is None:
-                good = Good(description=form.goods.data, project_id=project.id)
-                db.session.add(good)
-                db.session.commit()
-                flash('Good Added to the Database', 'succ')
-                return redirect(url_for('goods', project=project.name))
+        if request.method == 'POST' and request.form.get('add'):
+            if form.goods.data is not '':
+                gd = Good.query.filter_by(description=form.goods.data, project_id=project.id).first()
+                if gd is None:
+                    good = Good(description=form.goods.data, project_id=project.id)
+                    db.session.add(good)
+                    db.session.commit()
+                    flash('Good Added to the Database', 'succ')
+                    if form.stakeholders_list.data is not 'x':
+                        stakeholder = Stakeholder.query.filter_by(project_id=project.id, id=form.stakeholders_list.data).first()
+                        gud = Good.query.filter_by(project_id=project.id, description=form.goods.data).first()
+                        gud.add_stakeholder(stakeholder)
+                        db.session.commit()
+                    return redirect(url_for('goods', project=project.name))
+                else:
+                    flash('Good already exists', 'error')
             else:
-                flash('Good already exists', 'error')
+                flash('Asset field can\'t be empty', 'error')
+                return redirect(url_for('goods', project=project.name))
+        elif request.method == 'POST' and request.form.get('update'):
+            chbx_list = request.form.getlist('chbpx')
+            # print('check box list {}'.format(chbx_list))
+            goods = Good.query.filter_by(project_id=project.id).all()
+            current_stakeholders_list = []
+            for gd in goods:
+                for sh in gd.stakeholders:
+                    if sh in gd.stakeholders:
+                        curr_sh = '{}-{}'.format(gd.id, sh.id)
+                        current_stakeholders_list.append(curr_sh)
+            # print('current stakeholders list {}'.format(current_stakeholders_list))
+            for item in chbx_list:
+                if item in current_stakeholders_list:
+                    current_stakeholders_list.remove(item)
+                good_id, stakeholder_id = item.split('-')
+                gud = Good.query.filter_by(id=good_id).first()
+                sth = Stakeholder.query.filter_by(id=stakeholder_id).first()
+                gud.add_stakeholder(sth)
+                db.session.commit()
+            for remaining in current_stakeholders_list:
+                rem_good_id, rem_stakeholder_id = remaining.split('-')
+                rem_gud = Good.query.filter_by(id=rem_good_id).first()
+                rem_sth = Stakeholder.query.filter_by(id=rem_stakeholder_id).first()
+                rem_gud.remove_stakeholder(rem_sth)
+                db.session.commit()
+            # print('final stakeholder list {}'.format(current_stakeholders_list))
+            flash('Assets and Stakeholders Matrix Updated', 'succ')
+            return redirect(url_for('goods', project=project.name))
         goods = Good.query.filter_by(project_id=project.id).all()
         return render_template('goods.html',
                                title=project.name,
@@ -626,6 +763,10 @@ def goods(project):
 def removeg(project, desc):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
+        asset = Good.query.filter_by(description=desc, project_id=project.id).first()
+        for sh in asset.stakeholders:
+            asset.remove_stakeholder(sh)
+            db.session.commit()
         Good.query.filter_by(description=desc, project_id=project.id).delete()
         db.session.commit()
         flash('Good "{}" removed'.format(desc), 'error')
@@ -640,7 +781,13 @@ def removeg(project, desc):
 def functional_req(project):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
+        choices = [(sub.id, sub.name) for sub in SubService.query.filter_by(project_id=project.id)]
+        choices.insert(0, ('x', 'No Component'))
+        choices.insert(1, (0,'Add a new Component'))
+        setattr(FunctionalRequirementsForm, 'subservice_multiple_select',
+                SelectField('Add a Component for the Functional Requirement', default='x', choices=choices))
         form = FunctionalRequirementsForm()
+
         if request.method == 'POST' and request.form.get('freqbtn'):
             if form.freq.data is not '':
                 fr = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
@@ -649,25 +796,26 @@ def functional_req(project):
                     db.session.add(freq)
                     db.session.commit()
                     flash('Functional Requirement Added to the Database', 'succ')
-                    return redirect(url_for('functional_req', project=project.name))
                 else:
                     flash('Functional Requirement already exists', 'error')
             else:
                 flash('Functional Requirement field can\'t be empty', 'error')
-
-        elif request.method == 'POST' and request.form.get('servbtn'):
-            if form.subserv.data is not '':
+            if form.subserv.data is not '' and form.subservice_multiple_select.data == '0':
                 sub = SubService.query.filter_by(name=form.subserv.data, project_id=project.id).first()
                 if sub is None:
                     sb = SubService(name=form.subserv.data, project_id=project.id)
                     db.session.add(sb)
                     db.session.commit()
-                    flash('Service Added to the Database', 'succ')
-                    return redirect(url_for('functional_req', project=project.name))
+                    flash('Component Added to the Database', 'succ')
+
+                    added_sub = SubService.query.filter_by(name=form.subserv.data, project_id=project.id).first()
+                    fr = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
+                    fr.add_serv(added_sub)
+                    db.session.commit()
                 else:
-                    flash('Service Already Exists', 'error')
-            else:
-                flash('Service Field can\'t be empty', 'error')
+                    flash('Component Already Exists', 'error')
+
+            return redirect(url_for('functional_req', project=project.name))
         elif request.method == 'POST' and request.form.get('updatech'):
             chbx_list = request.form.getlist('chbpx')
             freqs = FunctionalRequirement.query.filter_by(project_id=project.id).all()
@@ -685,12 +833,12 @@ def functional_req(project):
                 serv = SubService.query.filter_by(id=serv_id).first()
                 frq.add_serv(serv)
                 db.session.commit()
-                for remaining in current_services_list:
-                    rem_freq_id, rem_serv_id = remaining.split('-')
-                    rem_frq = FunctionalRequirement.query.filter_by(id=rem_freq_id).first()
-                    rem_serv = SubService.query.filter_by(id=rem_serv_id).first()
-                    rem_frq.remove_serv(rem_serv)
-                    db.session.commit()
+            for remaining in current_services_list:
+                rem_freq_id, rem_serv_id = remaining.split('-')
+                rem_frq = FunctionalRequirement.query.filter_by(id=rem_freq_id).first()
+                rem_serv = SubService.query.filter_by(id=rem_serv_id).first()
+                rem_frq.remove_serv(rem_serv)
+                db.session.commit()
             flash('Functional Requirements and Sub-services Table Updated', 'succ')
             return redirect(url_for('functional_req', project=project.name))
 
@@ -733,7 +881,7 @@ def removesub(project, id):
         db.session.commit()
         SubService.query.filter_by(id=id, project_id=project.id).delete()
         db.session.commit()
-        flash('Sub-Service "{}" removed'.format(name), 'error')
+        flash('Component "{}" removed'.format(name), 'error')
         return redirect(url_for('functional_req', project=project.name))
     else:
         flash('You don\'t have permission to access this project.')

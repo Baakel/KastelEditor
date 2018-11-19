@@ -49,6 +49,9 @@
                 </div>
             </div>
         {% endif %}
+        {% if g.user in project.editors or project.public %}
+          <a href="{{ url_for('export', project=project.name) }}" class="btn btn-raised btn-outline-info ml-5 mt-2">Export Project</a>
+        {% endif %}
         {% for message in get_flashed_messages(category_filter=["succ"]) %}
             <div class="alert-success" role="alert">{{ message }}</div>
         {% endfor %}

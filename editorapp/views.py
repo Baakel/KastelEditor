@@ -187,98 +187,244 @@ def before_request():
 
 
 @app.route('/<project>/export')
+@login_required
 def export(project):
     proj = Projects.query.filter_by(name=project).first()
-    project_dict = {}
-    project_dict['Project'] = proj.name
-    creator = Users.query.filter_by(id=proj.creator).first()
-    project_dict['Project Creator'] = creator.nickname
-    project_dict['Contact Info'] = creator.contact
-    editor_list = []
-    for i, editor in enumerate(proj.editors):
-        # editor_list['{}'.format(i)] = str(editor)
-        editor_list.append(str(editor))
-    project_dict['Project Editors'] = editor_list
-    project_dict['Public'] = proj.public
-    project_dict['Final Assumptions Signed'] = proj.final_assumptions
-    assets = []
-    for asset in proj.goods:
-        assets.append(str(asset))
-    project_dict['Assets'] = assets
-    stakeholders = []
-    for stakeholder in proj.stake_holders:
-        stakeholders.append(stakeholder.nickname)
-    project_dict['Stakeholders'] = stakeholders
-    asset_stakeholder_relationship = {}
-    for asset in proj.goods:
-        for stakeholder in asset.stakeholders:
-            asset_stakeholder_relationship[asset.description] = str(stakeholder)
-    project_dict['Asset and Stakeholder Relationships'] = asset_stakeholder_relationship
-    functional_requirements = []
-    for fr in proj.functional_req:
-        functional_requirements.append(str(fr))
-    project_dict['Functional Requirements'] = functional_requirements
-    functional_requirements_services_relationship = {}
-    for fr in proj.functional_req:
-        for serv in fr.services:
-            functional_requirements_services_relationship[fr.description] = str(serv)
-    project_dict['Functional Requirements and Services Relationships'] = functional_requirements_services_relationship
-    soft_goals = [sg for sg in proj.hard_goals if not sg.description]
-    soft_goals_dict = {}
-    for sg in soft_goals:
-        if sg.integrity:
-            soft_goals_dict[sg.integrity] = {'priority': sg.priority, 'cb_value': sg.cb_value}
-    for sg in soft_goals:
-        if sg.authenticity:
-            soft_goals_dict[sg.authenticity] = {'priority': sg.priority, 'cb_value': sg.cb_value}
-    for sg in soft_goals:
-        if sg.confidentiality:
-            soft_goals_dict[sg.confidentiality] = {'priority': sg.priority, 'cb_value': sg.cb_value}
-    project_dict['Soft Goals'] = soft_goals_dict
-    hard_goals = [hg for hg in proj.hard_goals if hg.description]
-    hard_goals_dict = {}
-    for hg in hard_goals:
-        if hg.authenticity:
-            if hg.original_hg:
-                original = HardGoal.query.filter_by(id=hg.original_hg).first()
-                hard_goals_dict[hg.description] = {
-                    'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                    'extra_hg': hg.extra_hg, 'original_hg': original.description}
+    if proj.public or g.user in proj.editors:
+        project_dict = {}
+        project_dict['Project'] = proj.name
+        creator = Users.query.filter_by(id=proj.creator).first()
+        project_dict['Project Creator'] = creator.nickname
+        project_dict['Contact Info'] = creator.contact
+        editor_list = []
+        for i, editor in enumerate(proj.editors):
+            editor_list.append(str(editor))
+        project_dict['Project Editors'] = editor_list
+        project_dict['Public'] = proj.public
+        project_dict['Final Assumptions Signed'] = proj.final_assumptions
+        assets = []
+        for asset in proj.goods:
+            assets.append(asset.description)
+        project_dict['Assets'] = assets
+        stakeholders = []
+        for stakeholder in proj.stake_holders:
+            stakeholders.append(stakeholder.nickname)
+        project_dict['Stakeholders'] = stakeholders
+        asset_stakeholder_relationship = {}
+        for asset in proj.goods:
+            asset_stakeholder_relationship[asset.description] = []
+            for stakeholder in asset.stakeholders:
+                asset_stakeholder_relationship[asset.description].append(stakeholder.nickname)
+        project_dict['Asset and Stakeholder Relationships'] = asset_stakeholder_relationship
+        functional_requirements = []
+        for fr in proj.functional_req:
+            functional_requirements.append(fr.description)
+        project_dict['Functional Requirements'] = functional_requirements
+        functional_requirements_services_relationship = {}
+        for fr in proj.functional_req:
+            functional_requirements_services_relationship[fr.description] = []
+            for serv in fr.services:
+                functional_requirements_services_relationship[fr.description].append(serv.name)
+        project_dict['Functional Requirements and Services Relationships'] = functional_requirements_services_relationship
+        services = []
+        for service in proj.sub_services:
+            services.append(service.name)
+        project_dict['Services'] = services
+        soft_goals = [sg for sg in proj.hard_goals if not sg.description]
+        soft_goals_dict = {}
+        for sg in soft_goals:
+            if sg.integrity:
+                soft_goals_dict[sg.integrity] = {'priority': sg.priority, 'cb_value': sg.cb_value}
+        for sg in soft_goals:
+            if sg.authenticity:
+                soft_goals_dict[sg.authenticity] = {'priority': sg.priority, 'cb_value': sg.cb_value}
+        for sg in soft_goals:
+            if sg.confidentiality:
+                soft_goals_dict[sg.confidentiality] = {'priority': sg.priority, 'cb_value': sg.cb_value}
+        project_dict['Soft Goals'] = soft_goals_dict
+        hard_goals = [hg for hg in proj.hard_goals if hg.description]
+        hard_goals_dict = {}
+        hard_bb_mechanism_relationship = {}
+        for hg in hard_goals:
+            if hg.authenticity:
+                if hg.original_hg:
+                    original = HardGoal.query.filter_by(id=hg.original_hg).first()
+                    hard_goals_dict[hg.description] = {
+                        'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                        'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                else:
+                    hard_goals_dict[hg.description] = {
+                        'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                        'extra_hg': hg.extra_hg, 'original_hg': None}
+            if hg.confidentiality:
+                if hg.original_hg:
+                    original = HardGoal.query.filter_by(id=hg.original_hg).first()
+                    hard_goals_dict[hg.description] = {
+                        'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                        'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                else:
+                    hard_goals_dict[hg.description] = {
+                        'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                        'extra_hg': hg.extra_hg, 'original_hg': None}
+            if hg.integrity:
+                if hg.original_hg:
+                    original = HardGoal.query.filter_by(id=hg.original_hg).first()
+                    hard_goals_dict[hg.description] = {
+                        'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                        'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                else:
+                    hard_goals_dict[hg.description] = {
+                        'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                        'extra_hg': hg.extra_hg, 'original_hg': None}
+            for bbm in hg.bbmechanisms:
+                hard_bb_mechanism_relationship[hg.description] = bbm.name
+        project_dict['Hard Mechanism Relationship']  = hard_bb_mechanism_relationship
+        project_dict['Hard Goals'] = hard_goals_dict
+        black_box_mechanisms_dict = {}
+        for bb in BbMechanisms.query.all():
+            black_box_mechanisms_dict[bb.name] = {'authenticity': bb.authenticity, 'integrity': bb.integrity,
+                                                  'confidentiality': bb.confidentiality,
+                                                  'extra_hg': bb.extra_hg}
+        project_dict['Black Box Mechanisms'] = black_box_mechanisms_dict
+        assumptions = []
+        for ass in Assumptions.query.all():
+            assumptions.append(ass.name)
+        project_dict['Assumptions'] = assumptions
+        black_box_assumptions_dict = {}
+        for bb in BbMechanisms.query.all():
+            black_box_assumptions_dict[bb.name] = []
+            for assumption in bb.assumptions:
+                black_box_assumptions_dict[bb.name].append(assumption.name)
+        project_dict['Black Box And Assumptions Relationship'] = black_box_assumptions_dict
+        return jsonify(project_dict)
+    else:
+        flash('You don\'t have permission to do that', 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/import', methods=['POST'])
+@login_required
+def import_project():
+    try:
+        file = request.files['inputFile']
+        read_file = file.read()
+        decoded_file = read_file.decode('utf-8')
+        json_data = json.loads(decoded_file)
+        project_name = Projects.make_unique_name(json_data['Project'])
+        new_project = Projects(creator=g.user.id, name=project_name,
+                               final_assumptions=json_data['Final Assumptions Signed'], public=json_data['Public'])
+        db.session.add(new_project)
+        db.session.commit()
+        curr_project = Projects.query.filter_by(name=project_name).first()
+        for editor in json_data['Project Editors']:
+            ed = Users.query.filter_by(nickname=editor).first()
+            if ed:
+                ed.contribute(curr_project)
+        for stakeholder in json_data['Stakeholders']:
+            stk = Stakeholder(nickname=stakeholder, project_id=curr_project.id)
+            db.session.add(stk)
+            db.session.commit()
+        for asset in json_data['Assets']:
+            ass = Good(description=asset, project_id=curr_project.id)
+            db.session.add(ass)
+            db.session.commit()
+        for asset in json_data['Asset and Stakeholder Relationships']:
+            ass = Good.query.filter_by(description=asset, project_id=curr_project.id).first()
+            for stakeholder in json_data['Asset and Stakeholder Relationships'][asset]:
+                stk = Stakeholder.query.filter_by(nickname=stakeholder, project_id=curr_project.id).first()
+                ass.add_stakeholder(stk)
+            db.session.commit()
+        for functional_requirement in json_data['Functional Requirements']:
+            fr = FunctionalRequirement(description=functional_requirement, project_id=curr_project.id)
+            db.session.add(fr)
+            db.session.commit()
+        for service in json_data['Services']:
+            sv = SubService(name=service, project_id=curr_project.id)
+            db.session.add(sv)
+            db.session.commit()
+        for functional_requirement in json_data['Functional Requirements and Services Relationships']:
+            fr = FunctionalRequirement.query.filter_by(description=functional_requirement, project_id=curr_project.id).first()
+            for service in json_data['Functional Requirements and Services Relationships'][functional_requirement]:
+                sv = SubService.query.filter_by(name=service, project_id=curr_project.id).first()
+                fr.add_serv(sv)
+            db.session.commit()
+        for soft_goals in json_data['Soft Goals']:
+            if 'authenticity' in json_data['Soft Goals'][soft_goals]['cb_value']:
+                hg = HardGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
+                              cb_value=json_data['Soft Goals'][soft_goals]['cb_value'],
+                              authenticity=soft_goals, project_id=curr_project.id)
+                db.session.add(hg)
+                db.session.commit()
+            elif 'confidentiality' in json_data['Soft Goals'][soft_goals]['cb_value']:
+                hg = HardGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
+                              cb_value=json_data['Soft Goals'][soft_goals]['cb_value'],
+                              confidentiality=soft_goals, project_id=curr_project.id)
+                db.session.add(hg)
+                db.session.commit()
+            elif 'integrity' in json_data['Soft Goals'][soft_goals]['cb_value']:
+                hg = HardGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
+                              cb_value=json_data['Soft Goals'][soft_goals]['cb_value'],
+                              integrity=soft_goals, project_id=curr_project.id)
+                db.session.add(hg)
+                db.session.commit()
+        for hard_goal in json_data['Hard Goals']:
+            hg = HardGoal(description=hard_goal, project_id=curr_project.id, **json_data['Hard Goals'][hard_goal])
+            db.session.add(hg)
+            db.session.commit()
+        for hard_goal in json_data['Hard Goals']:
+            if json_data['Hard Goals'][hard_goal]['original_hg']:
+                original_hg_obj = HardGoal.query.filter_by(description=json_data['Hard Goals'][hard_goal]['original_hg'],
+                                                           project_id=curr_project.id).first()
             else:
-                hard_goals_dict[hg.description] = {
-                    'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                    'extra_hg': hg.extra_hg, 'original_hg': None}
-        if hg.confidentiality:
-            if hg.original_hg:
-                original = HardGoal.query.filter_by(id=hg.original_hg).first()
-                hard_goals_dict[hg.description] = {
-                    'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                    'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                original_hg_obj = None
+            hg = HardGoal.query.filter_by(description=hard_goal, project_id=curr_project.id).first()
+            if original_hg_obj:
+                hg.original_hg = original_hg_obj.id
             else:
-                hard_goals_dict[hg.description] = {
-                    'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                    'extra_hg': hg.extra_hg, 'original_hg': None}
-        if hg.integrity:
-            if hg.original_hg:
-                original = HardGoal.query.filter_by(id=hg.original_hg).first()
-                hard_goals_dict[hg.description] = {
-                    'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                    'extra_hg': hg.extra_hg, 'original_hg': original.description}
-            else:
-                hard_goals_dict[hg.description] = {
-                    'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                    'extra_hg': hg.extra_hg, 'original_hg': None}
-    project_dict['Hard Goals'] = hard_goals_dict
-    print(project_dict)
-    return jsonify(project_dict)
+                hg.original_hg = None
+            db.session.commit()
+        for bbm in json_data['Black Box Mechanisms']:
+            bb = BbMechanisms.query.filter_by(name=bbm, **json_data['Black Box Mechanisms'][bbm]).first()
+            if bb is None:
+                bb = BbMechanisms(name=bbm, **json_data['Black Box Mechanisms'][bbm])
+                db.session.add(bb)
+                db.session.commit()
+        for assumption in json_data['Assumptions']:
+            ass = Assumptions.query.filter_by(name=assumption).first()
+            if ass is None:
+                ass = Assumptions(name=assumption)
+                db.session.add(ass)
+                db.session.commit()
+        for bbm in json_data['Black Box And Assumptions Relationship']:
+            bb = BbMechanisms.query.filter_by(name=bbm).first()
+            for assumption in json_data['Black Box And Assumptions Relationship'][bbm]:
+                ass = Assumptions.query.filter_by(name=assumption).first()
+                if not bb.alrdy_used(ass):
+                    bb.add_ass(ass)
+        for hard_goal in json_data['Hard Mechanism Relationship']:
+            hg = HardGoal.query.filter_by(description=hard_goal, project_id=curr_project.id).first()
+            bbm = BbMechanisms.query.filter_by(name=json_data['Hard Mechanism Relationship'][hard_goal]).first()
+            if bbm:
+                hg.add_bb(bbm)
+            db.session.commit()
+        return redirect(url_for('projects', name=project_name))
+    except Exception as e:
+        print(e)
+        flash('An error occurred while importing project. Information might not be complete', 'error')
+        return redirect(url_for('index'))
 
 
 @app.route('/tree/<project>', methods=['GET', 'POST'])
+@login_required
 def tree(project):
     proj = Projects.query.filter_by(name=project).first()
-    return render_template('tree.html',
+    if g.user in proj.editors or proj.public:
+        return render_template('tree.html',
                                project=proj,
                                title=proj.name)
+    else:
+        flash('You don\'t have permission to see that.', 'error')
+        return redirect(url_for('index'))
 
 
 @app.route('/testdata')
@@ -317,6 +463,13 @@ def testdata():
                       'children': [],
                       'HTMLclass': 'yellow',
                       'collapsable': True}
+        for asset in project.goods:
+            if asset.description in softg.authenticity:
+                for stakeholder in asset.stakeholders:
+                    children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
+                                     'children': [],
+                                     'HTMLclass': 'red'}
+                    curr_dict['children'].append(children_dict)
         auth_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.authenticity in hg.description)
         for hardg in auth_hg_gen:
             if hardg.priority:
@@ -350,6 +503,13 @@ def testdata():
                      'children': [],
                      'HTMLclass': 'yellow',
                      'collapsable': True}
+        for asset in project.goods:
+            if asset.description in softg.confidentiality:
+                for stakeholder in asset.stakeholders:
+                    children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
+                                     'children': [],
+                                     'HTMLclass': 'red'}
+                    curr_dict['children'].append(children_dict)
         conf_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.confidentiality in hg.description)
         for hardg in conf_hg_gen:
             if hardg.priority:
@@ -383,6 +543,13 @@ def testdata():
                      'children': [],
                      'HTMLclass': 'yellow',
                      'collapsable': True}
+        for asset in project.goods:
+            if asset.description in softg.integrity:
+                for stakeholder in asset.stakeholders:
+                    children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
+                                     'children': [],
+                                     'HTMLclass': 'red'}
+                    curr_dict['children'].append(children_dict)
         int_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.integrity in hg.description)
         for hardg in int_hg_gen:
             if hardg.priority:
@@ -456,7 +623,7 @@ def stakeholders(project):
                                stakeholders=stakeholders,
                                project=project)
     else:
-        flash('You don\'t have permission to access this project.')
+        flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
 
 
@@ -475,7 +642,7 @@ def removesh(project, desc):
         flash('Stakeholder "{}" removed'.format(name), 'error')
         return redirect(url_for('stakeholders', project=project.name))
     else:
-        flash('You don\'t have permission to access this project.')
+        flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
 
 
@@ -606,9 +773,9 @@ def delete_project(project):
             db.session.commit()
         hard_goals = HardGoal.query.filter_by(project_id=project.id).all()
         for hg in hard_goals:
-            assumptions = Assumptions.query.filter_by(project_id=project.id, hg_id=hg.id).all()
-            for ass in assumptions:
-                Assumptions.query.filter_by(id=ass.id).delete()
+            # assumptions = Assumptions.query.filter_by(project_id=project.id, hg_id=hg.id).all()
+            # for ass in assumptions:
+            #     Assumptions.query.filter_by(id=ass.id).delete()
             for bbm in hg.bbmechanisms:
                 hg.remove_bb(bbm)
             db.session.delete(hg)
@@ -754,7 +921,7 @@ def goods(project):
                                goods=goods,
                                project=project)
     else:
-        flash('You don\'t have permission to access this project')
+        flash('You don\'t have permission to access this project', 'error')
         return redirect(url_for('index'))
 
 
@@ -772,7 +939,7 @@ def removeg(project, desc):
         flash('Good "{}" removed'.format(desc), 'error')
         return redirect(url_for('goods', project=project.name))
     else:
-        flash('You don\'t have permission to access this project')
+        flash('You don\'t have permission to access this project', 'error')
         return redirect(url_for('index'))
 
 
@@ -790,14 +957,30 @@ def functional_req(project):
 
         if request.method == 'POST' and request.form.get('freqbtn'):
             if form.freq.data is not '':
-                fr = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
-                if fr is None:
-                    freq = FunctionalRequirement(description=form.freq.data, project_id=project.id)
-                    db.session.add(freq)
-                    db.session.commit()
-                    flash('Functional Requirement Added to the Database', 'succ')
+                if form.subservice_multiple_select.data is not 'x' and form.subservice_multiple_select.data is not '0':
+                    sub = SubService.query.filter_by(id=form.subservice_multiple_select.data).first()
+                    fr = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
+                    if fr is None:
+                        freq = FunctionalRequirement(description=form.freq.data, project_id=project.id)
+                        db.session.add(freq)
+                        db.session.commit()
+                        flash('Functional Requirement Added to the Database', 'succ')
+
+                        fr2 = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
+                        fr2.add_serv(sub)
+                        db.session.commit()
+                    else:
+                        flash('Functional Requirement already exists', 'error')
                 else:
-                    flash('Functional Requirement already exists', 'error')
+                    fr = FunctionalRequirement.query.filter_by(description=form.freq.data,
+                                                               project_id=project.id).first()
+                    if fr is None:
+                        freq = FunctionalRequirement(description=form.freq.data, project_id=project.id)
+                        db.session.add(freq)
+                        db.session.commit()
+                        flash('Functional Requirement Added to the Database', 'succ')
+                    else:
+                        flash('Functional Requirement already exists', 'error')
             else:
                 flash('Functional Requirement field can\'t be empty', 'error')
             if form.subserv.data is not '' and form.subservice_multiple_select.data == '0':
@@ -847,7 +1030,7 @@ def functional_req(project):
                                form=form,
                                project=project)
     else:
-        flash('You don\'t have permission to access this project.')
+        flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
 
 
@@ -865,7 +1048,7 @@ def removefr(project, desc):
         flash('Functional Requirement "{}" removed'.format(desc), 'error')
         return redirect(url_for('functional_req', project=project.name))
     else:
-        flash('You don\'t have permission to access this project.')
+        flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
 
 
@@ -884,7 +1067,7 @@ def removesub(project, id):
         flash('Component "{}" removed'.format(name), 'error')
         return redirect(url_for('functional_req', project=project.name))
     else:
-        flash('You don\'t have permission to access this project.')
+        flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
 
 
@@ -1059,7 +1242,7 @@ def hard_goals(project):
                                project=project,
                                hardgs=hardgs)
     else:
-        flash('You don\'t have permission to access this project.')
+        flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
 
 

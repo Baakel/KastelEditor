@@ -50,6 +50,13 @@
             </table>
           </div>
         </div>
+    <form method="POST" action="/import" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="inputFile">Import Project</label>
+        <input type="file" name="inputFile">
+      </div>
+      <button type="submit" class="btn btn-outline-primary">Import</button>
+    </form>
     </div>
     {% else %}
     <div class="container-fluid" style="margin-top: 20%">

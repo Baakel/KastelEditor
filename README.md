@@ -18,6 +18,7 @@ You will also need the following packages installed _(They can also be found in 
 - Flask==1.0.2
 - GitHub_Flask==3.2.0
 - sqlalchemy_migrate==0.11.0
+[Requirements](requirements.txt)
 
 ### Installing
 To set up your database run the `db_create.py` file.

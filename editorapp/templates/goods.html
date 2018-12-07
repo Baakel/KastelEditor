@@ -54,10 +54,46 @@
                         </tr>
                     {% endfor %}
                     <tr>
-                        <td colspan="3"><button type="submit" name="update" value="pressed3" class="btn btn-raised btn-success">Update relationship Matrix</button> </td>
+                        <td colspan="3"><button id="update" type="submit" name="update" value="pressed3" class="btn btn-raised btn-success">Update relationship Matrix</button> </td>
                     </tr>
                 </tbody>
             </table>
         </div>
         </form>
+{% endblock %}
+{% block scripts %}
+  <script type="text/javascript">
+    sub_button = document.getElementById('update');
+    sub_button.addEventListener('click', function() {
+      checkboxes = document.getElementsByName('chbpx');
+      sh = 0;
+      {% for sh in project.stake_holders %}
+        sh++;
+      {% endfor %}
+      ass = 0;
+      {% for ass in project.goods %}
+        ass++;
+      {% endfor %}
+      i = -1;
+      rows = [];
+      for (x = 1; x <= ass; x++) {
+        rows[x-1] = false;
+        for (z = 1; z <= sh; z++){
+          i++;
+          if (checkboxes[i].checked) {
+            rows[x-1] = true;
+          }
+        }
+      }
+      msg = false;
+      rows.forEach(function(row) {
+        if (row === false) {
+          msg = true
+        }
+      });
+      if (msg) {
+        window.alert('Remember to assign a stakeholder to every asset. Assets without a stakeholder will not be processed.')
+      }
+    })
+  </script>
 {% endblock %}

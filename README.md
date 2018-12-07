@@ -25,6 +25,7 @@ To set up your database run the `db_create.py` file.
 ## Usage
 To start the server run the `run.py` file. Your port 5000 needs to be free for this to run. After that you can connect to the server from *localhost:5000* 
 You will need to log in using your Github account.
+If you are using the docker image then the command to start it would be `docker run -p 5000:5000 --rm kasteleditor:latest`
 
 ## Deployment
 _TODO_

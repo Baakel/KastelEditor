@@ -4,4 +4,5 @@ test.db
 app.db
 *.pyc
 *.pyo
+logs/*
 !*.gitkeep

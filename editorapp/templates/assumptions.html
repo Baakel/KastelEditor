@@ -69,6 +69,12 @@
                                             <td>{{ ass.name }}</td>
                                         </tr>
                                     {% endfor %}
+                                    {% if bbm.extra_hg and not hgoal.extra_hg_used %}
+                                      <tr class="table-secondary">
+                                        <td><b>A new Hardgoal with "{{ bbm.extra_hg }}" needs to be created</b>
+                                        <button type="submit" class="btn btn-raised btn-primary btn-sm" name="ehg" value="{{ bbm.id }}-{{ hgoal.id }}">Add</button></td>
+                                      </tr>
+                                    {% endif %}
                                     </tbody>
                                 </table>
                             </td>

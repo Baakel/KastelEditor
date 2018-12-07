@@ -6,7 +6,7 @@ from wtforms import SelectField
 from wtforms.validators import DataRequired
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, \
     HardGoalsForm, BbmForm, FlaskForm
-from .models import Stakeholder, Users, lm, Projects, Good, FunctionalRequirement,\
+from .models import Stakeholder, Users, Projects, Good, FunctionalRequirement,\
     HardGoal, Role, BbMechanisms,  Assumptions, SubService, freq_serv, hard_mechanism
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 # from flask_security.utils import hash_password, verify_password, get_hmac
@@ -15,7 +15,7 @@ from flask_admin.contrib.sqla.form import InlineModelConverter
 from flask_admin.contrib import sqla
 from flask_admin import helpers as admin_helpers
 import requests
-import json
+import json, re
 
 
 @app.before_first_request
@@ -234,13 +234,22 @@ def export(project):
         soft_goals_dict = {}
         for sg in soft_goals:
             if sg.integrity:
-                soft_goals_dict[sg.integrity] = {'priority': sg.priority, 'cb_value': sg.cb_value}
+                cbval = re.match(r"([a-zA-Z]+)([0-9]+)", sg.cb_value, re.I)
+                asset = Good.query.filter_by(id=cbval.groups()[1]).first()
+                soft_goals_dict[sg.integrity] = {'priority': sg.priority,
+                                                 'cb_value': '{}¡{}'.format(cbval.groups()[0], asset.description)}
         for sg in soft_goals:
             if sg.authenticity:
-                soft_goals_dict[sg.authenticity] = {'priority': sg.priority, 'cb_value': sg.cb_value}
+                cbval = re.match(r"([a-zA-Z]+)([0-9]+)", sg.cb_value, re.I)
+                asset = Good.query.filter_by(id=cbval.groups()[1]).first()
+                soft_goals_dict[sg.authenticity] = {'priority': sg.priority,
+                                                 'cb_value': '{}¡{}'.format(cbval.groups()[0], asset.description)}
         for sg in soft_goals:
             if sg.confidentiality:
-                soft_goals_dict[sg.confidentiality] = {'priority': sg.priority, 'cb_value': sg.cb_value}
+                cbval = re.match(r"([a-zA-Z]+)([0-9]+)", sg.cb_value, re.I)
+                asset = Good.query.filter_by(id=cbval.groups()[1]).first()
+                soft_goals_dict[sg.confidentiality] = {'priority': sg.priority,
+                                                 'cb_value': '{}¡{}'.format(cbval.groups()[0], asset.description)}
         project_dict['Soft Goals'] = soft_goals_dict
         hard_goals = [hg for hg in proj.hard_goals if hg.description]
         hard_goals_dict = {}
@@ -249,9 +258,14 @@ def export(project):
             if hg.authenticity:
                 if hg.original_hg:
                     original = HardGoal.query.filter_by(id=hg.original_hg).first()
-                    hard_goals_dict[hg.description] = {
-                        'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                        'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                    if original is not None:
+                        hard_goals_dict[hg.description] = {
+                            'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                            'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                    else:
+                        hard_goals_dict[hg.description] = {
+                            'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                            'extra_hg': hg.extra_hg, 'original_hg': None}
                 else:
                     hard_goals_dict[hg.description] = {
                         'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
@@ -259,9 +273,14 @@ def export(project):
             if hg.confidentiality:
                 if hg.original_hg:
                     original = HardGoal.query.filter_by(id=hg.original_hg).first()
-                    hard_goals_dict[hg.description] = {
-                        'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                        'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                    if original is not None:
+                        hard_goals_dict[hg.description] = {
+                            'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                            'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                    else:
+                        hard_goals_dict[hg.description] = {
+                            'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                            'extra_hg': hg.extra_hg, 'original_hg': None}
                 else:
                     hard_goals_dict[hg.description] = {
                         'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
@@ -269,9 +288,14 @@ def export(project):
             if hg.integrity:
                 if hg.original_hg:
                     original = HardGoal.query.filter_by(id=hg.original_hg).first()
-                    hard_goals_dict[hg.description] = {
-                        'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                        'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                    if original is not None:
+                        hard_goals_dict[hg.description] = {
+                            'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                            'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                    else:
+                        hard_goals_dict[hg.description] = {
+                            'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
+                            'extra_hg': hg.extra_hg, 'original_hg': None}
                 else:
                     hard_goals_dict[hg.description] = {
                         'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
@@ -350,20 +374,26 @@ def import_project():
             db.session.commit()
         for soft_goals in json_data['Soft Goals']:
             if 'authenticity' in json_data['Soft Goals'][soft_goals]['cb_value']:
+                cbval = json_data['Soft Goals'][soft_goals]['cb_value'].split('¡')
+                asset = Good.query.filter_by(description=cbval[1], project_id=curr_project.id).first()
                 hg = HardGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
-                              cb_value=json_data['Soft Goals'][soft_goals]['cb_value'],
+                              cb_value='{}{}'.format(cbval[0], asset.id),
                               authenticity=soft_goals, project_id=curr_project.id)
                 db.session.add(hg)
                 db.session.commit()
             elif 'confidentiality' in json_data['Soft Goals'][soft_goals]['cb_value']:
+                cbval = json_data['Soft Goals'][soft_goals]['cb_value'].split('¡')
+                asset = Good.query.filter_by(description=cbval[1], project_id=curr_project.id).first()
                 hg = HardGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
-                              cb_value=json_data['Soft Goals'][soft_goals]['cb_value'],
+                              cb_value='{}{}'.format(cbval[0], asset.id),
                               confidentiality=soft_goals, project_id=curr_project.id)
                 db.session.add(hg)
                 db.session.commit()
             elif 'integrity' in json_data['Soft Goals'][soft_goals]['cb_value']:
+                cbval = json_data['Soft Goals'][soft_goals]['cb_value'].split('¡')
+                asset = Good.query.filter_by(description=cbval[1], project_id=curr_project.id).first()
                 hg = HardGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
-                              cb_value=json_data['Soft Goals'][soft_goals]['cb_value'],
+                              cb_value='{}{}'.format(cbval[0], asset.id),
                               integrity=soft_goals, project_id=curr_project.id)
                 db.session.add(hg)
                 db.session.commit()
@@ -399,7 +429,7 @@ def import_project():
             bb = BbMechanisms.query.filter_by(name=bbm).first()
             for assumption in json_data['Black Box And Assumptions Relationship'][bbm]:
                 ass = Assumptions.query.filter_by(name=assumption).first()
-                if not bb.alrdy_used(ass):
+                if ass not in bb.assumptions:
                     bb.add_ass(ass)
         for hard_goal in json_data['Hard Mechanism Relationship']:
             hg = HardGoal.query.filter_by(description=hard_goal, project_id=curr_project.id).first()
@@ -773,9 +803,6 @@ def delete_project(project):
             db.session.commit()
         hard_goals = HardGoal.query.filter_by(project_id=project.id).all()
         for hg in hard_goals:
-            # assumptions = Assumptions.query.filter_by(project_id=project.id, hg_id=hg.id).all()
-            # for ass in assumptions:
-            #     Assumptions.query.filter_by(id=ass.id).delete()
             for bbm in hg.bbmechanisms:
                 hg.remove_bb(bbm)
             db.session.delete(hg)
@@ -792,9 +819,9 @@ def delete_project(project):
         flash('Cannot delete projects you don\'t own', 'error')
         return redirect(url_for('projects', name=project.name))
 
-@lm.user_loader
-def load_user(id):
-    return Users.query.get(int(id))
+# @lm.user_loader
+# def load_user(id):
+#     return Users.query.get(int(id))
 
 
 @app.route('/login')
@@ -874,7 +901,7 @@ def goods(project):
                     good = Good(description=form.goods.data, project_id=project.id)
                     db.session.add(good)
                     db.session.commit()
-                    flash('Good Added to the Database', 'succ')
+                    flash('Asset Added to the Database', 'succ')
                     if form.stakeholders_list.data is not 'x':
                         stakeholder = Stakeholder.query.filter_by(project_id=project.id, id=form.stakeholders_list.data).first()
                         gud = Good.query.filter_by(project_id=project.id, description=form.goods.data).first()
@@ -882,7 +909,7 @@ def goods(project):
                         db.session.commit()
                     return redirect(url_for('goods', project=project.name))
                 else:
-                    flash('Good already exists', 'error')
+                    flash('Asset already exists', 'error')
             else:
                 flash('Asset field can\'t be empty', 'error')
                 return redirect(url_for('goods', project=project.name))
@@ -936,7 +963,7 @@ def removeg(project, desc):
             db.session.commit()
         Good.query.filter_by(description=desc, project_id=project.id).delete()
         db.session.commit()
-        flash('Good "{}" removed'.format(desc), 'error')
+        flash('Asset "{}" removed'.format(desc), 'error')
         return redirect(url_for('goods', project=project.name))
     else:
         flash('You don\'t have permission to access this project', 'error')
@@ -1175,6 +1202,7 @@ def hard_goals(project):
 
             for val in db_values:
                 if val not in current_req:
+                    print('val is {} and current_req is {}'.format(val, current_req))
                     HardGoal.query.filter_by(cb_value=val, project_id=project.id).delete()
                     db.session.commit()
                     flash('Item(s) removed from the database', 'error')
@@ -1254,65 +1282,65 @@ def check_permission(project):
         return False
 
 
-@app.route('/bbm/<project>', methods=['GET', 'POST'])
-@login_required
-def bbm(project):
-    project = Projects.query.filter_by(name=project).first()
-    blackbox_mechanisms = BbMechanisms.query.all()
-    choices_tuples = [(bbm.id, bbm.name) for bbm in blackbox_mechanisms]
-    table_list = [[], [], []]
-    count = 0
-    class MultipleSelects(FlaskForm):
-        pass
-
-    hgoals = HardGoal.query.filter_by(project_id=project.id).all()
-    for hg in hgoals:
-        if hg.description:
-            table_list[0].append(count)
-            count += 1
-            table_list[1].append(hg.description)
-            bbms = [bbm.id for bbm in hg.bbmechanisms]
-            if bbms:
-                default_bbm = bbms[0]
-            else:
-                default_bbm = 1
-            if hg.authenticity == 'yes':
-                choices_tuples = [(bbma.id, bbma.name) for bbma in blackbox_mechanisms if bbma.authenticity]
-            if hg.confidentiality == 'yes':
-                choices_tuples = [(bbmc.id, bbmc.name) for bbmc in blackbox_mechanisms if bbmc.confidentiality]
-            if hg.integrity == 'yes':
-                choices_tuples = [(bbmi.id, bbmi.name) for bbmi in blackbox_mechanisms if bbmi.authenticity]
-            setattr(MultipleSelects, str(hg.id), SelectField('Desired Mechanism', choices=choices_tuples, default=default_bbm, validators=[DataRequired()]))
-            table_list[2].append('{}'.format(hg.id))
-
-    form2 = MultipleSelects()
-
-    if request.method == 'POST' and request.form.get('sub') == 'pressed':
-        for key,value in form2.data.items():
-            if key != 'csrf_token':
-                hardG = HardGoal.query.filter_by(id=key).first()
-                blbxm = BbMechanisms.query.filter_by(id=value).first()
-                hardG.add_bb(blbxm)
-                project.final_assumptions = False
-                db.session.commit()
-        flash('Black Box mechanisms updated', 'succ')
-    elif request.method == 'POST' and request.form.get('sub') != 'pressed':
-        if request.form.get('rmbbm'):
-            data = request.form.get('rmbbm').split('-')
-            hg = HardGoal.query.filter_by(id=data[0]).first()
-            blbm = BbMechanisms.query.filter_by(id=data[1]).first()
-            hg.remove_bb(blbm)
-            db.session.commit()
-            flash('Black Box Mechanism "{}" successfully removed for Hard Goal "{}"'.format(blbm.name, hg.description), 'succ')
-            return redirect(url_for('bbm', project=project.name))
-
-    return render_template('bbm.html',
-                           title=project.name,
-                           project=project,
-                           form2=form2,
-                           blackbox_mechanisms=blackbox_mechanisms,
-                           choices_tuples=choices_tuples,
-                           table_list=table_list)
+# @app.route('/bbm/<project>', methods=['GET', 'POST'])
+# @login_required
+# def bbm(project):
+#     project = Projects.query.filter_by(name=project).first()
+#     blackbox_mechanisms = BbMechanisms.query.all()
+#     choices_tuples = [(bbm.id, bbm.name) for bbm in blackbox_mechanisms]
+#     table_list = [[], [], []]
+#     count = 0
+#     class MultipleSelects(FlaskForm):
+#         pass
+#
+#     hgoals = HardGoal.query.filter_by(project_id=project.id).all()
+#     for hg in hgoals:
+#         if hg.description:
+#             table_list[0].append(count)
+#             count += 1
+#             table_list[1].append(hg.description)
+#             bbms = [bbm.id for bbm in hg.bbmechanisms]
+#             if bbms:
+#                 default_bbm = bbms[0]
+#             else:
+#                 default_bbm = 1
+#             if hg.authenticity == 'yes':
+#                 choices_tuples = [(bbma.id, bbma.name) for bbma in blackbox_mechanisms if bbma.authenticity]
+#             if hg.confidentiality == 'yes':
+#                 choices_tuples = [(bbmc.id, bbmc.name) for bbmc in blackbox_mechanisms if bbmc.confidentiality]
+#             if hg.integrity == 'yes':
+#                 choices_tuples = [(bbmi.id, bbmi.name) for bbmi in blackbox_mechanisms if bbmi.authenticity]
+#             setattr(MultipleSelects, str(hg.id), SelectField('Desired Mechanism', choices=choices_tuples, default=default_bbm, validators=[DataRequired()]))
+#             table_list[2].append('{}'.format(hg.id))
+#
+#     form2 = MultipleSelects()
+#
+#     if request.method == 'POST' and request.form.get('sub') == 'pressed':
+#         for key,value in form2.data.items():
+#             if key != 'csrf_token':
+#                 hardG = HardGoal.query.filter_by(id=key).first()
+#                 blbxm = BbMechanisms.query.filter_by(id=value).first()
+#                 hardG.add_bb(blbxm)
+#                 project.final_assumptions = False
+#                 db.session.commit()
+#         flash('Black Box mechanisms updated', 'succ')
+#     elif request.method == 'POST' and request.form.get('sub') != 'pressed':
+#         if request.form.get('rmbbm'):
+#             data = request.form.get('rmbbm').split('-')
+#             hg = HardGoal.query.filter_by(id=data[0]).first()
+#             blbm = BbMechanisms.query.filter_by(id=data[1]).first()
+#             hg.remove_bb(blbm)
+#             db.session.commit()
+#             flash('Black Box Mechanism "{}" successfully removed for Hard Goal "{}"'.format(blbm.name, hg.description), 'succ')
+#             return redirect(url_for('bbm', project=project.name))
+#
+#     return render_template('bbm.html',
+#                            title=project.name,
+#                            project=project,
+#                            form2=form2,
+#                            blackbox_mechanisms=blackbox_mechanisms,
+#                            choices_tuples=choices_tuples,
+#                            table_list=table_list)
 
 
 @app.route('/bbmech/<project>', methods=['POST', 'GET'])
@@ -1334,6 +1362,8 @@ def bbmech(project):
                 bbm = BbMechanisms.query.filter_by(id=value).first()
                 for key, val in current_bbms.items():
                     if key == hg.id and bbm in val:
+                        if bbm.extra_hg:
+                            print('The HG is {} BBM is {} extra hg is {}'.format(hg.description, bbm.name, bbm.extra_hg))
                         val.remove(bbm)
                     elif key == hg.id and bbm not in val:
                         hg.add_bb(bbm)
@@ -1447,10 +1477,17 @@ class MyModelView(sqla.ModelView):
 class MyModelViewBbMech(sqla.ModelView):
 
     # form_ajax_refs = {
-    #     'assumptions': QueryAjaxModelLoader('assumptions', db.session, Assumptions, fields=['name'])
+    #     'assumptions': {
+    #         'fields': ['name', 'id'],
+    #         'page_size': 10
+    #     }
     # }
 
     edit_modal = True
+    # column_list = ['name', 'assumptionz']
+    # column_display_all_relations = True
+    column_list = ['name','authenticity','confidentiality','integrity','extra_hg','assumptions']
+    # inline_models = (Assumptions, )
 
     # can_view_details = True
 

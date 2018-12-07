@@ -74,7 +74,7 @@
                         </tr>
                     {% endfor %}
                     <tr>
-                        <td colspan="3"><button type="submit" name="updatech" value="pressed3" class="btn btn-raised btn-success">Update relationship Matrix</button> </td>
+                        <td colspan="3"><button type="submit" id="updatech" name="updatech" value="pressed3" class="btn btn-raised btn-success">Update relationship Matrix</button> </td>
                     </tr>
                 </tbody>
             </table>
@@ -105,5 +105,39 @@
         servinp.value = '';
       }
     });
+  </script>
+  <script type="text/javascript">
+    sub_button = document.getElementById('updatech');
+    sub_button.addEventListener('click', function() {
+      checkboxes = document.getElementsByName('chbpx');
+      fr = 0;
+      {% for fr in project.functional_req %}
+        fr++;
+      {% endfor %}
+      serv = 0;
+      {% for serv in project.sub_services %}
+        serv++;
+      {% endfor %}
+      i = -1;
+      rows = [];
+      for (x = 1; x <= fr; x++) {
+        rows[x-1] = false;
+        for (z = 1; z <= serv; z++){
+          i++;
+          if (checkboxes[i].checked) {
+            rows[x-1] = true;
+          }
+        }
+      }
+      msg = false;
+      rows.forEach(function(row) {
+        if (row === false) {
+          msg = true
+        }
+      });
+      if (msg) {
+        window.alert('Remember to assign a service to every functional requirement. Functional requirements without a service will not be processed.')
+      }
+    })
   </script>
 {% endblock %}

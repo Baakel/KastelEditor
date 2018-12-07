@@ -1,8 +1,11 @@
-from editorapp import db, app
+from editorapp import db, app, login
 from flask_login import LoginManager
 from flask_security import RoleMixin, UserMixin
 
-lm = LoginManager(app)
+# lm = LoginManager(app)
+@login.user_loader
+def load_user(id):
+    return Users.query.get(int(id))
 
 wprojects = db.Table('wprojects',
                      db.Column('user_id', db.Integer, db.ForeignKey('users.id')),
@@ -178,6 +181,7 @@ class HardGoal(db.Model):
     extra_hg = db.Column(db.Boolean)
     original_hg = db.Column(db.Integer)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    soft_goals = db.relationship('SoftGoal', backref='hardgoals', lazy='dynamic')
     bbmechanisms = db.relationship('BbMechanisms',
                             secondary=hard_mechanism,
                             # primaryjoin=(hard_mechanism.c.hg_id == id),
@@ -205,6 +209,17 @@ class HardGoal(db.Model):
             return '<Hard Goal Place Holder {} NOT TO BE USED OR REMOVED>'.format(self.id)
 
 
+class SoftGoal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cb_value = db.Column(db.String(300))
+    authenticity = db.Column(db.String(280))
+    confidentiality = db.Column(db.String(280))
+    integrity = db.Column(db.String(280))
+    priority = db.Column(db.Boolean)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    hardgoal_id = db.Column(db.Integer, db.ForeignKey(HardGoal.id))
+
+
 class ExtraHardGoal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(280))
@@ -224,6 +239,7 @@ class Projects(db.Model):
     stake_holders = db.relationship('Stakeholder', backref='project', lazy='dynamic')
     goods = db.relationship('Good', backref='project', lazy='dynamic')
     sub_services = db.relationship('SubService', backref='project', lazy='dynamic')
+    soft_goals = db.relationship('SoftGoal', backref='project', lazy='dynamic')
 
     @staticmethod
     def make_unique_name(name):
@@ -258,11 +274,16 @@ class BbMechanisms(db.Model):
     extra_hg = db.Column(db.String(280))
     assumptions = db.relationship('Assumptions',
                                    secondary=bb_assumptions,
-                                   backref=db.backref('bb_mechanisms', lazy='dynamic'),
-                                   lazy='dynamic')
+                                   backref=db.backref('bb_mechanisms')) #, lazy='dynamic'),
+                                   # lazy='dynamic')
 
     def alrdy_used(self, ass):
-        return self.assumptions.filter(bb_assumptions.c.assumptions_id == ass.id).count() > 0
+        print(self.assumptions)
+        if ass in self.assumptions:
+            return True
+        else:
+            return False
+        # return self.assumptions.filter(bb_assumptions.c.assumptions_id == ass.id).count() > 0
 
     def add_ass(self, ass):
         if not self.alrdy_used(ass):

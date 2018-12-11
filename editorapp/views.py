@@ -1202,7 +1202,6 @@ def hard_goals(project):
 
             for val in db_values:
                 if val not in current_req:
-                    print('val is {} and current_req is {}'.format(val, current_req))
                     HardGoal.query.filter_by(cb_value=val, project_id=project.id).delete()
                     db.session.commit()
                     flash('Item(s) removed from the database', 'error')
@@ -1361,13 +1360,40 @@ def bbmech(project):
                 hg = HardGoal.query.filter_by(id=index).first()
                 bbm = BbMechanisms.query.filter_by(id=value).first()
                 for key, val in current_bbms.items():
-                    if key == hg.id and bbm in val:
-                        if bbm.extra_hg:
-                            print('The HG is {} BBM is {} extra hg is {}'.format(hg.description, bbm.name, bbm.extra_hg))
-                        val.remove(bbm)
-                    elif key == hg.id and bbm not in val:
-                        hg.add_bb(bbm)
-                        db.session.commit()
+                    if hg:
+                        if key == hg.id and bbm in val:
+                            if hg.extra_hg_used and not hg.extra_hg:
+                                match = False
+                                ehg = HardGoal.query.filter_by(id=hg.original_hg).first()
+                                if bbm.extra_hg:
+                                    if bbm.extra_hg in ehg.description:
+                                        match = True
+                                if not match:
+                                    if ehg:
+                                        for bb in ehg.bbmechanisms:
+                                            ehg.remove_bb(bb)
+                                        HardGoal.query.filter_by(id=hg.original_hg).delete()
+                                    hg.extra_hg_used = None
+                                    hg.original_hg = None
+                                    db.session.commit()
+                            val.remove(bbm)
+                        elif key == hg.id and bbm not in val:
+                            hg.add_bb(bbm)
+                            db.session.commit()
+                            if hg.extra_hg_used and not hg.extra_hg:
+                                match = False
+                                ehg = HardGoal.query.filter_by(id=hg.original_hg).first()
+                                if bbm.extra_hg:
+                                    if bbm.extra_hg in ehg.description:
+                                        match = True
+                                if not match:
+                                    if ehg:
+                                        for bb in ehg.bbmechanisms:
+                                            ehg.remove_bb(bb)
+                                        HardGoal.query.filter_by(id=hg.original_hg).delete()
+                                    hg.extra_hg_used = None
+                                    hg.original_hg = None
+                                    db.session.commit()
             for key, values in current_bbms.items():
                 if values:
                     for valu in values:
@@ -1376,7 +1402,7 @@ def bbmech(project):
             project.final_assumptions = False
             db.session.commit()
             flash('Black Box Mechanisms updated', 'succ')
-            return redirect(url_for('bbmech', project=project.name))
+            return redirect(url_for('assumptions', project=project.name))
         return render_template('bbmech.html',
                                title=project.name,
                                project=project,

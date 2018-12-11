@@ -29,7 +29,7 @@ class Config(object):
 
     SECURITY_POST_LOGIN_VIEW = "/admin/index.html"
     SECURITY_POST_LOGOUT_VIEW = "/admin/"
-    SECURITY_LOGIN_USER_TEMPLATE = "/admin/login.html"
+    SECURITY_LOGIN_USER_TEMPLATE = "/index.html"
 
     SECURITY_REGISTERABLE = False
     SECURITY_SEND_REGISTER_EMAIL = False

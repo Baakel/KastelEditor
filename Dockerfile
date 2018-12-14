@@ -13,7 +13,7 @@ RUN venv/bin/pip install -Iv pymysql==0.8.1
 COPY editorapp editorapp
 COPY db_repository db_repository
 COPY migrations migrations
-COPY config.py README.md app.db run.py tests.py boot.sh kastel.py ./
+COPY config.py README.md run.py tests.py boot.sh kastel.py ./
 RUN chmod a+x boot.sh
 
 ENV FLASK_APP kastel.py

@@ -1,0 +1,26 @@
+version: '3.2'
+
+services:
+  mysql:
+    image: mysql/mysql-server:5.7
+    volumes:
+      - kasteldb:/var/lib/mysql
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_DATABASE=kasteleditordb
+      - MYSQL_USER=kasteleditor
+      - MYSQL_PASSWORD=BVID4Kx4DVUGgseqLOicX7db
+      - MYSQL_LOG_CONSOLE=true
+
+  kasteleditor:
+    build: .
+    ports:
+      - 5000:5000
+    environment:
+      - SECRET_KEY=nGoaxYZeoZKVfjsaurwUXfGeZbTsiYmXhZMDfvbEqiAgyQRGyU
+      - DATABASE_URL=mysql+pymysql://kasteleditor:BVID4Kx4DVUGgseqLOicX7db@mysql/kasteleditordb
+    depends_on:
+      - mysql
+
+volumes:
+  kasteldb:

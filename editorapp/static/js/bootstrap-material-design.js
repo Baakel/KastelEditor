@@ -53,7 +53,7 @@ var Util = function ($) {
       return false;
     }
 
-    var el = document.createElement('bootstrap');
+    var el = document.createElement('bootstrap-material');
 
     for (var name in TransitionEndEvent) {
       if (el.style[name] !== undefined) {
@@ -6960,4 +6960,4 @@ var BootstrapMaterialDesign = function ($) {
 // invalidComponentMatches is currently disabled due to https://github.com/rollup/rollup/issues/428#issuecomment-170066452
 
 }());
-//# sourceMappingURL=bootstrap-material-design.js.map
+//# sourceMappingURL=bootstrap-material-material-design.js.map

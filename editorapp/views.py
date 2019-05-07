@@ -426,10 +426,16 @@ def import_project():
         for bbm in json_data['Black Box Mechanisms']:
             bb = BbMechanisms.query.filter_by(name=bbm, **json_data['Black Box Mechanisms'][bbm]).first()
             if bb is None:
-                # existing_bb = BbMechanisms.query.filter_by(name=bbm).first()
-                bb = BbMechanisms(name=bbm, **json_data['Black Box Mechanisms'][bbm])
-                db.session.add(bb)
-                db.session.commit()
+                existing_bb = BbMechanisms.query.filter_by(name=bbm).first()
+                if existing_bb is None:
+                    bb = BbMechanisms(name=bbm, **json_data['Black Box Mechanisms'][bbm])
+                    db.session.add(bb)
+                    db.session.commit()
+                else:
+                    existing_bb.authenticity = json_data['Black Box Mechanisms'][bbm]['authenticity']
+                    existing_bb.confidentiality = json_data['Black Box Mechanisms'][bbm]['confidentiality']
+                    existing_bb.integrity = json_data['Black Box Mechanisms'][bbm]['integrity']
+                    db.session.commit()
         for assumption in json_data['Assumptions']:
             ass = Assumptions.query.filter_by(name=assumption).first()
             if ass is None:

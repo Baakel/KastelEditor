@@ -1,13 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ project.name }} Functional Requirements</h1>
+{#    <h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ project.name }} Functional Requirements</h1>#}
     {% for message in get_flashed_messages(category_filter=["succ"]) %}
         <div class="alert-success" role="alert">{{ message }}</div>
     {% endfor %}
     {% for errors in get_flashed_messages(category_filter=["error"]) %}
         <div class="alert-danger" role="alert">{{ errors }}</div>
     {% endfor %}
+    <div class="container-fluid">
+      <div class="row align-items-center">
+        <div class="col align-items-center text-center"><a href="{{ url_for('goods', project=project.name) }}" class="btn btn-primary btn-raised">Prev</a></div>
+        <div class="col-8"><h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ project.name }} Functional Requirements</h1></div>
+        {% if project.functional_req %}
+          <div class="col align-items-center text-center"><a href="{{ url_for('hard_goals', project=project.name) }}" class="btn btn-primary btn-raised">Next</a></div>
+        {% else %}
+          <div class="col"></div>
+        {% endif %}
+      </div>
+    </div>
         <form action="" method="post" name="addsgoals">
             {{ form.hidden_tag() }}
         <div class="container">
@@ -30,8 +41,8 @@
                     </tr>
                     {% for freq in project.functional_req %}
                             <tr>
-                                <td>{{ freq.description }}</td>
-                                <td class="text-right"><a class="text-danger" href="{{ url_for('removefr', project=project.name, desc=freq.description) }}">Remove</a></td>
+                                <td id="{{ freq.description }}">{{ freq.description }}</td>
+                                <td class="text-right"><a class="text-primary" onclick="editVal(document.getElementById('{{ freq.description }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removefr', project=project.name, desc=freq.description) }}"><i class="material-icons">delete</i></a></td>
                             </tr>
                     {% endfor %}
                 </table>
@@ -43,8 +54,8 @@
                     </tr>
                     {% for serv in project.sub_services %}
                         <tr>
-                            <td>{{ serv.name }}</td>
-                            <td class="text-right"><a class="text-danger" href="{{ url_for('removesub', project=project.name, id=serv.id) }}">Remove</a></td>
+                            <td id="{{ serv.name }}">{{ serv.name }}</td>
+                            <td class="text-right"><a class="text-primary" onclick="editSub(document.getElementById('{{ serv.name }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removesub', project=project.name, id=serv.id) }}"><i class="material-icons">delete</i></a></td>
                         </tr>
                     {% endfor %}
                 </table>
@@ -139,5 +150,27 @@
         window.alert('Remember to assign a service to every functional requirement. Functional requirements without a service will not be processed.')
       }
     })
+  </script>
+  <script type="text/javascript">
+    function editVal(object) {
+
+      if (prev_edit = document.getElementById('editedfr')) {
+        prev_edit.parentElement.innerHTML = `${prev_edit.parentElement.id}`;
+      } else if (prev_edit = document.getElementById('editedsub')) {
+        prev_edit.parentElement.innerHTML = `${prev_edit.parentElement.id}`;
+      }
+      object.innerHTML = `<input id="editedfr" name="editedfr-${object.id}" class="form-control" type="text" value="${object.id}">`;
+      document.getElementById('editedfr').focus();
+    }
+    function editSub(object) {
+
+      if (prev_edit = document.getElementById('editedfr')) {
+        prev_edit.parentElement.innerHTML = `${prev_edit.parentElement.id}`;
+      } else if (prev_edit = document.getElementById('editedsub')) {
+        prev_edit.parentElement.innerHTML = `${prev_edit.parentElement.id}`;
+      }
+      object.innerHTML = `<input id="editedsub" name="editedsub-${object.id}" class="form-control" type="text" value="${object.id}">`;
+      document.getElementById('editedsub').focus();
+    }
   </script>
 {% endblock %}

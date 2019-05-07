@@ -7,6 +7,13 @@
     {% for errors in get_flashed_messages(category_filter=["error"]) %}
         <div class="alert-danger" role="alert">{{ errors }}</div>
     {% endfor %}
+    <div class="container-fluid">
+      <div class="row align-items-center">
+        <div class="col align-items-center text-center"><a href="{{ url_for('hard_goals', project=project.name) }}" class="btn btn-primary btn-raised">Prev</a></div>
+        <div class="col-8"><h1 class="display-2 mt-5 ml-5 mb-3 text-center">Black Box Mechanisms</h1></div>
+        <div class="col align-items-center text-center"><a href="{{ url_for('assumptions', project=project.name) }}" class="btn btn-primary btn-raised">Next</a></div>
+      </div>
+    </div>
     <div class="containter mt-5 ml-5 mr-5">
     <form action="" name="bbmechs" method="post">
         <table class="table table-bordered">

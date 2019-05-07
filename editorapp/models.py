@@ -235,7 +235,7 @@ class Projects(db.Model):
     final_assumptions = db.Column(db.Boolean)
     public = db.Column(db.Boolean)
     hard_goals = db.relationship('HardGoal', backref='project', lazy='dynamic')
-    functional_req = db.relationship('FunctionalRequirement', backref='project', lazy='dynamic')
+    functional_req = db.relationship('FunctionalRequirement', backref='project')
     stake_holders = db.relationship('Stakeholder', backref='project', lazy='dynamic')
     goods = db.relationship('Good', backref='project', lazy='dynamic')
     sub_services = db.relationship('SubService', backref='project', lazy='dynamic')

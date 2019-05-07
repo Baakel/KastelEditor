@@ -1,5 +1,5 @@
 from random import sample
-from flask import render_template, url_for, flash, redirect, request, session, g, abort, jsonify
+from flask import render_template, url_for, flash, redirect, request, session, g, abort, jsonify, Response
 from editorapp import app, db, github
 from flask_login import login_required
 from wtforms import SelectField
@@ -187,8 +187,9 @@ def before_request():
 
 
 @app.route('/<project>/export')
+@app.route('/<project>/export/<backup>')
 @login_required
-def export(project):
+def export(project, backup=False):
     proj = Projects.query.filter_by(name=project).first()
     if proj.public or g.user in proj.editors:
         project_dict = {}
@@ -320,20 +321,29 @@ def export(project):
             for assumption in bb.assumptions:
                 black_box_assumptions_dict[bb.name].append(assumption.name)
         project_dict['Black Box And Assumptions Relationship'] = black_box_assumptions_dict
-        return jsonify(project_dict)
+        resp = jsonify(project_dict)
+        if backup:
+            resp.headers['Content-disposition'] = 'attachment; filename={}-backup.json'.format(proj.name.replace(' ', '_'))
+        else:
+            resp.headers['Content-disposition'] = 'attachment; filename={}.json'.format(proj.name)
+        return resp
     else:
         flash('You don\'t have permission to do that', 'error')
         return redirect(url_for('index'))
 
 
-@app.route('/import', methods=['POST'])
+@app.route('/import', methods=['POST', 'GET'])
 @login_required
 def import_project():
     try:
-        file = request.files['inputFile']
-        read_file = file.read()
-        decoded_file = read_file.decode('utf-8')
-        json_data = json.loads(decoded_file)
+        # file = request.files['inputFile']
+        # read_file = file.read()
+        # decoded_file = read_file.decode('utf-8')
+        # json_data = json.loads(decoded_file)
+        # original_project = Projects.query.filter_by(name=json_data['Project']).first()
+        # if original_project:
+        #     print(original_project)
+        json_data = session['json_data']
         project_name = Projects.make_unique_name(json_data['Project'])
         new_project = Projects(creator=g.user.id, name=project_name,
                                final_assumptions=json_data['Final Assumptions Signed'], public=json_data['Public'])
@@ -416,6 +426,7 @@ def import_project():
         for bbm in json_data['Black Box Mechanisms']:
             bb = BbMechanisms.query.filter_by(name=bbm, **json_data['Black Box Mechanisms'][bbm]).first()
             if bb is None:
+                # existing_bb = BbMechanisms.query.filter_by(name=bbm).first()
                 bb = BbMechanisms(name=bbm, **json_data['Black Box Mechanisms'][bbm])
                 db.session.add(bb)
                 db.session.commit()
@@ -437,11 +448,46 @@ def import_project():
             if bbm:
                 hg.add_bb(bbm)
             db.session.commit()
+        session.pop('json_data', None)
         return redirect(url_for('projects', name=project_name))
     except Exception as e:
         print(e)
         flash('An error occurred while importing project. Information might not be complete', 'error')
         return redirect(url_for('index'))
+
+
+@app.route('/preprocess', methods=['POST'])
+@login_required
+def preprocess():
+    file = request.files['inputFile']
+    read_file = file.read()
+    decoded_file = read_file.decode('utf-8')
+    json_data = json.loads(decoded_file)
+
+    # original_project = Projects.query.filter_by(name=json_data['Project']).first()
+
+    existing_bb_list = []
+    warnings = []
+    for bbm in json_data['Black Box Mechanisms']:
+        bb = BbMechanisms.query.filter_by(name=bbm, **json_data['Black Box Mechanisms'][bbm]).first()
+        if bb is None:
+            existing_bb = BbMechanisms.query.filter_by(name=bbm).first()
+            if existing_bb:
+                existing_bb_list.append(existing_bb)
+
+    for bbmecha in existing_bb_list:
+        hgs = [hg for hg in bbmecha.hardgoals]
+        projects = [proj.project_id for proj in hgs]
+        warning = [Projects.query.filter_by(id=p).first().name for p in set(projects)]
+        if warning:
+            warnings.extend(warning)
+
+    session['json_data'] = json_data
+    return render_template('preprocess.html',
+                           warnings=set(warnings),
+                           project_name=json_data['Project'],
+                           title='Importing Projecct')
+
 
 
 @app.route('/tree/<project>', methods=['GET', 'POST'])
@@ -634,7 +680,18 @@ def index():
 @login_required
 def stakeholders(project):
     project = Projects.query.filter_by(name=project).first()
+    edited_sh = [k for k in request.form if k.startswith('edited')]
     if g.user in project.editors:
+        if edited_sh:
+            original_nickname = edited_sh[0].split('-')
+            sh_list = [sh.nickname for sh in Stakeholder.query.filter_by(project_id=project.id).all()]
+            if request.form.get(edited_sh[0]) not in sh_list:
+                sh = Stakeholder.query.filter_by(nickname=original_nickname[1], project_id=project.id).first()
+                sh.nickname = request.form.get(edited_sh[0])
+                db.session.commit()
+                flash('Stakeholder \'{}\' changed to \'{}\''.format(original_nickname[1], request.form.get(edited_sh[0])), 'succ')
+            else:
+                flash('Stakeholder \'{}\' already exists'.format(original_nickname[1]), 'error')
         form = StakeHoldersForm()
         if form.validate_on_submit():
             stkhld = Stakeholder.query.filter_by(nickname=form.stakeholder.data, project_id=project.id).first()
@@ -646,6 +703,8 @@ def stakeholders(project):
                 return redirect(url_for('stakeholders', project=project.name))
             else:
                 flash('Stakeholder already exists', 'error')
+        # else:
+        #     flash('You can\'t edit a Stakeholder and add a new one at the same time')
         stakeholders = Stakeholder.query.filter_by(project_id=project.id).all()
         return render_template('editor.html',
                                title=project.name,
@@ -704,7 +763,7 @@ def projects(name):
             db.session.add(law)
             db.session.commit()
         flash('Project created.', 'succ')
-        return redirect(url_for('projects', name=projname.name))
+        return redirect(url_for('stakeholders', project=projname.name))
     if form2.validate_on_submit():
         editor = Users.query.filter_by(nickname=form2.editor.data).first()
         if editor is None:
@@ -888,6 +947,37 @@ def logout():
 def goods(project):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
+        edited_asset = [a for a in request.form if a.startswith('edited')]
+        if edited_asset:
+            original_asset_name = edited_asset[0].split('-')[1]
+            new_asset_name = request.form.get(edited_asset[0])
+            original_asset = Good.query.filter_by(description=original_asset_name, project_id=project.id).first()
+            original_asset.description = new_asset_name
+
+            project_hard_goals = [hg for hg in project.hard_goals]
+            auth_hg = [i for i in project_hard_goals if (i.authenticity is not None and original_asset_name in i.authenticity)]
+            if auth_hg:
+                string_to_replace = auth_hg[0].authenticity
+                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+                auth_hg[0].authenticity = new_string
+            conf_hg = [i for i in project_hard_goals if (i.confidentiality is not None and original_asset_name in i.confidentiality)]
+            if conf_hg:
+                string_to_replace = conf_hg[0].confidentiality
+                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+                conf_hg[0].confidentiality = new_string
+            integrity_hg = [i for i in project_hard_goals if (i.integrity is not None and original_asset_name in i.integrity)]
+            if integrity_hg:
+                string_to_replace = integrity_hg[0].integrity
+                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+                integrity_hg[0].integrity = new_string
+            hg_description = [i for i in project_hard_goals if (i.description is not None and original_asset_name in i.description)]
+            if hg_description:
+                string_to_replace = hg_description[0].description
+                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+                hg_description[0].description = new_string
+
+            db.session.commit()
+
         choices = [(sh.id, sh.nickname) for sh in Stakeholder.query.filter_by(project_id=project.id)]
         choices.insert(0, ('x', 'No Stakeholder'))
         # choices.insert(1, (0, 'Add a new Component'))
@@ -975,6 +1065,41 @@ def removeg(project, desc):
 def functional_req(project):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
+        edited_fr = [a for a in request.form if a.startswith('editedfr')]
+        edited_sub = [a for a in request.form if a.startswith('editedsub')]
+        if edited_fr:
+            original_fr_name = edited_fr[0].split('-')[1]
+            new_fr_name = request.form.get(edited_fr[0])
+            original_fr = FunctionalRequirement.query.filter_by(description=original_fr_name, project_id=project.id).first()
+            original_fr.description = new_fr_name
+
+            project_hard_goals = [hg for hg in project.hard_goals]
+            hg_description = [i for i in project_hard_goals if
+                              (i.description is not None and original_fr_name in i.description)]
+            if hg_description:
+                string_to_replace = hg_description[0].description
+                new_string = string_to_replace.replace('{}'.format(original_fr_name), '{}'.format(new_fr_name))
+                hg_description[0].description = new_string
+
+            db.session.commit()
+
+        if edited_sub:
+            original_sub_name = edited_sub[0].split('-')[1]
+            new_sub_name = request.form.get(edited_sub[0])
+            original_sub = SubService.query.filter_by(name=original_sub_name, project_id=project.id).first()
+            original_sub.name = new_sub_name
+
+            project_hard_goals = [hg for hg in project.hard_goals]
+            hg_description = [i for i in project_hard_goals if
+                              (i.description is not None and original_sub_name in i.description)]
+            if hg_description:
+                string_to_replace = hg_description[0].description
+                new_string = string_to_replace.replace('{}'.format(original_sub_name), '{}'.format(new_sub_name))
+                hg_description[0].description = new_string
+
+            db.session.commit()
+
+
         choices = [(sub.id, sub.name) for sub in SubService.query.filter_by(project_id=project.id)]
         choices.insert(0, ('x', 'No Component'))
         choices.insert(1, (0,'Add a new Component'))
@@ -1020,7 +1145,8 @@ def functional_req(project):
 
                     added_sub = SubService.query.filter_by(name=form.subserv.data, project_id=project.id).first()
                     fr = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
-                    fr.add_serv(added_sub)
+                    if fr is not None:
+                        fr.add_serv(added_sub)
                     db.session.commit()
                 else:
                     flash('Component Already Exists', 'error')
@@ -1051,7 +1177,6 @@ def functional_req(project):
                 db.session.commit()
             flash('Functional Requirements and Sub-services Table Updated', 'succ')
             return redirect(url_for('functional_req', project=project.name))
-
         return render_template('funcreq.html',
                                title=project.name,
                                form=form,
@@ -1214,7 +1339,7 @@ def hard_goals(project):
                 for item in callback_list:
                     item_parts = item.split('¡')
                     final_string = '{} ensures the {} during the {}'.format(item_parts[0], item_parts[2], item_parts[1])
-                    nhg = HardGoal.query.filter_by(description=final_string).first()
+                    nhg = HardGoal.query.filter_by(description=final_string, project_id=project.id).first()
                     if nhg is None:
                         new_hg = HardGoal(project_id=project.id, description=final_string)
                         current_hgs = HardGoal.query.filter_by(project_id=project.id, priority=True).all()

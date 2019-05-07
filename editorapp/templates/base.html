@@ -27,7 +27,7 @@
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="{{ url_for('projects', name='New Project') }}">New Project</a>
                             <div class="dropdown-divider"></div>
-                            <form class="dropdown-item" method="POST" action="/import" enctype="multipart/form-data">
+                            <form class="dropdown-item" method="POST" action="/preprocess" enctype="multipart/form-data">
                               <div class="form-group">
                                 <label for="inputFile">Import Project</label>
                                 <input type="file" name="inputFile">
@@ -56,10 +56,10 @@
                                 <a class="nav-link" href="{{ url_for('stakeholders', project=project.name) }}">Stakeholders</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('functional_req', project=project.name) }}">Functional Requirements</a>
+                                <a class="nav-link" href="{{ url_for('goods', project=project.name) }}">Assets</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('goods', project=project.name) }}">Assets</a>
+                                <a class="nav-link" href="{{ url_for('functional_req', project=project.name) }}">Functional Requirements</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('hard_goals', project=project.name) }}">Hard Goals</a>

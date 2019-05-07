@@ -152,6 +152,11 @@ def not_found_error(error):
     return render_template('404.html'), 404
 
 
+@app.errorhandler(400)
+def bad_request(error):
+    return render_template('400.html'), 400
+
+
 @app.errorhandler(500)
 def internal_error(error):
     db.session.rollback()
@@ -465,34 +470,39 @@ def import_project():
 @app.route('/preprocess', methods=['POST'])
 @login_required
 def preprocess():
-    file = request.files['inputFile']
-    read_file = file.read()
-    decoded_file = read_file.decode('utf-8')
-    json_data = json.loads(decoded_file)
+    try:
+        file = request.files['inputFile']
+        read_file = file.read()
+        decoded_file = read_file.decode('utf-8')
+        json_data = json.loads(decoded_file)
 
-    # original_project = Projects.query.filter_by(name=json_data['Project']).first()
+        # original_project = Projects.query.filter_by(name=json_data['Project']).first()
 
-    existing_bb_list = []
-    warnings = []
-    for bbm in json_data['Black Box Mechanisms']:
-        bb = BbMechanisms.query.filter_by(name=bbm, **json_data['Black Box Mechanisms'][bbm]).first()
-        if bb is None:
-            existing_bb = BbMechanisms.query.filter_by(name=bbm).first()
-            if existing_bb:
-                existing_bb_list.append(existing_bb)
+        existing_bb_list = []
+        warnings = []
+        for bbm in json_data['Black Box Mechanisms']:
+            bb = BbMechanisms.query.filter_by(name=bbm, **json_data['Black Box Mechanisms'][bbm]).first()
+            if bb is None:
+                existing_bb = BbMechanisms.query.filter_by(name=bbm).first()
+                if existing_bb:
+                    existing_bb_list.append(existing_bb)
 
-    for bbmecha in existing_bb_list:
-        hgs = [hg for hg in bbmecha.hardgoals]
-        projects = [proj.project_id for proj in hgs]
-        warning = [Projects.query.filter_by(id=p).first().name for p in set(projects)]
-        if warning:
-            warnings.extend(warning)
+        for bbmecha in existing_bb_list:
+            hgs = [hg for hg in bbmecha.hardgoals]
+            projects = [proj.project_id for proj in hgs]
+            warning = [Projects.query.filter_by(id=p).first().name for p in set(projects)]
+            if warning:
+                warnings.extend(warning)
 
-    session['json_data'] = json_data
-    return render_template('preprocess.html',
-                           warnings=set(warnings),
-                           project_name=json_data['Project'],
-                           title='Importing Projecct')
+        session['json_data'] = json_data
+        return render_template('preprocess.html',
+                               warnings=set(warnings),
+                               project_name=json_data['Project'],
+                               title='Importing Projecct')
+    except Exception as e:
+        print(e)
+        flash('Please select a valid file to import', 'error')
+        return redirect(url_for('index'))
 
 
 

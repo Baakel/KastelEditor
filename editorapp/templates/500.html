@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
+  {% for message in get_flashed_messages(category_filter=["succ"]) %}
+        <div class="alert-success" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% for errors in get_flashed_messages(category_filter=["error"]) %}
+        <div class="alert-danger" role="alert">{{ errors }}</div>
+    {% endfor %}
 <div class="container-fluid" style="margin-top: 20%">
     <div class="jumbotron jumbotron-fluid">
         <div class="container">

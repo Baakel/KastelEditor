@@ -7,5 +7,5 @@ app.db
 logs/*
 venv/*
 !*.
-bootstrap/*
-bootstrap-material/*
+**/bootstrap/
+**/bootstrap-material/

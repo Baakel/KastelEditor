@@ -6,4 +6,6 @@ app.db
 *.pyo
 logs/*
 venv/*
-!*.gitkeep
+!*.
+bootstrap/*
+bootstrap-material/*

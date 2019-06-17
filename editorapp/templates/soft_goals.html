@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% for message in get_flashed_messages(category_filter=["succ"]) %}
+        <div class="alert-success" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% for errors in get_flashed_messages(category_filter=["error"]) %}
+        <div class="alert-danger" role="alert">{{ errors }}</div>
+    {% endfor %}
+    <div class="container-fluid">
+      <div class="row align-items-center">
+        <div class="col align-items-center text-center"><a href="{{ url_for('functional_req', project=project.name) }}" class="btn btn-primary btn-raised">Prev</a></div>
+        <div class="col-8"><h1 class="display-2 mt-5 ml-5 mb-3 text-center">Current Soft Goals</h1></div>
+        {% if hardgs %}
+          <div class="col align-items-center text-center"><a href="{{ url_for('bbmech', project=project.name) }}" class="btn btn-primary btn-raised">Next</a></div>
+        {% else %}
+          <div class="col"></div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="container-fluid">
+    <form method="post">
+        <div class="row">
+            <div class="col">
+                <table class="table table-striped table-bordered table-hover w-34">
+                    <caption>Pick the protection goals for your assets</caption>
+                    <thead class="thead-dark">
+                        <tr>
+                            <th class="bg-warning" scope="col">Assets</th>
+                            <th class="bg-success" scope="col">Confidentiality</th>
+                            <th class="bg-success" scope="col">Integrity</th>
+                            <th class="bg-success" scope="col">Authenticity</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for good in project.goods %}
+                        <tr>
+                            <th scope="row">{{ good.description }}</th>
+                            {% set auth = [] %}
+                            {% set conf = [] %}
+                            {% set integrity = [] %}
+                            {% for softgoal in project.soft_goals %}
+                                {% if softgoal.confidentiality != None %}
+                                    {% if "Confidentiality of %s" %good.description in softgoal.confidentiality %}
+                                        {% if conf.append(True) %} {% endif %}
+                                    {% endif %}
+                                {% endif %}
+                                {% if softgoal.integrity != None %}
+                                    {% if "Integrity of %s" %good.description in softgoal.integrity %}
+                                        {% if integrity.append(True) %} {% endif %}
+                                    {% endif %}
+                                {% endif %}
+                                {% if softgoal.authenticity != None %}
+                                    {% if "Authenticity of %s" %good.description in softgoal.authenticity %}
+                                        {% if auth.append(True) %} {% endif %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                            {% if conf %}
+                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}checked" name="confidentiality{{ good.id }}" value="Confidentiality" checked><label for="conf_{{ good.id }}checked"></label></td>
+                            {% else %}
+                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}" name="confidentiality{{ good.id }}" value="Confidentiality"><label for="conf_{{ good.id }}"></label></td>
+                            {% endif %}
+                            {% if integrity %}
+                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}checked" name="integrity{{ good.id }}" value="Integrity" checked><label for="integ_{{ good.id }}checked"></label></td>
+                            {% else %}
+                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}" name="integrity{{ good.id }}" value="Integrity"><label for="integ_{{ good.id }}"></label></td>
+                            {% endif %}
+                            {% if auth %}
+                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}checked" name="authenticity{{ good.id }}" value="Authenticity" checked><label for="auth_{{ good.id }}checked"></label></td>
+                            {% else %}
+                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}" name="authenticity{{ good.id }}" value="Authenticity"><label for="auth_{{ good.id }}"></label></td>
+                            {% endif %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+          <div class="col">
+              <button type="submit" class="btn btn-raised btn-primary" name="subb" value="pressed">Update Soft Goals Matrix</button>
+          </div>
+        </div>
+    </form>
+    </div>
+
+{% endblock %}

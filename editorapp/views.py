@@ -5,9 +5,9 @@ from flask_login import login_required
 from wtforms import SelectField
 from wtforms.validators import DataRequired
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, \
-    HardGoalsForm, BbmForm, FlaskForm
+    HardGoalsForm, BbmForm, FlaskForm, ActorsForm, AttackersForm
 from .models import Stakeholder, Users, Projects, Good, FunctionalRequirement,\
-    HardGoal, Role, BbMechanisms,  Assumptions, SubService, freq_serv, hard_mechanism
+    HardGoal, Role, BbMechanisms,  Assumptions, SubService, freq_serv, hard_mechanism, SoftGoal, Attacker
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 # from flask_security.utils import hash_password, verify_password, get_hmac
 import flask_admin
@@ -236,7 +236,7 @@ def export(project, backup=False):
         for service in proj.sub_services:
             services.append(service.name)
         project_dict['Services'] = services
-        soft_goals = [sg for sg in proj.hard_goals if not sg.description]
+        soft_goals = [sg for sg in proj.soft_goals]
         soft_goals_dict = {}
         for sg in soft_goals:
             if sg.integrity:
@@ -391,26 +391,26 @@ def import_project():
             if 'authenticity' in json_data['Soft Goals'][soft_goals]['cb_value']:
                 cbval = json_data['Soft Goals'][soft_goals]['cb_value'].split('¡')
                 asset = Good.query.filter_by(description=cbval[1], project_id=curr_project.id).first()
-                hg = HardGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
+                sg = SoftGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
                               cb_value='{}{}'.format(cbval[0], asset.id),
                               authenticity=soft_goals, project_id=curr_project.id)
-                db.session.add(hg)
+                db.session.add(sg)
                 db.session.commit()
             elif 'confidentiality' in json_data['Soft Goals'][soft_goals]['cb_value']:
                 cbval = json_data['Soft Goals'][soft_goals]['cb_value'].split('¡')
                 asset = Good.query.filter_by(description=cbval[1], project_id=curr_project.id).first()
-                hg = HardGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
+                sg = SoftGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
                               cb_value='{}{}'.format(cbval[0], asset.id),
                               confidentiality=soft_goals, project_id=curr_project.id)
-                db.session.add(hg)
+                db.session.add(sg)
                 db.session.commit()
             elif 'integrity' in json_data['Soft Goals'][soft_goals]['cb_value']:
                 cbval = json_data['Soft Goals'][soft_goals]['cb_value'].split('¡')
                 asset = Good.query.filter_by(description=cbval[1], project_id=curr_project.id).first()
-                hg = HardGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
+                sg = SoftGoal(priority=json_data['Soft Goals'][soft_goals]['priority'],
                               cb_value='{}{}'.format(cbval[0], asset.id),
                               integrity=soft_goals, project_id=curr_project.id)
-                db.session.add(hg)
+                db.session.add(sg)
                 db.session.commit()
         for hard_goal in json_data['Hard Goals']:
             hg = HardGoal(description=hard_goal, project_id=curr_project.id, **json_data['Hard Goals'][hard_goal])
@@ -505,7 +505,6 @@ def preprocess():
         return redirect(url_for('index'))
 
 
-
 @app.route('/tree/<project>', methods=['GET', 'POST'])
 @login_required
 def tree(project):
@@ -549,7 +548,7 @@ def testdata():
         }
 
     }
-    auth_gen = (sg for sg in project.hard_goals if sg.authenticity and sg.description == None)
+    auth_gen = (sg for sg in project.soft_goals if sg.authenticity)
     for softg in auth_gen:
         curr_dict = { 'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
                       'children': [],
@@ -589,7 +588,7 @@ def testdata():
 
         dictionary['nodeStructure']['children'].append(curr_dict)
 
-    conf_gen = (sg for sg in project.hard_goals if sg.confidentiality and sg.description == None)
+    conf_gen = (sg for sg in project.soft_goals if sg.confidentiality)
     for softg in conf_gen:
         curr_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
                      'children': [],
@@ -629,7 +628,7 @@ def testdata():
 
         dictionary['nodeStructure']['children'].append(curr_dict)
 
-    int_gen = (sg for sg in project.hard_goals if sg.integrity and sg.description == None)
+    int_gen = (sg for sg in project.soft_goals if sg.integrity)
     for softg in int_gen:
         curr_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
                      'children': [],
@@ -868,9 +867,17 @@ def delete_project(project):
         for stkhld in stakeholders:
             db.session.delete(stkhld)
             db.session.commit()
-        softgoals = FunctionalRequirement.query.filter_by(project_id=project.id).all()
+        softgoals = SoftGoal.query.filter_by(project_id=project.id).all()
         for sftgl in softgoals:
             db.session.delete(sftgl)
+            db.session.commit()
+        functional_reqs = FunctionalRequirement.query.filter_by(project_id=project.id).all()
+        for fr in functional_reqs:
+            db.session.delete(fr)
+            db.session.commit()
+        services = SubService.query.filter_by(project_id=project.id).all()
+        for serv in services:
+            db.session.delete(serv)
             db.session.commit()
         goods = Good.query.filter_by(project_id=project.id).all()
         for gd in goods:
@@ -1076,6 +1083,146 @@ def removeg(project, desc):
         return redirect(url_for('index'))
 
 
+@app.route('/soft_goals/<project>', methods=['GET', 'POST'])
+@login_required
+def soft_goals(project):
+    project = Projects.query.filter_by(name=project).first()
+    if g.user in project.editors:
+        if request.method == 'POST':
+            for good in project.goods:
+                for softgoal in request.form.getlist('authenticity{}'.format(good.id)):
+                    auth_desc = '{} of {}'.format(softgoal, good.description)
+                    cb_value = 'authenticity{}'.format(good.id)
+                    SG = SoftGoal.query.filter_by(authenticity=auth_desc, project_id=project.id).first()
+                    if SG is None:
+                        auth = SoftGoal(authenticity=auth_desc, project_id=project.id, cb_value=cb_value)
+                        db.session.add(auth)
+                        db.session.commit()
+                        flash('Protection Goals Updated', 'succ')
+
+                for softgoal in request.form.getlist('confidentiality{}'.format(good.id)):
+                    conf_desc = '{} of {}'.format(softgoal, good.description)
+                    cb_value = 'confidentiality{}'.format(good.id)
+                    SG = SoftGoal.query.filter_by(confidentiality=conf_desc, project_id=project.id).first()
+                    if SG is None:
+                        conf = SoftGoal(confidentiality=conf_desc, project_id=project.id, cb_value=cb_value)
+                        db.session.add(conf)
+                        db.session.commit()
+                        flash('Protection Goals Updated', 'succ')
+
+                for softgoal in request.form.getlist('integrity{}'.format(good.id)):
+                    int_desc = '{} of {}'.format(softgoal, good.description)
+                    cb_value = 'integrity{}'.format(good.id)
+                    SG = SoftGoal.query.filter_by(integrity=int_desc, project_id=project.id).first()
+                    if SG is None:
+                        integ = SoftGoal(integrity=int_desc, project_id=project.id, cb_value=cb_value)
+                        db.session.add(integ)
+                        db.session.commit()
+                        flash('Protection Goals Updated', 'succ')
+
+            current_req = []
+            for i in request.form:
+                current_req.append(i)
+            softgoals = SoftGoal.query.filter_by(project_id=project.id).all()
+            db_values = []
+            for sgoal in softgoals:
+                db_values.append(sgoal)
+
+            for val in db_values:
+                if str(val) not in current_req:
+                    SoftGoal.query.filter_by(cb_value=str(val), project_id=project.id).delete()
+                    db.session.commit()
+                    flash('Item(s) removed from the database', 'error')
+
+            return redirect(url_for('soft_goals', project=project.name))
+        return render_template('soft_goals.html',
+                               title=project.name,
+                               project=project)
+    else:
+        flash('You don\'t have permission to access this project.', 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/attackers/<project>', methods=['GET', 'POST'])
+@login_required
+def attackers(project):
+    project = Projects.query.filter_by(name=project).first()
+    form = AttackersForm()
+    if g.user in project.editors:
+        if form.validate_on_submit():
+            attacker = Attacker.query.filter_by(name=form.attacker.data, project_id=project.id).first()
+            if attacker is None:
+                atk = Attacker(name=form.attacker.data, project_id=project.id)
+                db.session.add(atk)
+                db.session.commit()
+                flash('Attacker "{}" added to the database'.format(form.attacker.data), 'succ')
+                return redirect(url_for('attackers', project=project.name))
+            else:
+                flash('Attacker "{}" already exists'.format(form.attacker.data), 'error')
+                return redirect(url_for('attackers', project=project.name))
+        return render_template('attackers.html',
+                               project=project,
+                               title='{} attackers'.format(project.name),
+                               form=form)
+    else:
+        flash('You don\'t have permission to access this project.', 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/attackers/<project>/<id>', methods=['GET', 'POST'])
+@login_required
+def atk(project, id):
+    project = Projects.query.filter_by(name=project).first()
+    if g.user in project.editors:
+        attacker = Attacker.query.filter_by(id=id).first()
+        return render_template('atks.html',
+                               title='{} - {}'.format(project.name, attacker.name),
+                               attacker=attacker,
+                               project=project)
+
+
+@app.route('/stk/<project>')
+@login_required
+def stk(project):
+    res = Stakeholder.query.filter_by(project_id=project).all()
+    list_of_stk = [stkh.as_dict() for stkh in res]
+    return jsonify(list_of_stk)
+
+
+@app.route('/removeatt/<project>/<desc>', methods=['GET', 'POST'])
+@login_required
+def removeatt(project, desc):
+    project = Projects.query.filter_by(name=project).first()
+    if g.user in project.editors:
+        att = Attacker.query.filter_by(name=desc, project_id=project.id).first()
+        name = att.name
+        # for atk in .goods:
+        #     sth.remove_stakeholder(sh)
+        # db.session.commit()
+        Attacker.query.filter_by(name=desc, project_id=project.id).delete()
+        db.session.commit()
+        flash('Attacker "{}" removed'.format(name), 'error')
+        return redirect(url_for('attackers', project=project.name))
+    else:
+        flash('You don\'t have permission to access this project.', 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/actors/<project>', methods=['GET', 'POST'])
+@login_required
+def actors(project):
+    project = Projects.query.filter_by(name=project).first()
+    form = ActorsForm()
+    if g.user in project.editors:
+        return render_template('actors.html',
+                               title='Actors of {}'.format(project.name),
+                               form=form,
+                               project=project)
+    else:
+        flash('You don\'t have permission to access this project.', 'error')
+        return redirect(url_for('index'))
+
+
 @app.route('/functional_req/<project>', methods=['GET', 'POST'])
 @login_required
 def functional_req(project):
@@ -1256,100 +1403,100 @@ def hard_goals(project):
     if access_granted:
         project = Projects.query.filter_by(name=project).first()
         hardgoalz = HardGoal.query.filter_by(project_id=project.id).all()
-        hardgs = []
-        for hg in hardgoalz:
-            if hg.description is not None:
-                hardgs.append(hg.description)
-        if request.method == 'POST' and request.form.get('subb') == 'pressed':
+        hardgs = [hg.description for hg in hardgoalz]
+        # for hg in hardgoalz:
+        #     if hg.description is not None:
+        #         hardgs.append(hg.description)
+        # if request.method == 'POST' and request.form.get('subb') == 'pressed':
+        #
+        #     for good in project.goods:
+        #         for goal in request.form.getlist('authenticity%s' % good.id):
+        #             auth_desc = goal + " of " + good.description
+        #             cb_value = 'authenticity%s' % good.id
+        #             HG = HardGoal.query.filter_by(authenticity=auth_desc, project_id=project.id).first()
+        #             if HG is None:
+        #                 auth = HardGoal(authenticity=auth_desc, project_id=project.id, cb_value=cb_value)
+        #                 db.session.add(auth)
+        #                 db.session.commit()
+        #                 flash('Protection Goals updated', 'succ')
+        #
+        #         for goal in request.form.getlist('confidentiality%s' % good.id):
+        #             conf_desc = goal + " of " + good.description
+        #             cb_value = 'confidentiality%s' % good.id
+        #             HG = HardGoal.query.filter_by(confidentiality=conf_desc, project_id=project.id).first()
+        #             if HG is None:
+        #                 conf = HardGoal(confidentiality=conf_desc, project_id=project.id, cb_value=cb_value)
+        #                 db.session.add(conf)
+        #                 db.session.commit()
+        #                 flash('Protection Goals updated', 'succ')
+        #
+        #         for goal in request.form.getlist('integrity%s' % good.id):
+        #             integ_desc = goal + " of " + good.description
+        #             cb_value = 'integrity%s' % good.id
+        #             HG = HardGoal.query.filter_by(integrity=integ_desc, project_id=project.id).first()
+        #             if HG is None:
+        #                 integ = HardGoal(integrity=integ_desc, project_id=project.id, cb_value=cb_value)
+        #                 db.session.add(integ)
+        #                 db.session.commit()
+        #                 flash('Protection Goals updated', 'succ')
+        #
+        #     for hgoal in project.hard_goals:
+        #         test = request.form.getlist('Hgoal%s' % hgoal.id)
+        #         if test and hgoal.description is None:
+        #             hgoal.priority = True
+        #             db.session.add(hgoal)
+        #             db.session.commit()
+        #         elif not test and hgoal.description is None:
+        #             hgoal.priority = False
+        #             db.session.add(hgoal)
+        #             db.session.commit()
+        #         gen = (hgl for hgl in project.hard_goals if hgl.description is not None)
+        #         for hgl in gen:
+        #             if test:
+        #                 if hgoal.authenticity is not None and hgoal.authenticity in hgl.description:
+        #                     hgl.priority = True
+        #                     db.session.add(hgl)
+        #                     db.session.commit()
+        #                 elif hgoal.confidentiality is not None and hgoal.confidentiality in hgl.description:
+        #                     hgl.priority = True
+        #                     db.session.add(hgl)
+        #                     db.session.commit()
+        #                 elif hgoal.integrity is not None and hgoal.integrity in hgl.description:
+        #                     hgl.priority = True
+        #                     db.session.add(hgl)
+        #                     db.session.commit()
+        #             else:
+        #                 if hgoal.authenticity is not None and hgoal.authenticity in hgl.description:
+        #                     hgl.priority = False
+        #                     db.session.add(hgl)
+        #                     db.session.commit()
+        #                 elif hgoal.confidentiality is not None and hgoal.confidentiality in hgl.description:
+        #                     hgl.priority = False
+        #                     db.session.add(hgl)
+        #                     db.session.commit()
+        #                 elif hgoal.integrity is not None and hgoal.integrity in hgl.description:
+        #                     hgl.priority = False
+        #                     db.session.add(hgl)
+        #                     db.session.commit()
+        #
+        #     current_req = []
+        #     for i in request.form:
+        #         current_req.append(i)
+        #     hardgoals = HardGoal.query.filter_by(project_id=project.id).all()
+        #     db_values = []
+        #     for hgoal in hardgoals:
+        #         if hgoal.cb_value and not hgoal.extra_hg:
+        #             db_values.append(hgoal.cb_value)
+        #
+        #     for val in db_values:
+        #         if val not in current_req:
+        #             HardGoal.query.filter_by(cb_value=val, project_id=project.id).delete()
+        #             db.session.commit()
+        #             flash('Item(s) removed from the database', 'error')
+        #
+        #     return redirect(url_for('hard_goals', project=project.name))
 
-            for good in project.goods:
-                for goal in request.form.getlist('authenticity%s' % good.id):
-                    auth_desc = goal + " of " + good.description
-                    cb_value = 'authenticity%s' % good.id
-                    HG = HardGoal.query.filter_by(authenticity=auth_desc, project_id=project.id).first()
-                    if HG is None:
-                        auth = HardGoal(authenticity=auth_desc, project_id=project.id, cb_value=cb_value)
-                        db.session.add(auth)
-                        db.session.commit()
-                        flash('Protection Goals updated', 'succ')
-
-                for goal in request.form.getlist('confidentiality%s' % good.id):
-                    conf_desc = goal + " of " + good.description
-                    cb_value = 'confidentiality%s' % good.id
-                    HG = HardGoal.query.filter_by(confidentiality=conf_desc, project_id=project.id).first()
-                    if HG is None:
-                        conf = HardGoal(confidentiality=conf_desc, project_id=project.id, cb_value=cb_value)
-                        db.session.add(conf)
-                        db.session.commit()
-                        flash('Protection Goals updated', 'succ')
-
-                for goal in request.form.getlist('integrity%s' % good.id):
-                    integ_desc = goal + " of " + good.description
-                    cb_value = 'integrity%s' % good.id
-                    HG = HardGoal.query.filter_by(integrity=integ_desc, project_id=project.id).first()
-                    if HG is None:
-                        integ = HardGoal(integrity=integ_desc, project_id=project.id, cb_value=cb_value)
-                        db.session.add(integ)
-                        db.session.commit()
-                        flash('Protection Goals updated', 'succ')
-
-            for hgoal in project.hard_goals:
-                test = request.form.getlist('Hgoal%s' % hgoal.id)
-                if test and hgoal.description is None:
-                    hgoal.priority = True
-                    db.session.add(hgoal)
-                    db.session.commit()
-                elif not test and hgoal.description is None:
-                    hgoal.priority = False
-                    db.session.add(hgoal)
-                    db.session.commit()
-                gen = (hgl for hgl in project.hard_goals if hgl.description is not None)
-                for hgl in gen:
-                    if test:
-                        if hgoal.authenticity is not None and hgoal.authenticity in hgl.description:
-                            hgl.priority = True
-                            db.session.add(hgl)
-                            db.session.commit()
-                        elif hgoal.confidentiality is not None and hgoal.confidentiality in hgl.description:
-                            hgl.priority = True
-                            db.session.add(hgl)
-                            db.session.commit()
-                        elif hgoal.integrity is not None and hgoal.integrity in hgl.description:
-                            hgl.priority = True
-                            db.session.add(hgl)
-                            db.session.commit()
-                    else:
-                        if hgoal.authenticity is not None and hgoal.authenticity in hgl.description:
-                            hgl.priority = False
-                            db.session.add(hgl)
-                            db.session.commit()
-                        elif hgoal.confidentiality is not None and hgoal.confidentiality in hgl.description:
-                            hgl.priority = False
-                            db.session.add(hgl)
-                            db.session.commit()
-                        elif hgoal.integrity is not None and hgoal.integrity in hgl.description:
-                            hgl.priority = False
-                            db.session.add(hgl)
-                            db.session.commit()
-
-            current_req = []
-            for i in request.form:
-                current_req.append(i)
-            hardgoals = HardGoal.query.filter_by(project_id=project.id).all()
-            db_values = []
-            for hgoal in hardgoals:
-                if hgoal.cb_value and not hgoal.extra_hg:
-                    db_values.append(hgoal.cb_value)
-
-            for val in db_values:
-                if val not in current_req:
-                    HardGoal.query.filter_by(cb_value=val, project_id=project.id).delete()
-                    db.session.commit()
-                    flash('Item(s) removed from the database', 'error')
-
-            return redirect(url_for('hard_goals', project=project.name))
-
-        elif request.method == 'POST' and request.form.get('sub2') == 'pressed2':
+        if request.method == 'POST' and request.form.get('sub2') == 'pressed2':
             callback_list = request.form.getlist('hglist')
             if callback_list:
                 for item in callback_list:

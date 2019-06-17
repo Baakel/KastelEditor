@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block extracss %}
+  <link rel="stylesheet" href="/static/css/auto-complete.css" type="text/css">
+{% endblock %}
+
+{% block content %}
+  {% for message in get_flashed_messages(category_filter=["succ"]) %}
+      <div class="alert-success" role="alert">{{ message }}</div>
+  {% endfor %}
+  {% for errors in get_flashed_messages(category_filter=["error"]) %}
+      <div class="alert-danger" role="alert">{{ errors }}</div>
+  {% endfor %}
+  <div class="container-fluid">
+    <div class="row align-items-center">
+      <div class="col"></div>
+      <div class="col-8"><h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ project.name }} Attackers</h1></div>
+      {% if stakeholders %}
+        <div class="col align-items-center text-center"><a href="{{ url_for('goods', project=project.name) }}" class="btn btn-primary btn-raised">Next</a></div>
+      {% else %}
+        <div class="col"></div>
+      {% endif %}
+    </div>
+  </div>
+  <form action="" method="post" name="addattacker">
+      {{ form.hidden_tag() }}
+  <div class="container">
+      <table class="table">
+          <tr>
+              <td colspan="2"><div class="form-group mb-4">{{ form.attacker.label(class_="form-control-label") }}{{ form.attacker(class_="form-control", placeholder="Add an Attacker") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
+          </tr>
+      </table>
+      <table class="table table-hover">
+          <tr class="thead-inverse text-center mt-5">
+              <th colspan="2">Current Attackers</th>
+          </tr>
+          {% for attacker in project.attackers %}
+          <tr>
+              <td id="{{ attacker.name }}">{{ attacker.name }}</td>
+              <td class="text-right"><a class="text-success" href="{{ url_for('atk', project=project.name, id=attacker.id) }}"><i class="material-icons">visibility</i></a>&nbsp;&nbsp;<a class="text-primary" onclick="editVal(document.getElementById('{{ attacker.name }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removeatt', project=project.name, desc=attacker.name) }}"><i class="material-icons">delete</i></a></td>
+          </tr>
+          {% endfor %}
+      </table>
+  </div>
+  </form>
+{% endblock %}
+
+{% block scripts %}
+  <script src="/static/js/auto-complete.min.js"></script>
+  <script type="text/javascript">
+    function editVal(object) {
+
+      if (prev_edit = document.getElementById('edited')) {
+        prev_edit.parentElement.innerHTML = `${prev_edit.parentElement.id}`;
+      }
+      object.innerHTML = `<input id="edited" name="edited-${object.id}" class="form-control" type="text" value="${object.id}">`;
+      document.getElementById('edited').focus();
+    }
+  </script>
+  <script type="text/javascript">
+    $(document).ready(function(){
+      let stakeholders = [];
+
+      function loadStakeholders(){
+        $.getJSON('/stk/{{ project.id }}', function(data, status, xhr){
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].nickname != 'Law') {
+              stakeholders.push(data[i].nickname);
+            }
+          }
+        });
+      }
+
+      loadStakeholders();
+
+      new autoComplete({
+        selector: document.getElementById('attacker'),
+        minChars: 2,
+        source: function(term, suggest){
+          term = term.toLowerCase();
+          let matches = [];
+          for (i=0; i<stakeholders.length; i++)
+            if (~stakeholders[i].toLowerCase().indexOf(term)) matches.push(stakeholders[i]);
+          suggest(matches);
+        }
+      });
+    })
+  </script>
+{% endblock %}

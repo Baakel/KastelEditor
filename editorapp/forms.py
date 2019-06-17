@@ -67,3 +67,11 @@ class HardGoalsForm(FlaskForm):
 class BbmForm(FlaskForm):
     selections = SelectField('Desired Mechanism', coerce=int, validators=[DataRequired()])
         # SelectField('Desired Mechanism', coerce=int, validators=[DataRequired()])
+
+
+class ActorsForm(FlaskForm):
+    actor = StringField('Actor name:', validators=[DataRequired()])
+
+
+class AttackersForm(FlaskForm):
+    attacker = StringField('Attacker name:', validators=[DataRequired()])

@@ -21,121 +21,121 @@
     </div>
     <div class="container-fluid">
     <form method="post">
-        <div class="row">
-            <div class="col">
-                <table class="table table-striped table-bordered table-hover w-34">
-                    <caption>Pick the protection goals for your assets</caption>
-                    <thead class="thead-dark">
-                        <tr>
-                            <th class="bg-warning" scope="col">Assets</th>
-                            <th class="bg-success" scope="col">Confidentiality</th>
-                            <th class="bg-success" scope="col">Integrity</th>
-                            <th class="bg-success" scope="col">Authenticity</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for good in project.goods %}
-                        <tr>
-                            <th scope="row">{{ good.description }}</th>
-                            {% set auth = [] %}
-                            {% set conf = [] %}
-                            {% set integrity = [] %}
-                            {% for hardgoal in project.hard_goals %}
-                                {% if hardgoal.confidentiality != None %}
-                                    {% if "Confidentiality of %s" %good.description in hardgoal.confidentiality %}
-                                        {% if conf.append(True) %} {% endif %}
-                                    {% endif %}
-                                {% endif %}
-                                {% if hardgoal.integrity != None %}
-                                    {% if "Integrity of %s" %good.description in hardgoal.integrity %}
-                                        {% if integrity.append(True) %} {% endif %}
-                                    {% endif %}
-                                {% endif %}
-                                {% if hardgoal.authenticity != None %}
-                                    {% if "Authenticity of %s" %good.description in hardgoal.authenticity %}
-                                        {% if auth.append(True) %} {% endif %}
-                                    {% endif %}
-                                {% endif %}
-                            {% endfor %}
-                            {% if conf %}
-                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}checked" name="confidentiality{{ good.id }}" value="Confidentiality" checked><label for="conf_{{ good.id }}checked"></label></td>
-                            {% else %}
-                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}" name="confidentiality{{ good.id }}" value="Confidentiality"><label for="conf_{{ good.id }}"></label></td>
-                            {% endif %}
-                            {% if integrity %}
-                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}checked" name="integrity{{ good.id }}" value="Integrity" checked><label for="integ_{{ good.id }}checked"></label></td>
-                            {% else %}
-                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}" name="integrity{{ good.id }}" value="Integrity"><label for="integ_{{ good.id }}"></label></td>
-                            {% endif %}
-                            {% if auth %}
-                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}checked" name="authenticity{{ good.id }}" value="Authenticity" checked><label for="auth_{{ good.id }}checked"></label></td>
-                            {% else %}
-                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}" name="authenticity{{ good.id }}" value="Authenticity"><label for="auth_{{ good.id }}"></label></td>
-                            {% endif %}
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            <div class="col">
-                <table class="table table-striped table-bordered table-hover w-33">
-                    <caption>Choose protection priority</caption>
-                    <thead class="thead-dark">
-                        <tr>
-                            <th class="bg-success" scope="col">Description</th>
-                            <th class="bg-primary" scope="col">High Priority</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for hgoal in project.hard_goals %}
-                        {% if hgoal.authenticity != None and hgoal.authenticity != "yes" %}
-                            <tr>
-                                {% if hgoal.priority == True %}
-                                    <td><b>{{ hgoal.authenticity }}</b></td>
-                                    <td class="text-center"><input type="checkbox" id="hgoalauth_{{ hgoal.id }}checked" name="Hgoal{{ hgoal.id }}" value=True checked><label for="hgoalauth_{{ hgoal.id }}checked"></label></td>
-                                {% else %}
-                                    <td>{{ hgoal.authenticity }}</td>
-                                    <td class="text-center"><input type="checkbox" id="hgoalauth_{{ hgoal.id }}" name="Hgoal{{ hgoal.id }}" value=True><label for="hgoalauth_{{ hgoal.id }}"></label></td>
-                                {% endif %}
-                            </tr>
-                        {% endif %}
-                        {% if hgoal.confidentiality != None and hgoal.confidentiality != "yes" %}
-                            <tr>
-                                {% if hgoal.priority == True %}
-                                    <td><b>{{ hgoal.confidentiality }}</b></td>
-                                    <td class="text-center"><input type="checkbox" id="hgoalconf_{{ hgoal.id }}checked" name="Hgoal{{ hgoal.id }}" value=True checked><label for="hgoalconf_{{ hgoal.id }}checked"></label></td>
-                                {% else %}
-                                    <td>{{ hgoal.confidentiality }}</td>
-                                    <td class="text-center"><input type="checkbox" id="hgoalconf_{{ hgoal.id }}" name="Hgoal{{ hgoal.id }}" value=True><label for="hgoalconf_{{ hgoal.id }}"></label></td>
-                                {% endif %}
-                            </tr>
-                        {% endif %}
-                        {% if hgoal.integrity != None and hgoal.integrity != "yes" %}
-                            <tr>
-                                {% if hgoal.priority == True %}
-                                    <td><b>{{ hgoal.integrity }}</b></td>
-                                    <td class="text-center"><input type="checkbox" id="hgoalint_{{ hgoal.id }}checked" name="Hgoal{{ hgoal.id }}" value=True checked><label for="hgoalint_{{ hgoal.id }}checked"></label></td>
-                                {% else %}
-                                    <td>{{ hgoal.integrity }}</td>
-                                    <td class="text-center"><input type="checkbox" id="hgoalint_{{ hgoal.id }}" name="Hgoal{{ hgoal.id }}" value=True><label for="hgoalint_{{ hgoal.id }}"></label></td>
-                                {% endif %}
-                            </tr>
-                        {% endif %}
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                <button type="submit" class="btn btn-raised btn-primary" name="subb" value="pressed">Update Soft Goals Matrix</button>
-            </div>
-        </div>
+{#        <div class="row">#}
+{#            <div class="col">#}
+{#                <table class="table table-striped table-bordered table-hover w-34">#}
+{#                    <caption>Pick the protection goals for your assets</caption>#}
+{#                    <thead class="thead-dark">#}
+{#                        <tr>#}
+{#                            <th class="bg-warning" scope="col">Assets</th>#}
+{#                            <th class="bg-success" scope="col">Confidentiality</th>#}
+{#                            <th class="bg-success" scope="col">Integrity</th>#}
+{#                            <th class="bg-success" scope="col">Authenticity</th>#}
+{#                        </tr>#}
+{#                    </thead>#}
+{#                    <tbody>#}
+{#                    {% for good in project.goods %}#}
+{#                        <tr>#}
+{#                            <th scope="row">{{ good.description }}</th>#}
+{#                            {% set auth = [] %}#}
+{#                            {% set conf = [] %}#}
+{#                            {% set integrity = [] %}#}
+{#                            {% for hardgoal in project.hard_goals %}#}
+{#                                {% if hardgoal.confidentiality != None %}#}
+{#                                    {% if "Confidentiality of %s" %good.description in hardgoal.confidentiality %}#}
+{#                                        {% if conf.append(True) %} {% endif %}#}
+{#                                    {% endif %}#}
+{#                                {% endif %}#}
+{#                                {% if hardgoal.integrity != None %}#}
+{#                                    {% if "Integrity of %s" %good.description in hardgoal.integrity %}#}
+{#                                        {% if integrity.append(True) %} {% endif %}#}
+{#                                    {% endif %}#}
+{#                                {% endif %}#}
+{#                                {% if hardgoal.authenticity != None %}#}
+{#                                    {% if "Authenticity of %s" %good.description in hardgoal.authenticity %}#}
+{#                                        {% if auth.append(True) %} {% endif %}#}
+{#                                    {% endif %}#}
+{#                                {% endif %}#}
+{#                            {% endfor %}#}
+{#                            {% if conf %}#}
+{#                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}checked" name="confidentiality{{ good.id }}" value="Confidentiality" checked><label for="conf_{{ good.id }}checked"></label></td>#}
+{#                            {% else %}#}
+{#                                <td class="text-center"><input type="checkbox" id="conf_{{ good.id }}" name="confidentiality{{ good.id }}" value="Confidentiality"><label for="conf_{{ good.id }}"></label></td>#}
+{#                            {% endif %}#}
+{#                            {% if integrity %}#}
+{#                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}checked" name="integrity{{ good.id }}" value="Integrity" checked><label for="integ_{{ good.id }}checked"></label></td>#}
+{#                            {% else %}#}
+{#                                <td class="text-center"><input type="checkbox" id="integ_{{ good.id }}" name="integrity{{ good.id }}" value="Integrity"><label for="integ_{{ good.id }}"></label></td>#}
+{#                            {% endif %}#}
+{#                            {% if auth %}#}
+{#                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}checked" name="authenticity{{ good.id }}" value="Authenticity" checked><label for="auth_{{ good.id }}checked"></label></td>#}
+{#                            {% else %}#}
+{#                                <td class="text-center"><input type="checkbox" id="auth_{{ good.id }}" name="authenticity{{ good.id }}" value="Authenticity"><label for="auth_{{ good.id }}"></label></td>#}
+{#                            {% endif %}#}
+{#                        </tr>#}
+{#                    {% endfor %}#}
+{#                    </tbody>#}
+{#                </table>#}
+{#            </div>#}
+{#            <div class="col">#}
+{#                <table class="table table-striped table-bordered table-hover w-33">#}
+{#                    <caption>Choose protection priority</caption>#}
+{#                    <thead class="thead-dark">#}
+{#                        <tr>#}
+{#                            <th class="bg-success" scope="col">Description</th>#}
+{#                            <th class="bg-primary" scope="col">High Priority</th>#}
+{#                        </tr>#}
+{#                    </thead>#}
+{#                    <tbody>#}
+{#                        {% for hgoal in project.hard_goals %}#}
+{#                        {% if hgoal.authenticity != None and hgoal.authenticity != "yes" %}#}
+{#                            <tr>#}
+{#                                {% if hgoal.priority == True %}#}
+{#                                    <td><b>{{ hgoal.authenticity }}</b></td>#}
+{#                                    <td class="text-center"><input type="checkbox" id="hgoalauth_{{ hgoal.id }}checked" name="Hgoal{{ hgoal.id }}" value=True checked><label for="hgoalauth_{{ hgoal.id }}checked"></label></td>#}
+{#                                {% else %}#}
+{#                                    <td>{{ hgoal.authenticity }}</td>#}
+{#                                    <td class="text-center"><input type="checkbox" id="hgoalauth_{{ hgoal.id }}" name="Hgoal{{ hgoal.id }}" value=True><label for="hgoalauth_{{ hgoal.id }}"></label></td>#}
+{#                                {% endif %}#}
+{#                            </tr>#}
+{#                        {% endif %}#}
+{#                        {% if hgoal.confidentiality != None and hgoal.confidentiality != "yes" %}#}
+{#                            <tr>#}
+{#                                {% if hgoal.priority == True %}#}
+{#                                    <td><b>{{ hgoal.confidentiality }}</b></td>#}
+{#                                    <td class="text-center"><input type="checkbox" id="hgoalconf_{{ hgoal.id }}checked" name="Hgoal{{ hgoal.id }}" value=True checked><label for="hgoalconf_{{ hgoal.id }}checked"></label></td>#}
+{#                                {% else %}#}
+{#                                    <td>{{ hgoal.confidentiality }}</td>#}
+{#                                    <td class="text-center"><input type="checkbox" id="hgoalconf_{{ hgoal.id }}" name="Hgoal{{ hgoal.id }}" value=True><label for="hgoalconf_{{ hgoal.id }}"></label></td>#}
+{#                                {% endif %}#}
+{#                            </tr>#}
+{#                        {% endif %}#}
+{#                        {% if hgoal.integrity != None and hgoal.integrity != "yes" %}#}
+{#                            <tr>#}
+{#                                {% if hgoal.priority == True %}#}
+{#                                    <td><b>{{ hgoal.integrity }}</b></td>#}
+{#                                    <td class="text-center"><input type="checkbox" id="hgoalint_{{ hgoal.id }}checked" name="Hgoal{{ hgoal.id }}" value=True checked><label for="hgoalint_{{ hgoal.id }}checked"></label></td>#}
+{#                                {% else %}#}
+{#                                    <td>{{ hgoal.integrity }}</td>#}
+{#                                    <td class="text-center"><input type="checkbox" id="hgoalint_{{ hgoal.id }}" name="Hgoal{{ hgoal.id }}" value=True><label for="hgoalint_{{ hgoal.id }}"></label></td>#}
+{#                                {% endif %}#}
+{#                            </tr>#}
+{#                        {% endif %}#}
+{#                        {% endfor %}#}
+{#                    </tbody>#}
+{#                </table>#}
+{#            </div>#}
+{#        </div>#}
+{#        <div class="row">#}
+{#            <div class="col">#}
+{#                <button type="submit" class="btn btn-raised btn-primary" name="subb" value="pressed">Update Soft Goals Matrix</button>#}
+{#            </div>#}
+{#        </div>#}
 
     <div class="row">
         <div class="col">
             <table class="table table-hover table-bordered">
-                <caption>Soft Goals Matrix</caption>
+                <caption>Hard Goals Matrix</caption>
                 <thead>
                     <tr>
                         <th scope="col" class="bg-success text-light">Soft Goals / Functional Requirements</th>
@@ -147,48 +147,48 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% for hgoal in project.hard_goals %}
-                    {% if hgoal.authenticity and hgoal.description == None %}
+                {% for sgoal in project.soft_goals %}
+                    {% if sgoal.authenticity %}
                     <tr>
-                        <th scope="row" class="bg-warning">{{ hgoal.authenticity }}</th>
+                        <th scope="row" class="bg-warning">{{ sgoal.authenticity }}</th>
                         {% for fr in project.functional_req %}
                             {% for serv in fr.services %}
-                                {% if  '{} ensures the {} during the {}'.format(serv.name, hgoal.authenticity, fr.description) in hardgs  %}
-                                        <td class="text-center"><input type="checkbox" id="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ hgoal.authenticity }}" checked><label for="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ hgoal.id }}{{ fr.id }}</label></td>
+                                {% if  '{} ensures the {} during the {}'.format(serv.name, sgoal.authenticity, fr.description) in hardgs  %}
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.authenticity }}" checked><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% else %}
-                                        <td class="text-center"><input type="checkbox" id="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ hgoal.authenticity }}"><label for="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ hgoal.id }}{{ fr.id }}</label></td>
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.authenticity }}"><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% endif %}
                             {% endfor %}
                         {% endfor %}
                     </tr>
                     {% endif %}
                 {% endfor %}
-                {% for hgoal in project.hard_goals %}
-                    {% if hgoal.confidentiality and hgoal.description == None %}
+                {% for sgoal in project.soft_goals %}
+                    {% if sgoal.confidentiality %}
                     <tr>
-                        <th scope="row" class="bg-warning">{{ hgoal.confidentiality }}</th>
+                        <th scope="row" class="bg-warning">{{ sgoal.confidentiality }}</th>
                         {% for fr in project.functional_req %}
                             {% for serv in fr.services %}
-                                    {% if  '{} ensures the {} during the {}'.format(serv.name, hgoal.confidentiality, fr.description) in hardgs  %}
-                                        <td class="text-center"><input type="checkbox" id="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ hgoal.confidentiality }}" checked><label for="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ hgoal.id }}{{ fr.id }}</label></td>
+                                    {% if  '{} ensures the {} during the {}'.format(serv.name, sgoal.confidentiality, fr.description) in hardgs  %}
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.confidentiality }}" checked><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% else %}
-                                        <td class="text-center"><input type="checkbox" id="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ hgoal.confidentiality }}"><label for="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ hgoal.id }}{{ fr.id }}</label></td>
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.confidentiality }}"><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% endif %}
                             {% endfor %}
                         {% endfor %}
                     </tr>
                     {% endif %}
                 {% endfor %}
-                {% for hgoal in project.hard_goals %}
-                    {% if hgoal.integrity and hgoal.description == None %}
+                {% for sgoal in project.soft_goals %}
+                    {% if sgoal.integrity %}
                     <tr>
-                        <th scope="row" class="bg-warning">{{ hgoal.integrity }}</th>
+                        <th scope="row" class="bg-warning">{{ sgoal.integrity }}</th>
                         {% for fr in project.functional_req %}
                             {% for serv in fr.services %}
-                                    {% if  '{} ensures the {} during the {}'.format(serv.name, hgoal.integrity, fr.description) in hardgs  %}
-                                        <td class="text-center"><input type="checkbox" id="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ hgoal.integrity }}" checked><label for="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ hgoal.id }}{{ fr.id }}</label></td>
+                                    {% if  '{} ensures the {} during the {}'.format(serv.name, sgoal.integrity, fr.description) in hardgs  %}
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.integrity }}" checked><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% else %}
-                                        <td class="text-center"><input type="checkbox" id="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ hgoal.integrity }}"><label for="{{ hgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ hgoal.id }}{{ fr.id }}</label></td>
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.integrity }}"><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% endif %}
                             {% endfor %}
                         {% endfor %}

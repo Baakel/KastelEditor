@@ -106,6 +106,9 @@ class Stakeholder(db.Model):
     def __repr__(self):
         return '{}'.format(self.nickname)
 
+    def as_dict(self):
+        return {'nickname': self.nickname}
+
 
 class Good(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -219,6 +222,9 @@ class SoftGoal(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     hardgoal_id = db.Column(db.Integer, db.ForeignKey(HardGoal.id))
 
+    def __repr__(self):
+        return '{}'.format(self.cb_value)
+
 
 class ExtraHardGoal(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -240,6 +246,7 @@ class Projects(db.Model):
     goods = db.relationship('Good', backref='project', lazy='dynamic')
     sub_services = db.relationship('SubService', backref='project', lazy='dynamic')
     soft_goals = db.relationship('SoftGoal', backref='project', lazy='dynamic')
+    attackers = db.relationship('Attacker', backref='project', lazy='dynamic')
 
     @staticmethod
     def make_unique_name(name):
@@ -297,3 +304,9 @@ class BbMechanisms(db.Model):
 
     def __repr__(self):
         return '{}'.format(self.name)
+
+
+class Attacker(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64))
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))

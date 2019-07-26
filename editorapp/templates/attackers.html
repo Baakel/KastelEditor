@@ -27,7 +27,8 @@
   <div class="container">
       <table class="table">
           <tr>
-              <td colspan="2"><div class="form-group mb-4">{{ form.attacker.label(class_="form-control-label") }}{{ form.attacker(class_="form-control", placeholder="Add an Attacker") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
+              <td><div class="form-group mb-4">{{ form.attacker.label(class_="form-control-label") }}{{ form.attacker(class_="form-control", placeholder="Add an Attacker") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
+              <td><div class="form-group">{{ form['softgoals_list'].label(class_="form-control-label") }}{{ form['softgoals_list'](class_='form-control', id='selectfield') }}</div></td>
           </tr>
       </table>
       <table class="table table-hover">
@@ -35,10 +36,17 @@
               <th colspan="2">Current Attackers</th>
           </tr>
           {% for attacker in project.attackers %}
-          <tr>
+            {% if attacker.has_sg() %}
+            <tr class="table-primary">
+                <td id="{{ attacker.name }}">{{ attacker.name }}</td>
+                <td class="text-right"><a class="text-success" href="{{ url_for('atk', project=project.name, id=attacker.id) }}"><i class="material-icons">visibility</i></a>&nbsp;&nbsp;<a class="text-primary" onclick="editVal(document.getElementById('{{ attacker.name }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removeatt', project=project.name, desc=attacker.name) }}"><i class="material-icons">delete</i></a></td>
+            </tr>
+            {% else %}
+            <tr class="table-danger">
               <td id="{{ attacker.name }}">{{ attacker.name }}</td>
-              <td class="text-right"><a class="text-success" href="{{ url_for('atk', project=project.name, id=attacker.id) }}"><i class="material-icons">visibility</i></a>&nbsp;&nbsp;<a class="text-primary" onclick="editVal(document.getElementById('{{ attacker.name }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removeatt', project=project.name, desc=attacker.name) }}"><i class="material-icons">delete</i></a></td>
-          </tr>
+                <td class="text-right"><a class="text-success" href="{{ url_for('atk', project=project.name, id=attacker.id) }}"><i class="material-icons">visibility</i></a>&nbsp;&nbsp;<a class="text-primary" onclick="editVal(document.getElementById('{{ attacker.name }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removeatt', project=project.name, desc=attacker.name) }}"><i class="material-icons">delete</i></a></td>
+            </tr>
+            {% endif %}
           {% endfor %}
       </table>
   </div>

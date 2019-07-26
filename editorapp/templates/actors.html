@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block extracss %}
+  <link rel="stylesheet" href="/static/css/auto-complete.css" type="text/css">
+{% endblock %}
+
 {% block content %}
      {% for message in get_flashed_messages(category_filter=["succ"]) %}
         <div class="alert-success" role="alert">{{ message }}</div>
@@ -18,7 +22,7 @@
         {% endif %}
       </div>
     </div>
-        <form action="" method="post" name="addstakeholder">
+        <form action="" method="post" name="addactor">
             {{ form.hidden_tag() }}
         <div class="container">
             <table class="table">
@@ -30,13 +34,56 @@
                 <tr class="thead-inverse text-center mt-5">
                     <th colspan="2">Current Actors</th>
                 </tr>
-                {% for stakeholder in project.stake_holders %}
+                {% for actor in project.actors %}
                 <tr>
-                    <td id="{{ stakeholder.nickname }}">{{ stakeholder.nickname }}</td>
-                    <td class="text-right"><a class="text-primary" onclick="editVal(document.getElementById('{{ stakeholder.nickname }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removesh', project=project.name, desc=stakeholder.nickname) }}"><i class="material-icons">delete</i></a></td>
+                    <td id="{{ actor.name }}">{{ actor.name }}</td>
+                    <td class="text-right"><a class="text-success" href="{{ url_for('act', project=project.name, id=actor.id) }}"><i class="material-icons">visibility</i></a>&nbsp;&nbsp;<a class="text-primary" onclick="editVal(document.getElementById('{{ actor.name }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removeact', project=project.name, name=actor.name) }}"><i class="material-icons">delete</i></a></td>
                 </tr>
                 {% endfor %}
             </table>
         </div>
         </form>
+{% endblock %}
+
+{% block scripts %}
+  <script src="/static/js/auto-complete.min.js"></script>
+  <script type="text/javascript">
+    function editVal(object) {
+
+      if (prev_edit = document.getElementById('edited')) {
+        prev_edit.parentElement.innerHTML = `${prev_edit.parentElement.id}`;
+      }
+      object.innerHTML = `<input id="edited" name="edited-${object.id}" class="form-control" type="text" value="${object.id}">`;
+      document.getElementById('edited').focus();
+    }
+  </script>
+  <script type="text/javascript">
+    $(document).ready(function(){
+      let stakeholders = [];
+
+      function loadStakeholders(){
+        $.getJSON('/stk/{{ project.id }}', function(data, status, xhr){
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].nickname != 'Law') {
+              stakeholders.push(data[i].nickname);
+            }
+          }
+        });
+      }
+
+      loadStakeholders();
+
+      new autoComplete({
+        selector: document.getElementById('actor'),
+        minChars: 2,
+        source: function(term, suggest){
+          term = term.toLowerCase();
+          let matches = [];
+          for (i=0; i<stakeholders.length; i++)
+            if (~stakeholders[i].toLowerCase().indexOf(term)) matches.push(stakeholders[i]);
+          suggest(matches);
+        }
+      });
+    })
+  </script>
 {% endblock %}

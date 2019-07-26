@@ -34,7 +34,7 @@
                             <table class="table table-hover">
                                 <tbody>
                                 {% for bbm in bbms %}
-                                    {% for key, values in current_bbms.items() %}
+                                    {% for key, values in current_bbms['bbms_list'].items() %}
                                         {% if key == hgoal.id and bbm in values %}
                                             {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}
                                             <tr>
@@ -71,23 +71,31 @@
                             <table class="table table-hover">
                                 <tbody>
                                 {% for bbm in bbms %}
-                                    {% for key, values in current_bbms.items() %}
+                                    {% for key, values in current_bbms['bbms_list'].items() %}
                                         {% if key == hgoal.id and bbm in values %}
                                             {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}
-                                                <tr>
-                                                    <td>
-                                                        <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}" checked><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
-                                                    </td>
-                                                </tr>
+                                                {% if bbm.against_actor %}
+                                                    {% if bbm.against_actor[0].id in current_bbms['components'][hgoal.component_id] %}
+                                                    <tr>
+                                                        <td>
+                                                            <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}" checked><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
+                                                        </td>
+                                                    </tr>
+                                                    {% endif %}
+                                                  {% endif %}
                                                 {% endif %}
                                             {% endif %}
                                             {% if key == hgoal.id and bbm not in values %}
                                                 {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}
-                                                <tr>
-                                                    <td>
-                                                        <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}"><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
-                                                    </td>
-                                                </tr>
+                                                  {% if bbm.against_actor %}
+                                                    {% if bbm.against_actor[0].id in current_bbms['components'][hgoal.component_id] %}
+                                                    <tr>
+                                                        <td>
+                                                            <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}"><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
+                                                        </td>
+                                                    </tr>
+                                                    {% endif %}
+                                                  {% endif %}
                                             {% endif %}
                                         {% endif %}
                                     {% endfor %}

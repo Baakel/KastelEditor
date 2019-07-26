@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% for message in get_flashed_messages(category_filter=["succ"]) %}
+      <div class="alert-success" role="alert">{{ message }}</div>
+  {% endfor %}
+  {% for errors in get_flashed_messages(category_filter=["error"]) %}
+      <div class="alert-danger" role="alert">{{ errors }}</div>
+  {% endfor %}
+  <div class="container-fluid">
+    <div class="row align-items-center">
+      <div class="col"><a class="btn btn-primary btn-raised" href="{{ url_for('actors', project=project.name) }}">Back</a></div>
+      <div class="col-8"><h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ actor.name }} Details</h1></div>
+      {% if stakeholders %}
+        <div class="col align-items-center text-center"><a href="{{ url_for('goods', project=project.name) }}" class="btn btn-primary btn-raised">Next</a></div>
+      {% else %}
+        <div class="col"></div>
+      {% endif %}
+    </div>
+    <form action="" method="post" name="actor-control">
+    <div class="row">
+      <div class="col">
+      {{ form.hidden_tag() }}
+        <table class="table table-hover">
+          <thead>
+            <tr class="thead-inverse text-center mt-5">
+              <th colspan="2" class="text-light">
+                Components Accessible to {{ actor.name }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for serv in project.sub_services %}
+            <tr>
+              <td>{{ serv.name }}</td>
+              {% if serv.id in services_used  %}
+                {% for detail in actor.details %}
+                  {% if serv.id == detail.service_id %}
+                    {% if detail.role_id == 1 %}
+                      <td>
+                        <select class="form-control" name="serv{{ serv.id }}">
+                          <option value="1" selected>External</option>
+                          <option value="2">User</option>
+                          <option value="3">Admin</option>
+                        </select>
+                      </td>
+                    {% endif %}
+                    {% if detail.role_id == 2 %}
+                      <td>
+                        <select class="form-control" name="serv{{ serv.id }}">
+                          <option value="1">External</option>
+                          <option value="2" selected>User</option>
+                          <option value="3">Admin</option>
+                        </select>
+                      </td>
+                    {% endif %}
+                    {% if detail.role_id == 3 %}
+                      <td>
+                        <select class="form-control" name="serv{{ serv.id }}">
+                          <option value="1">External</option>
+                          <option value="2">User</option>
+                          <option value="3" selected>Admin</option>
+                        </select>
+                      </td>
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              {% else %}
+                <td>
+                  <select class="form-control" name="serv{{ serv.id }}">
+                    <option value="1">External</option>
+                    <option value="2">User</option>
+                    <option value="3">Admin</option>
+                    <option value="4" selected>Choose a Role</option>
+                  </select>
+                </td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="col">
+        <table class="table table-hover">
+          <thead>
+            <tr class="thead-inverse text-center mt-5">
+              <th colspan="2" class="text-light">
+                {{ actor.name }} can Attack as:
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for atk in project.attackers %}
+            {% if atk.id in atkrs%}
+            <tr>
+              <td>{{ atk.name }}</td>
+              <td><input class="form-control" type="checkbox" id="{{ atk.id }}" name="atk-{{ atk.id }}" checked></td>
+            </tr>
+            {% else %}
+            <tr>
+              <td>{{ atk.name }}</td>
+              <td><input class="form-control" type="checkbox" id="{{ atk.id }}" name="atk-{{ atk.id }}"></td>
+            </tr>
+            {% endif %}
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="container-fluid">
+    <div class="row">
+      <button class="btn-primary btn btn-raised" type="submit" name="sub" id="subid" value="submitted">Update</button>
+    </div>
+    </div>
+    </form>
+  </div>
+{% endblock %}

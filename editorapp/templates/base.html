@@ -18,7 +18,7 @@
                 {% if g.project %}
                     <div class="dropdown">
                         <button class="btn btn-secondary btn-raised dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                           {{ project.name }}
+                           {{ g.project.name }}
                         </button>
                         <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                             {% for proj in g.user.wprojects %}
@@ -50,37 +50,37 @@
                     {% if g.page != 'Noproj' %}
                         {% if g.project %}
                             <li class="nav-item active">
-                                <a class="nav-link" href="{{ url_for('projects', name=project.name) }}">Overview<span class="sr-only">(current)</span></a>
+                                <a class="nav-link" href="{{ url_for('projects', name=g.project.name) }}">Overview<span class="sr-only">(current)</span></a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('stakeholders', project=project.name) }}">Stakeholders</a>
+                                <a class="nav-link" href="{{ url_for('stakeholders', project=g.project.name) }}">Stakeholders</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('goods', project=project.name) }}">Assets</a>
+                                <a class="nav-link" href="{{ url_for('goods', project=g.project.name) }}">Assets</a>
                             </li>
                             <li>
-                              <a class="nav-link" href="{{ url_for('soft_goals', project=project.name) }}">Soft Goals</a>
+                              <a class="nav-link" href="{{ url_for('soft_goals', project=g.project.name) }}">Soft Goals</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('functional_req', project=project.name) }}">Functional Requirements</a>
+                                <a class="nav-link" href="{{ url_for('functional_req', project=g.project.name) }}">Functional Requirements</a>
                             </li>
                             <li>
-                              <a class="nav-link" href="{{ url_for('attackers', project=project.name) }}">Attackers</a>
+                              <a class="nav-link" href="{{ url_for('attackers', project=g.project.name) }}">Attackers</a>
                             </li>
                             <li>
-                              <a class="nav-link" href="{{ url_for('actors', project=project.name) }}">Actors</a>
+                              <a class="nav-link" href="{{ url_for('actors', project=g.project.name) }}">Actors</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('hard_goals', project=project.name) }}">Hard Goals</a>
+                                <a class="nav-link" href="{{ url_for('hard_goals', project=g.project.name) }}">Hard Goals</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('bbmech', project=project.name) }}">BBM</a>
+                                <a class="nav-link" href="{{ url_for('bbmech', project=g.project.name) }}">BBM</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('assumptions', project=project.name) }}">Assumptions</a>
+                                <a class="nav-link" href="{{ url_for('assumptions', project=g.project.name) }}">Assumptions</a>
                             </li>
                             <li>
-                                <a class="nav-link" href="{{ url_for('tree', project=project.name) }}">Project Diagram</a>
+                                <a class="nav-link" href="{{ url_for('tree', project=g.project.name) }}">Project Diagram</a>
                             </li>
                         {% else %}
                             <li class="nav-item">

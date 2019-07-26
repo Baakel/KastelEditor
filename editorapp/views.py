@@ -7,7 +7,8 @@ from wtforms.validators import DataRequired
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, \
     HardGoalsForm, BbmForm, FlaskForm, ActorsForm, AttackersForm
 from .models import Stakeholder, Users, Projects, Good, FunctionalRequirement,\
-    HardGoal, Role, BbMechanisms,  Assumptions, SubService, freq_serv, hard_mechanism, SoftGoal, Attacker
+    HardGoal, Role, BbMechanisms,  Assumptions, SubService, freq_serv, hard_mechanism, SoftGoal, Attacker, Actors,\
+    Aktoren, ActorDetails
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 # from flask_security.utils import hash_password, verify_password, get_hmac
 import flask_admin
@@ -137,6 +138,18 @@ def create_db_data():
                 bbm = BbMechanisms.query.filter_by(name='Strong Authentication Procedure').first()
                 bbm.add_ass(ass)
 
+        db.session.commit()
+
+    actors = Actors.query.first()
+    if not actors:
+        actors = [
+            'External',
+            'User',
+            'Admin'
+        ]
+        for actor in actors:
+            a = Actors(name=actor)
+            db.session.add(a)
         db.session.commit()
 
 
@@ -359,6 +372,7 @@ def import_project():
             ed = Users.query.filter_by(nickname=editor).first()
             if ed:
                 ed.contribute(curr_project)
+        g.user.contribute(curr_project)
         for stakeholder in json_data['Stakeholders']:
             stk = Stakeholder(nickname=stakeholder, project_id=curr_project.id)
             db.session.add(stk)
@@ -440,6 +454,7 @@ def import_project():
                     existing_bb.authenticity = json_data['Black Box Mechanisms'][bbm]['authenticity']
                     existing_bb.confidentiality = json_data['Black Box Mechanisms'][bbm]['confidentiality']
                     existing_bb.integrity = json_data['Black Box Mechanisms'][bbm]['integrity']
+                    existing_bb.extra_hg = json_data['Black Box Mechanisms'][bbm]['extra_hg']
                     db.session.commit()
         for assumption in json_data['Assumptions']:
             ass = Assumptions.query.filter_by(name=assumption).first()
@@ -965,7 +980,7 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/goods/<project>', methods=['GET', 'POST'])
+@app.route('/assets/<project>', methods=['GET', 'POST'])
 @login_required
 def goods(project):
     project = Projects.query.filter_by(name=project).first()
@@ -977,27 +992,44 @@ def goods(project):
             original_asset = Good.query.filter_by(description=original_asset_name, project_id=project.id).first()
             original_asset.description = new_asset_name
 
+            project_soft_goals = [sg for sg in project.soft_goals]
+            auth_sg = [i for i in project_soft_goals if (i.authenticity and original_asset_name in i.authenticity)]
+            for auth in auth_sg:
+                string_to_replace = auth.authenticity
+                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+                auth.authenticity = new_string
+            conf_sg = [i for i in project_soft_goals if (i.confidentiality and original_asset_name in i.confidentiality)]
+            for conf in conf_sg:
+                string_to_replace = conf.confidentiality
+                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+                conf.confidentiality = new_string
+            int_sg = [i for i in project_soft_goals if (i.integrity and original_asset_name in i.integrity)]
+            for integ in int_sg:
+                string_to_replace = integ.integrity
+                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+                integ.integrity = new_string
+
             project_hard_goals = [hg for hg in project.hard_goals]
             auth_hg = [i for i in project_hard_goals if (i.authenticity is not None and original_asset_name in i.authenticity)]
-            if auth_hg:
-                string_to_replace = auth_hg[0].authenticity
+            for auth in  auth_hg:
+                string_to_replace = auth.authenticity
                 new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
-                auth_hg[0].authenticity = new_string
+                auth.authenticity = new_string
             conf_hg = [i for i in project_hard_goals if (i.confidentiality is not None and original_asset_name in i.confidentiality)]
-            if conf_hg:
-                string_to_replace = conf_hg[0].confidentiality
+            for conf in conf_hg:
+                string_to_replace = conf.confidentiality
                 new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
-                conf_hg[0].confidentiality = new_string
+                conf.confidentiality = new_string
             integrity_hg = [i for i in project_hard_goals if (i.integrity is not None and original_asset_name in i.integrity)]
-            if integrity_hg:
-                string_to_replace = integrity_hg[0].integrity
+            for integ in integrity_hg:
+                string_to_replace = integ.integrity
                 new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
-                integrity_hg[0].integrity = new_string
+                integ.integrity = new_string
             hg_description = [i for i in project_hard_goals if (i.description is not None and original_asset_name in i.description)]
-            if hg_description:
-                string_to_replace = hg_description[0].description
+            for descr in hg_description:
+                string_to_replace = descr.description
                 new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
-                hg_description[0].description = new_string
+                descr.description = new_string
 
             db.session.commit()
 
@@ -1130,6 +1162,10 @@ def soft_goals(project):
 
             for val in db_values:
                 if str(val) not in current_req:
+                    sg = SoftGoal.query.filter_by(cb_value=str(val), project_id=project.id).first()
+                    attackers = [s for s in sg.attackers]
+                    for attacker in attackers:
+                        attacker.remove_sg(sg)
                     SoftGoal.query.filter_by(cb_value=str(val), project_id=project.id).delete()
                     db.session.commit()
                     flash('Item(s) removed from the database', 'error')
@@ -1147,18 +1183,43 @@ def soft_goals(project):
 @login_required
 def attackers(project):
     project = Projects.query.filter_by(name=project).first()
+
+    choices_auth = [(sg.id, sg.authenticity) for sg in SoftGoal.query.filter_by(project_id=project.id) if
+                    sg.authenticity]
+    choices_conf = [(sg.id, sg.confidentiality) for sg in SoftGoal.query.filter_by(project_id=project.id) if
+                    sg.confidentiality]
+    choices_int = [(sg.id, sg.integrity) for sg in SoftGoal.query.filter_by(project_id=project.id) if
+                    sg.integrity]
+    choices = [*choices_auth, *choices_conf, *choices_int]
+    choices.insert(0, ('x', 'No Soft Goal'))
+    setattr(AttackersForm, 'softgoals_list',
+            SelectField('Select a Soft Goal vulnerable to this attacker', default='x', choices=choices))
+
     form = AttackersForm()
     if g.user in project.editors:
-        if form.validate_on_submit():
-            attacker = Attacker.query.filter_by(name=form.attacker.data, project_id=project.id).first()
-            if attacker is None:
-                atk = Attacker(name=form.attacker.data, project_id=project.id)
-                db.session.add(atk)
-                db.session.commit()
-                flash('Attacker "{}" added to the database'.format(form.attacker.data), 'succ')
-                return redirect(url_for('attackers', project=project.name))
+
+        if request.method == 'POST':
+            if form.attacker.data is not '' and form.attacker.data is not ' ':
+                attacker = Attacker.query.filter_by(name=form.attacker.data, project_id=project.id).first()
+                if form.softgoals_list.data is not 'x':
+                    sg = SoftGoal.query.filter_by(id=form.softgoals_list.data).first()
+                else:
+                    sg = None
+                if attacker is None:
+                    atk = Attacker(name=form.attacker.data, project_id=project.id)
+                    db.session.add(atk)
+                    db.session.commit()
+                    if sg:
+                        if not atk.alrdy_used(sg):
+                            atk.add_sg(sg)
+                            db.session.commit()
+                    flash('Attacker "{}" added to the database'.format(form.attacker.data), 'succ')
+                    return redirect(url_for('attackers', project=project.name))
+                else:
+                    flash('Attacker "{}" already exists'.format(form.attacker.data), 'error')
+                    return redirect(url_for('attackers', project=project.name))
             else:
-                flash('Attacker "{}" already exists'.format(form.attacker.data), 'error')
+                flash("The attacker field can't be empty", 'error')
                 return redirect(url_for('attackers', project=project.name))
         return render_template('attackers.html',
                                project=project,
@@ -1175,10 +1236,34 @@ def atk(project, id):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
         attacker = Attacker.query.filter_by(id=id).first()
+
+        softgoals = [sg for sg in attacker.soft_goals]
+
+        if request.method == 'POST':
+            for item in request.form.getlist('chbpx'):
+                sg_id, attacker_id = item.split('-')
+                atkr = Attacker.query.filter_by(id=attacker_id).first()
+                sg = SoftGoal.query.filter_by(id=sg_id).first()
+                if not atkr.alrdy_used(sg):
+                    atkr.add_sg(sg)
+                    db.session.commit()
+                else:
+                    softgoals.remove(sg)
+            else:
+                for item in softgoals:
+                    attacker.remove_sg(item)
+                    db.session.commit()
+            flash('Soft Goals updated', 'succ')
+            return redirect(url_for('atk', project=project.name, id=attacker.id))
+
         return render_template('atks.html',
                                title='{} - {}'.format(project.name, attacker.name),
                                attacker=attacker,
-                               project=project)
+                               project=project,
+                               softgoals=softgoals)
+    else:
+        flash('You don\'t have permission to access this project', 'error')
+        return redirect(url_for('index'))
 
 
 @app.route('/stk/<project>')
@@ -1199,6 +1284,8 @@ def removeatt(project, desc):
         # for atk in .goods:
         #     sth.remove_stakeholder(sh)
         # db.session.commit()
+        for sg in att.soft_goals:
+            att.remove_sg(sg)
         Attacker.query.filter_by(name=desc, project_id=project.id).delete()
         db.session.commit()
         flash('Attacker "{}" removed'.format(name), 'error')
@@ -1214,10 +1301,81 @@ def actors(project):
     project = Projects.query.filter_by(name=project).first()
     form = ActorsForm()
     if g.user in project.editors:
+        if request.method == 'POST' and form.actor.data is not '':
+            actor = Aktoren.query.filter_by(name=form.actor.data, project_id=project.id).first()
+            if actor is None:
+                a = Aktoren(name=form.actor.data, project_id=project.id)
+                db.session.add(a)
+                db.session.commit()
+                flash('Actor "{}" added to the database'.format(a.name), 'succ')
+                return redirect(url_for('act', project=project.name, id=a.id))
+            else:
+                flash('Actor "{}" already in database'.format(form.actor.data), 'error')
+                return redirect(url_for('actors', project=project.name))
         return render_template('actors.html',
                                title='Actors of {}'.format(project.name),
                                form=form,
                                project=project)
+    else:
+        flash('You don\'t have permission to access this project.', 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/actors/<project>/<id>', methods=['GET', 'POST'])
+@login_required
+def act(project, id):
+    project = Projects.query.filter_by(name=project).first()
+    actor = Aktoren.query.filter_by(id=id, project_id=project.id).first()
+    form = ActorsForm()
+    if g.user in project.editors:
+        if request.method == 'POST':
+            form_fields = [(name, val) for name,val in request.form.items() if name.startswith('serv')]
+            checkboxes = [atk.split('-')[1] for atk in request.form if atk.startswith('atk')]
+            atk_indb = [atk.id for atk in actor.attackers]
+            for attacker in checkboxes:
+                if int(attacker) not in [_.id for _ in actor.attackers]:
+                    actor.add_atk(Attacker.query.filter_by(id=attacker).first())
+                    db.session.commit()
+                else:
+                    atk_indb.remove(int(attacker))
+
+            for attacker in atk_indb:
+                actor.remove_atk(Attacker.query.filter_by(id=attacker).first())
+                db.session.commit()
+
+            for field in form_fields:
+                prev_dets = ActorDetails.query.filter_by(actor_id=id, service_id=field[0][4:], role_id=field[1]).first()
+                if prev_dets is None and field[1] != '4':
+                    details = ActorDetails(actor_id=id, service_id=field[0][4:], role_id=field[1])
+                    db.session.add(details)
+                    db.session.commit()
+
+            flash('db updated', 'succ')
+            return redirect(url_for('act', project=project.name, id=id))
+
+        services_used = [serv.service_id for serv in actor.details]
+        atkrs = [atkr.id for atkr in actor.attackers]
+        return render_template('acts.html',
+                               title='{} - {}'.format(project.name, actor.name),
+                               project=project,
+                               actor=actor,
+                               services_used=services_used,
+                               atkrs=atkrs,
+                               form=form)
+    else:
+        flash('You don\'t have permission to access this project.', 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/removeact/<project>/<name>', methods=['GET', 'POST'])
+@login_required
+def removeact(project, name):
+    project = Projects.query.filter_by(name=project).first()
+    if g.user in project.editors:
+        Aktoren.query.filter_by(name=name, project_id=project.id).delete()
+        db.session.commit()
+        flash('Actor "{}" removed'.format(name), 'error')
+        return redirect(url_for('actors', project=project.name))
     else:
         flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
@@ -1239,10 +1397,10 @@ def functional_req(project):
             project_hard_goals = [hg for hg in project.hard_goals]
             hg_description = [i for i in project_hard_goals if
                               (i.description is not None and original_fr_name in i.description)]
-            if hg_description:
-                string_to_replace = hg_description[0].description
+            for hg_desc in hg_description:
+                string_to_replace = hg_desc.description
                 new_string = string_to_replace.replace('{}'.format(original_fr_name), '{}'.format(new_fr_name))
-                hg_description[0].description = new_string
+                hg_desc.description = new_string
 
             db.session.commit()
 
@@ -1255,10 +1413,10 @@ def functional_req(project):
             project_hard_goals = [hg for hg in project.hard_goals]
             hg_description = [i for i in project_hard_goals if
                               (i.description is not None and original_sub_name in i.description)]
-            if hg_description:
-                string_to_replace = hg_description[0].description
+            for hg_desc in hg_description:
+                string_to_replace = hg_desc.description
                 new_string = string_to_replace.replace('{}'.format(original_sub_name), '{}'.format(new_sub_name))
-                hg_description[0].description = new_string
+                hg_desc.description = new_string
 
             db.session.commit()
 
@@ -1504,7 +1662,7 @@ def hard_goals(project):
                     final_string = '{} ensures the {} during the {}'.format(item_parts[0], item_parts[2], item_parts[1])
                     nhg = HardGoal.query.filter_by(description=final_string, project_id=project.id).first()
                     if nhg is None:
-                        new_hg = HardGoal(project_id=project.id, description=final_string)
+                        new_hg = HardGoal(project_id=project.id, description=final_string, component_id=item_parts[3])
                         current_hgs = HardGoal.query.filter_by(project_id=project.id, priority=True).all()
                         for chg in current_hgs:
                             if chg.authenticity:
@@ -1633,21 +1791,23 @@ def check_permission(project):
 @app.route('/bbmech/<project>', methods=['POST', 'GET'])
 @login_required
 def bbmech(project):
-    access = check_permission(project)
     project = Projects.query.filter_by(name=project).first()
-    if access:
+    if check_permission(project.name):
         bbms = BbMechanisms.query.all()
-        current_bbms = {}
+        current_bbms = {'bbms_list': {},
+                        'components': {}}
         for hg in project.hard_goals:
             bbms_list = []
             for bbm in hg.bbmechanisms:
                 bbms_list.append(bbm)
-            current_bbms[hg.id] = bbms_list
+            current_bbms['bbms_list'].update({hg.id: bbms_list})
+            component = SubService.query.filter_by(id=hg.component_id).first()
+            current_bbms['components'].update({component.id: [details.role_id for details in component.actor_details]})
         if request.method == 'POST':
             for index, value in request.form.items():
                 hg = HardGoal.query.filter_by(id=index).first()
                 bbm = BbMechanisms.query.filter_by(id=value).first()
-                for key, val in current_bbms.items():
+                for key, val in current_bbms['bbms_list'].items():
                     if hg:
                         if key == hg.id and bbm in val:
                             if hg.extra_hg_used and not hg.extra_hg:
@@ -1682,7 +1842,7 @@ def bbmech(project):
                                     hg.extra_hg_used = None
                                     hg.original_hg = None
                                     db.session.commit()
-            for key, values in current_bbms.items():
+            for key, values in current_bbms['bbms_list'].items():
                 if values:
                     for valu in values:
                         hg = HardGoal.query.filter_by(id=key).first()
@@ -1800,7 +1960,7 @@ class MyModelViewBbMech(sqla.ModelView):
     edit_modal = True
     # column_list = ['name', 'assumptionz']
     # column_display_all_relations = True
-    column_list = ['name','authenticity','confidentiality','integrity','extra_hg','assumptions']
+    column_list = ['name','authenticity','confidentiality','integrity','extra_hg','assumptions', 'against_actor']
     # inline_models = (Assumptions, )
 
     # can_view_details = True

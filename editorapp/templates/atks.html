@@ -10,35 +10,63 @@
   <div class="container-fluid">
     <div class="row align-items-center">
       <div class="col"><div class="col align-items-center text-center"><a href="{{ url_for('attackers', project=project.name) }}" class="btn btn-primary btn-raised">Back</a></div></div>
-      <div class="col-8"><h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ project.name }} {{ attacker.name }}</h1></div>
+      <div class="col-8"><h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ attacker.name }}</h1></div>
       <div class="col"></div>
     </div>
+    <form method="post" action="" name="addsg">
     <div class="row align-items-center">
-      <table class="table-hover table">
-        <thead class="thead-inverse">
-          <tr class="text-center">
-            <th colspan="2" class="text-light">Vulnerable Soft Goals</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for softgoal in project.soft_goals %}
-            <tr>
-              {% if softgoal.authenticity %}
-                <td class="table-primary">{{ softgoal.authenticity }}</td>
-                <td class="table-primary"><input title="{{ attacker.name }}" name="chbpx" value="{{ softgoal.id }}-{{ attacker.id }}" type="checkbox"></td>
-              {% endif %}
-              {% if softgoal.confidentiality %}
-                <td class="table-success">{{ softgoal.confidentiality }}</td>
-                <td class="table-success"><input title="{{ attacker.name }}" name="chbpx" value="{{ softgoal.id }}-{{ attacker.id }}" type="checkbox"></td>
-              {% endif %}
-              {% if softgoal.integrity %}
-                <td class="table-warning">{{ softgoal.integrity }}</td>
-                <td class="table-warning"><input title="{{ attacker.name }}" name="chbpx" value="{{ softgoal.id }}-{{ attacker.id }}" type="checkbox"></td>
-              {% endif %}
+      <div class="col"></div>
+      <div class="col-8">
+        <table class="table-hover table">
+          <thead class="thead-inverse">
+            <tr class="text-center">
+              <th colspan="2" class="text-light">Vulnerable Soft Goals</th>
             </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {% for softgoal in project.soft_goals %}
+              {% if softgoal not in softgoals %}
+              <tr>
+                {% if softgoal.authenticity %}
+                  <td class="table-primary">{{ softgoal.authenticity }}</td>
+                  <td class="table-primary"><input title="{{ attacker.name }}" name="chbpx" value="{{ softgoal.id }}-{{ attacker.id }}" type="checkbox"></td>
+                {% endif %}
+                {% if softgoal.confidentiality %}
+                  <td class="table-success">{{ softgoal.confidentiality }}</td>
+                  <td class="table-success"><input title="{{ attacker.name }}" name="chbpx" value="{{ softgoal.id }}-{{ attacker.id }}" type="checkbox"></td>
+                {% endif %}
+                {% if softgoal.integrity %}
+                  <td class="table-warning">{{ softgoal.integrity }}</td>
+                  <td class="table-warning"><input title="{{ attacker.name }}" name="chbpx" value="{{ softgoal.id }}-{{ attacker.id }}" type="checkbox"></td>
+                {% endif %}
+              </tr>
+              {% else %}
+              <tr>
+                {% if softgoal.authenticity %}
+                  <td class="table-primary"><b>{{ softgoal.authenticity }}</b></td>
+                  <td class="table-primary"><input title="{{ attacker.name }}" name="chbpx" value="{{ softgoal.id }}-{{ attacker.id }}" type="checkbox" checked></td>
+                {% endif %}
+                {% if softgoal.confidentiality %}
+                  <td class="table-success"><b>{{ softgoal.confidentiality }}</b></td>
+                  <td class="table-success"><input title="{{ attacker.name }}" name="chbpx" value="{{ softgoal.id }}-{{ attacker.id }}" type="checkbox" checked></td>
+                {% endif %}
+                {% if softgoal.integrity %}
+                  <td class="table-warning"><b>{{ softgoal.integrity }}</b></td>
+                  <td class="table-warning"><input title="{{ attacker.name }}" name="chbpx" value="{{ softgoal.id }}-{{ attacker.id }}" type="checkbox" checked></td>
+                {% endif %}
+              </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="col"></div>
     </div>
+    <div class="row">
+      <div class="col"></div>
+      <div class="col-8"><button class="btn btn-raised btn-primary" type="submit">Update Changes</button></div>
+      <div class="col"></div>
+    </div>
+    </form>
   </div>
 {% endblock %}

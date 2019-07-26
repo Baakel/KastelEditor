@@ -28,6 +28,10 @@ bb_assumptions = db.Table('bb_assumptions',
                           db.Column('bb_id', db.Integer, db.ForeignKey('bb_mechanisms.id')),
                           db.Column('assumptions_id', db.Integer, db.ForeignKey('assumptions.id')))
 
+bb_actors = db.Table('bb_actors',
+                     db.Column('bb_id', db.Integer, db.ForeignKey('bb_mechanisms.id')),
+                     db.Column('actors.id', db.Integer, db.ForeignKey('actors.id')))
+
 freq_serv = db.Table('freq_serv',
                      db.Column('fr_id', db.Integer, db.ForeignKey('functional_requirement.id')),
                      db.Column('serv_id', db.Integer, db.ForeignKey('sub_service.id')))
@@ -36,6 +40,18 @@ freq_serv = db.Table('freq_serv',
 good_stakeholder = db.Table('good_stakeholder',
                             db.Column('good_id', db.Integer, db.ForeignKey('good.id')),
                             db.Column('stakeholder_id', db.Integer, db.ForeignKey('stakeholder.id')))
+
+atk_sg = db.Table('atk_sg',
+                  db.Column('attacker_id', db.Integer, db.ForeignKey('attacker.id')),
+                  db.Column('softgoal_id', db.Integer, db.ForeignKey('soft_goal.id')))
+
+act_atk = db.Table('act_atk',
+                   db.Column('actor_id', db.Integer, db.ForeignKey('aktoren.id')),
+                   db.Column('attacker_id', db.Integer, db.ForeignKey('attacker.id')))
+
+# actor_component = db.Table('actor_component',
+#                            db.Column('actor_id', db.Integer, db.ForeignKey('aktoren.id')),
+#                            db.Column('component_id', db.Integer, db.ForeignKey('sub_service.id')))
 
 
 class Role(db.Model, RoleMixin):
@@ -165,6 +181,8 @@ class SubService(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(80))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    hard_goals = db.relationship('HardGoal', backref='component')
+    actor_details = db.relationship('ActorDetails', backref='component', lazy='dynamic')
 
     def __repr__(self):
         return '{}'.format(self.name)
@@ -175,8 +193,8 @@ class HardGoal(db.Model):
     authenticity = db.Column(db.String(280))
     confidentiality = db.Column(db.String(280))
     integrity = db.Column(db.String(280))
-    applications = db.Column(db.String(280))
-    services = db.Column(db.String(280))
+    # applications = db.Column(db.String(280))
+    component_id = db.Column(db.Integer, db.ForeignKey('sub_service.id'))
     priority = db.Column(db.Boolean(), default=False)
     cb_value = db.Column(db.String(300))
     description = db.Column(db.String(500))
@@ -247,6 +265,7 @@ class Projects(db.Model):
     sub_services = db.relationship('SubService', backref='project', lazy='dynamic')
     soft_goals = db.relationship('SoftGoal', backref='project', lazy='dynamic')
     attackers = db.relationship('Attacker', backref='project', lazy='dynamic')
+    actors = db.relationship('Aktoren', backref='project', lazy='dynamic')
 
     @staticmethod
     def make_unique_name(name):
@@ -272,6 +291,15 @@ class Assumptions(db.Model):
         return '{}'.format(self.name)
 
 
+class Actors(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(280))
+    actors = db.relationship('ActorDetails', backref='role_type', lazy='dynamic')
+
+    def __repr__(self):
+        return '{}'.format(self.name)
+
+
 class BbMechanisms(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True)
@@ -279,6 +307,9 @@ class BbMechanisms(db.Model):
     confidentiality = db.Column(db.Boolean, default=False)
     integrity = db.Column(db.Boolean, default=False)
     extra_hg = db.Column(db.String(280))
+    against_actor = db.relationship('Actors',
+                                    secondary=bb_actors,
+                                    backref=db.backref('bb_mechanisms'))
     assumptions = db.relationship('Assumptions',
                                    secondary=bb_assumptions,
                                    backref=db.backref('bb_mechanisms')) #, lazy='dynamic'),
@@ -310,3 +341,72 @@ class Attacker(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(64))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    soft_goals = db.relationship('SoftGoal',
+                               secondary=atk_sg,
+                               backref=db.backref('attackers', lazy='dynamic'),
+                               lazy='dynamic')
+
+    def alrdy_used(self, sg):
+        return self.soft_goals.filter(atk_sg.c.softgoal_id == sg.id).count() > 0
+
+    def add_sg(self, sg):
+        if not self.alrdy_used(sg):
+            self.soft_goals.append(sg)
+            return self
+
+    def remove_sg(self, sg):
+        if self.alrdy_used(sg):
+            self.soft_goals.remove(sg)
+            return self
+
+    def has_sg(self):
+        sg = [s for s in self.soft_goals]
+        if sg:
+            return True
+        else:
+            return False
+
+
+class Aktoren(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64))
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    details = db.relationship('ActorDetails', backref='actor', lazy='dynamic')
+    attackers = db.relationship('Attacker',
+                                secondary=act_atk,
+                                backref=db.backref('attacker', lazy='dynamic'),
+                                lazy='dynamic')
+    # components = db.relationship('SubService',
+    #                              secondary=actor_component,
+    #                              backref=db.backref('actors', lazy='dynamic'),
+    #                              lazy='dynamic')
+
+    def alrdy_used(self, atk):
+        return self.attackers.filter(act_atk.c.attacker_id == atk.id).count() > 0
+
+    def add_atk(self, atk):
+        if not self.alrdy_used(atk):
+            self.attackers.append(atk)
+            return self
+
+    def remove_atk(self, atk):
+        if self.alrdy_used(atk):
+            self.attackers.remove(atk)
+            return self
+
+    # def has_serv(self):
+    #     serv = [s for s in self.components]
+    #     if serv:
+    #         return True
+    #     else:
+    #         return False
+
+
+class ActorDetails(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    actor_id = db.Column(db.Integer, db.ForeignKey('aktoren.id'))
+    service_id = db.Column(db.Integer, db.ForeignKey('sub_service.id'))
+    role_id = db.Column(db.Integer, db.ForeignKey('actors.id'))
+
+    def __repr__(self):
+        return '(actor_id: {}, component_id: {}, role_id: {})'.format(self.actor_id, self.service_id, self.role_id)

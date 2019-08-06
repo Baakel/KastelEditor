@@ -270,6 +270,37 @@ def export(project, backup=False):
                 soft_goals_dict[sg.confidentiality] = {'priority': sg.priority,
                                                  'cb_value': '{}¡{}'.format(cbval.groups()[0], asset.description)}
         project_dict['Soft Goals'] = soft_goals_dict
+        attackers_list = [atk.name for atk in proj.attackers]
+        attackers = [atk for atk in proj.attackers]
+        attackers_sg_dict = {}
+        for atk in attackers:
+            sg = [sg for sg in atk.soft_goals]
+            attackers_sg_dict[atk.name] = {'authenticity': [], 'integrity': [], 'confidentiality': []}
+            for s in sg:
+                if 'authenticity' in s.cb_value:
+                    attackers_sg_dict[atk.name]['authenticity'].append(s.authenticity)
+                elif 'integrity' in s.cb_value:
+                    attackers_sg_dict[atk.name]['integrity'].append(s.integrity)
+                elif 'confidentiality' in s.cb_value:
+                    attackers_sg_dict[atk.name]['confidentiality'].append(s.confidentiality)
+        project_dict['Attackers'] = attackers_list
+        project_dict['Attackers and Soft Goal Relationships'] = attackers_sg_dict
+        actors = [act for act in proj.actors]
+        actors_dictionary = {}
+        for actor in actors:
+            attackers = [atk.name for atk in actor.attackers]
+            details = [{'component': dets.service_id, 'role': dets.role_id} for dets in actor.details]
+            actors_dictionary[actor.name] = {}
+            actors_dictionary[actor.name]['attackers'] = attackers
+            actors_dictionary[actor.name]['details'] = details
+
+            for i, deeds in enumerate(actors_dictionary[actor.name]['details']):
+                component = SubService.query.filter_by(id=deeds['component']).first()
+                actors_dictionary[actor.name]['details'][i]['component'] = component.name
+
+                role = Actors.query.filter_by(id=deeds['role']).first()
+                actors_dictionary[actor.name]['details'][i]['role'] = role.name
+        project_dict['Actors'] = actors_dictionary
         hard_goals = [hg for hg in proj.hard_goals if hg.description]
         hard_goals_dict = {}
         hard_bb_mechanism_relationship = {}
@@ -280,55 +311,62 @@ def export(project, backup=False):
                     if original is not None:
                         hard_goals_dict[hg.description] = {
                             'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                            'extra_hg': hg.extra_hg, 'original_hg': original.description, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
                     else:
                         hard_goals_dict[hg.description] = {
                             'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': None}
+                            'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
                 else:
                     hard_goals_dict[hg.description] = {
                         'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                        'extra_hg': hg.extra_hg, 'original_hg': None}
+                        'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
             if hg.confidentiality:
                 if hg.original_hg:
                     original = HardGoal.query.filter_by(id=hg.original_hg).first()
                     if original is not None:
                         hard_goals_dict[hg.description] = {
                             'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                            'extra_hg': hg.extra_hg, 'original_hg': original.description, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
                     else:
                         hard_goals_dict[hg.description] = {
                             'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': None}
+                            'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
                 else:
                     hard_goals_dict[hg.description] = {
                         'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                        'extra_hg': hg.extra_hg, 'original_hg': None}
+                        'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
             if hg.integrity:
                 if hg.original_hg:
                     original = HardGoal.query.filter_by(id=hg.original_hg).first()
                     if original is not None:
                         hard_goals_dict[hg.description] = {
                             'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': original.description}
+                            'extra_hg': hg.extra_hg, 'original_hg': original.description, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
                     else:
                         hard_goals_dict[hg.description] = {
                             'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': None}
+                            'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
                 else:
                     hard_goals_dict[hg.description] = {
                         'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                        'extra_hg': hg.extra_hg, 'original_hg': None}
+                        'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
             for bbm in hg.bbmechanisms:
                 hard_bb_mechanism_relationship[hg.description] = bbm.name
         project_dict['Hard Mechanism Relationship']  = hard_bb_mechanism_relationship
         project_dict['Hard Goals'] = hard_goals_dict
         black_box_mechanisms_dict = {}
         for bb in BbMechanisms.query.all():
-            black_box_mechanisms_dict[bb.name] = {'authenticity': bb.authenticity, 'integrity': bb.integrity,
+            black_box_mechanisms_dict[bb.name] = {}
+            black_box_mechanisms_dict[bb.name]['base'] = {'authenticity': bb.authenticity, 'integrity': bb.integrity,
                                                   'confidentiality': bb.confidentiality,
                                                   'extra_hg': bb.extra_hg}
+            black_box_mechanisms_dict[bb.name]['role'] = [act.name for act in bb.against_actor]
         project_dict['Black Box Mechanisms'] = black_box_mechanisms_dict
+        actor_roles = Actors.query.all()
+        actor_roles_list = []
+        for role in actor_roles:
+            actor_roles_list.append(role.name)
+        project_dict['Actor Roles'] = actor_roles_list
         assumptions = []
         for ass in Assumptions.query.all():
             assumptions.append(ass.name)
@@ -426,7 +464,42 @@ def import_project():
                               integrity=soft_goals, project_id=curr_project.id)
                 db.session.add(sg)
                 db.session.commit()
+        for attacker in json_data['Attackers']:
+            atk = Attacker(name=attacker, project_id=curr_project.id)
+            db.session.add(atk)
+            db.session.commit()
+        for attacker, values in json_data['Attackers and Soft Goal Relationships'].items():
+            atk = Attacker.query.filter_by(name=attacker, project_id=curr_project.id).first()
+            if values['authenticity']:
+                for auth in values['authenticity']:
+                    sg = SoftGoal.query.filter_by(authenticity=auth, project_id=curr_project.id).first()
+                    atk.add_sg(sg)
+                    db.session.commit()
+            if values['integrity']:
+                for integ in values['integrity']:
+                    sg = SoftGoal.query.filter_by(integrity=integ, project_id=curr_project.id).first()
+                    atk.add_sg(sg)
+                    db.session.commit()
+            if values['confidentiality']:
+                for conf in values['confidentiality']:
+                    sg = SoftGoal.query.filter_by(confidentiality=conf, project_id=curr_project.id).first()
+                    atk.add_sg(sg)
+                    db.session.commit()
+        for actor, values in json_data['Actors'].items():
+            act = Aktoren(name=actor, project_id=curr_project.id)
+            db.session.add(act)
+            for attacker in values['attackers']:
+                atk = Attacker.query.filter_by(name=attacker, project_id=curr_project.id).first()
+                act.add_atk(atk)
+            for detail in values['details']:
+                component_id = SubService.query.filter_by(name=detail['component'], project_id=curr_project.id).first().id
+                role_id = Actors.query.filter_by(name=detail['role']).first().id
+                act_det = ActorDetails(service_id=component_id, role_id=role_id, actor_id=act.id)
+                db.session.add(act_det)
+            db.session.commit()
         for hard_goal in json_data['Hard Goals']:
+            component_id = SubService.query.filter_by(name=json_data['Hard Goals'][hard_goal]['component_id'], project_id=curr_project.id).first().id
+            json_data['Hard Goals'][hard_goal]['component_id'] = component_id
             hg = HardGoal(description=hard_goal, project_id=curr_project.id, **json_data['Hard Goals'][hard_goal])
             db.session.add(hg)
             db.session.commit()
@@ -442,20 +515,48 @@ def import_project():
             else:
                 hg.original_hg = None
             db.session.commit()
+        for role in json_data['Actor Roles']:
+            r = Actors.query.filter_by(name=role).first()
+            if r is None:
+                new_role = Actors(name=role)
+                db.session.add(new_role)
+                db.session.commit()
         for bbm in json_data['Black Box Mechanisms']:
-            bb = BbMechanisms.query.filter_by(name=bbm, **json_data['Black Box Mechanisms'][bbm]).first()
+            bb = BbMechanisms.query.filter_by(name=bbm, **json_data['Black Box Mechanisms'][bbm]['base']).first()
             if bb is None:
                 existing_bb = BbMechanisms.query.filter_by(name=bbm).first()
                 if existing_bb is None:
-                    bb = BbMechanisms(name=bbm, **json_data['Black Box Mechanisms'][bbm])
+                    bb = BbMechanisms(name=bbm, **json_data['Black Box Mechanisms'][bbm]['base'])
                     db.session.add(bb)
+                    if json_data['Black Box Mechanisms'][bbm]['role']:
+                        for role in json_data['Black Box Mechanisms'][bbm]['role']:
+                            r = Actors.query.filter_by(name=role).first()
+                            bb.add_role(r)
                     db.session.commit()
                 else:
-                    existing_bb.authenticity = json_data['Black Box Mechanisms'][bbm]['authenticity']
-                    existing_bb.confidentiality = json_data['Black Box Mechanisms'][bbm]['confidentiality']
-                    existing_bb.integrity = json_data['Black Box Mechanisms'][bbm]['integrity']
-                    existing_bb.extra_hg = json_data['Black Box Mechanisms'][bbm]['extra_hg']
+                    existing_bb.authenticity = json_data['Black Box Mechanisms'][bbm]['base']['authenticity']
+                    existing_bb.confidentiality = json_data['Black Box Mechanisms'][bbm]['base']['confidentiality']
+                    existing_bb.integrity = json_data['Black Box Mechanisms'][bbm]['base']['integrity']
+                    existing_bb.extra_hg = json_data['Black Box Mechanisms'][bbm]['base']['extra_hg']
+                    current_role = [role for role in existing_bb.against_actor]
+                    if current_role:
+                            for role in current_role:
+                                existing_bb.remove_role(role)
+                    if json_data['Black Box Mechanisms'][bbm]['role']:
+                        for role in json_data['Black Box Mechanisms'][bbm]['role']:
+                            r = Actors.query.filter_by(name=role).first()
+                            existing_bb.add_role(r)
                     db.session.commit()
+            else:
+                current_role = [role for role in bb.against_actor]
+                if current_role:
+                    for role in current_role:
+                        bb.remove_role(role)
+                if json_data['Black Box Mechanisms'][bbm]['role']:
+                    for role in json_data['Black Box Mechanisms'][bbm]['role']:
+                        r = Actors.query.filter_by(name=role).first()
+                        bb.add_role(r)
+                db.session.commit()
         for assumption in json_data['Assumptions']:
             ass = Assumptions.query.filter_by(name=assumption).first()
             if ass is None:
@@ -496,11 +597,22 @@ def preprocess():
         existing_bb_list = []
         warnings = []
         for bbm in json_data['Black Box Mechanisms']:
-            bb = BbMechanisms.query.filter_by(name=bbm, **json_data['Black Box Mechanisms'][bbm]).first()
+            bb = BbMechanisms.query.filter_by(name=bbm, **json_data['Black Box Mechanisms'][bbm]['base']).first()
             if bb is None:
                 existing_bb = BbMechanisms.query.filter_by(name=bbm).first()
                 if existing_bb:
                     existing_bb_list.append(existing_bb)
+            else:
+                roles = [role for role in bb.against_actor]
+                json_roles = [role for role in json_data['Black Box Mechanisms'][bbm]['role']]
+                if roles:
+                    for role in roles:
+                        if role.name not in json_roles:
+                            existing_bb_list.append(bb)
+                else:
+                    if json_roles:
+                        existing_bb_list.append(bb)
+
 
         for bbmecha in existing_bb_list:
             hgs = [hg for hg in bbmecha.hardgoals]
@@ -897,6 +1009,20 @@ def delete_project(project):
         goods = Good.query.filter_by(project_id=project.id).all()
         for gd in goods:
             db.session.delete(gd)
+            db.session.commit()
+        attackers = Attacker.query.filter_by(project_id=project.id).all()
+        for atk in attackers:
+            for sg in atk.soft_goals:
+                atk.remove_sg(sg)
+            db.session.delete(atk)
+            db.session.commit()
+        actors = Aktoren.query.filter_by(project_id=project.id).all()
+        for act in actors:
+            for atk in act.attackers:
+                act.remove_atk(atk)
+            for det in act.details:
+                ActorDetails.query.filter_by(id=det.id).delete()
+            db.session.delete(act)
             db.session.commit()
         hard_goals = HardGoal.query.filter_by(project_id=project.id).all()
         for hg in hard_goals:
@@ -1350,8 +1476,8 @@ def act(project, id):
                     db.session.add(details)
                     db.session.commit()
 
-            flash('db updated', 'succ')
-            return redirect(url_for('act', project=project.name, id=id))
+            flash('Changes Saved', 'succ')
+            return redirect(url_for('actors', project=project.name))
 
         services_used = [serv.service_id for serv in actor.details]
         atkrs = [atkr.id for atkr in actor.attackers]
@@ -1372,6 +1498,12 @@ def act(project, id):
 def removeact(project, name):
     project = Projects.query.filter_by(name=project).first()
     if g.user in project.editors:
+        actor = Aktoren.query.filter_by(name=name, project_id=project.id).first()
+        for detail in actor.details:
+            ActorDetails.query.filter_by(id=detail.id).delete()
+        for attacker in actor.attackers:
+            actor.remove_atk(attacker)
+        db.session.commit()
         Aktoren.query.filter_by(name=name, project_id=project.id).delete()
         db.session.commit()
         flash('Actor "{}" removed'.format(name), 'error')
@@ -1802,7 +1934,8 @@ def bbmech(project):
                 bbms_list.append(bbm)
             current_bbms['bbms_list'].update({hg.id: bbms_list})
             component = SubService.query.filter_by(id=hg.component_id).first()
-            current_bbms['components'].update({component.id: [details.role_id for details in component.actor_details]})
+            roles_set = list(set([details.role_id for details in component.actor_details]))
+            current_bbms['components'].update({component.id: roles_set})
         if request.method == 'POST':
             for index, value in request.form.items():
                 hg = HardGoal.query.filter_by(id=index).first()
@@ -1893,19 +2026,19 @@ def assumptions(project):
             new_hg_service = hg.description.find('ensures the ')
             new_hg = hg.description[:new_hg_service] + 'ensures the ' + bbm.extra_hg + ' ' + hg.description[new_hg_start:]
             if 'authenticity' in  bbm.extra_hg.lower():
-                n_hg = HardGoal(authenticity='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id)
+                n_hg = HardGoal(authenticity='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id, component_id=hg.component_id)
                 db.session.add(n_hg)
                 db.session.commit()
                 hg.extra_hg_used = True
                 hg.original_hg = n_hg.id
             elif 'confidentiality' in bbm.extra_hg.lower():
-                n_hg = HardGoal(confidentiality='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id)
+                n_hg = HardGoal(confidentiality='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id, component_id=hg.component_id)
                 db.session.add(n_hg)
                 db.session.commit()
                 hg.extra_hg_used = True
                 hg.original_hg = n_hg.id
             elif 'integrity' in bbm.extra_hg.lower():
-                n_hg = HardGoal(integrity='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id)
+                n_hg = HardGoal(integrity='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id, component_id=hg.component_id)
                 db.session.add(n_hg)
                 db.session.commit()
                 hg.extra_hg_used = True
@@ -1993,6 +2126,7 @@ admin = flask_admin.Admin(
 admin.add_view(MyModelView(Role, db.session))
 admin.add_view(MyModelView(Users, db.session))
 admin.add_view(MyModelView(Projects, db.session))
+admin.add_view(MyModelView(Actors, db.session, 'Actor Roles'))
 admin.add_view(MyModelViewBbMech(BbMechanisms, db.session))
 admin.add_view(MyModelView(Assumptions, db.session))
 

@@ -316,7 +316,6 @@ class BbMechanisms(db.Model):
                                    # lazy='dynamic')
 
     def alrdy_used(self, ass):
-        print(self.assumptions)
         if ass in self.assumptions:
             return True
         else:
@@ -336,6 +335,21 @@ class BbMechanisms(db.Model):
     def __repr__(self):
         return '{}'.format(self.name)
 
+    def role_alrdy_used(self, role):
+        if role in self.against_actor:
+            return True
+        else:
+            return False
+
+    def add_role(self, role):
+        if not self.role_alrdy_used(role):
+            self.against_actor.append(role)
+            return self
+
+    def remove_role(self, role):
+        if self.role_alrdy_used(role):
+            self.against_actor.remove(role)
+            return self
 
 class Attacker(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -75,26 +75,34 @@
                                         {% if key == hgoal.id and bbm in values %}
                                             {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}
                                                 {% if bbm.against_actor %}
-                                                    {% if bbm.against_actor[0].id in current_bbms['components'][hgoal.component_id] %}
-                                                    <tr>
-                                                        <td>
+                                                    {% for actor in bbm.against_actor %}
+                                                      {% for role in current_bbms['components'][hgoal.component_id] %}
+                                                        {% if actor.id == role %}
+                                                        <tr>
+                                                          <td>
                                                             <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}" checked><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
-                                                        </td>
-                                                    </tr>
-                                                    {% endif %}
-                                                  {% endif %}
+                                                          </td>
+                                                        </tr>
+                                                        {% endif %}
+                                                      {% endfor %}
+                                                    {% endfor %}
                                                 {% endif %}
                                             {% endif %}
+                                        {% endif %}
                                             {% if key == hgoal.id and bbm not in values %}
                                                 {% if (hgoal.authenticity == 'yes' and bbm.authenticity) or (hgoal.confidentiality == 'yes' and bbm.confidentiality) or (hgoal.integrity == 'yes' and bbm.integrity) %}
                                                   {% if bbm.against_actor %}
-                                                    {% if bbm.against_actor[0].id in current_bbms['components'][hgoal.component_id] %}
-                                                    <tr>
-                                                        <td>
+                                                    {% for actor in bbm.against_actor %}
+                                                      {% for role in current_bbms['components'][hgoal.component_id] %}
+                                                        {% if actor.id == role %}
+                                                        <tr>
+                                                          <td>
                                                             <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}"><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
-                                                        </td>
-                                                    </tr>
-                                                    {% endif %}
+                                                          </td>
+                                                        </tr>
+                                                        {% endif %}
+                                                      {% endfor %}
+                                                    {% endfor %}
                                                   {% endif %}
                                             {% endif %}
                                         {% endif %}

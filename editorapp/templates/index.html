@@ -23,8 +23,8 @@
               <tbody>
               {% for project in g.user.wprojects %}
               <tr>
-                <td>{{ project.name }}</td>
-                <td class="text-right"><a href="{{ url_for('projects', name=project.name) }}">Edit</a></td>
+                <td colspan="2"><b><a href="{{ url_for('projects', name=project.name) }}">{{ project.name }}</a></b></td>
+{#                <td class="text-right"><a href="{{ url_for('projects', name=project.name) }}">Edit</a></td>#}
               </tr>
               {% endfor %}
               </tbody>
@@ -41,8 +41,8 @@
               {% for project in projects_list %}
                 {% if project.public %}
                 <tr>
-                  <td>{{ project.name }}</td>
-                  <td class="text-right"><a href="{{ url_for('projects', name=project.name) }}">View</a></td>
+                  <td colspan="2"><b><a href="{{ url_for('projects', name=project.name) }}">{{ project.name }}</a></b></td>
+{#                  <td class="text-right"><a href="{{ url_for('projects', name=project.name) }}">View</a></td>#}
                 </tr>
                 {% endif %}
               {% endfor %}

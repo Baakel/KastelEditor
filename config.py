@@ -6,7 +6,7 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 
 class Config(object):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql+pymysql://thra:I44!s9rcuk@localhost/kastel_test' #'sqlite:///' + os.path.join(basedir, 'app.db')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql+pymysql://thra:I44!s9rcuk@localhost/KastelEditor' #'sqlite:///' + os.path.join(basedir, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     LOG_TO_STDOUT = os.environ.get('LOG_TO_STDOUT')

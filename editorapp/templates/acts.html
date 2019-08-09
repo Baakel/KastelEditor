@@ -18,6 +18,7 @@
       {% endif %}
     </div>
     <form action="" method="post" name="actor-control">
+      {{ form.hidden_tag() }}
     <div class="row">
       <div class="col">
       {{ form.hidden_tag() }}
@@ -36,43 +37,52 @@
               {% if serv.id in services_used  %}
                 {% for detail in actor.details %}
                   {% if serv.id == detail.service_id %}
-                    {% if detail.role_id == 1 %}
-                      <td>
-                        <select class="form-control" name="serv{{ serv.id }}">
-                          <option value="1" selected>External</option>
-                          <option value="2">User</option>
-                          <option value="3">Admin</option>
-                        </select>
-                      </td>
-                    {% endif %}
-                    {% if detail.role_id == 2 %}
-                      <td>
-                        <select class="form-control" name="serv{{ serv.id }}">
-                          <option value="1">External</option>
-                          <option value="2" selected>User</option>
-                          <option value="3">Admin</option>
-                        </select>
-                      </td>
-                    {% endif %}
-                    {% if detail.role_id == 3 %}
-                      <td>
-                        <select class="form-control" name="serv{{ serv.id }}">
-                          <option value="1">External</option>
-                          <option value="2">User</option>
-                          <option value="3" selected>Admin</option>
-                        </select>
-                      </td>
-                    {% endif %}
+{#                    {% if detail.role_id == 1 %}#}
+{#                      <td>#}
+{#                        <select class="form-control" name="serv{{ serv.id }}">#}
+{#                          <option value="1" selected>External</option>#}
+{#                          <option value="2">User</option>#}
+{#                          <option value="3">Admin</option>#}
+{#                        </select>#}
+{#                      </td>#}
+{#                      <td>{{ form['serv{}'.format(serv.id)](class='form-control')}}</td>#}
+{#                    {% endif %}#}
+{#                    {% if detail.role_id == 2 %}#}
+{#                      <td>#}
+{#                        <select class="form-control" name="serv{{ serv.id }}">#}
+{#                          <option value="1">External</option>#}
+{#                          <option value="2" selected>User</option>#}
+{#                          <option value="3">Admin</option>#}
+{#                        </select>#}
+{#                      </td>#}
+{#                      <td>{{ form['serv{}'.format(serv.id)](class='form-control')}}</td>#}
+{#                    {% endif %}#}
+{#                    {% if detail.role_id == 3 %}#}
+{#                      <td>#}
+{#                        <select class="form-control" name="serv{{ serv.id }}">#}
+{#                          <option value="1">External</option>#}
+{#                          <option value="2">User</option>#}
+{#                          <option value="3" selected>Admin</option>#}
+{#                        </select>#}
+{#                      </td>#}
+{#                      <td>{{ form['serv{}'.format(serv.id)](class='form-control', id='selectfield')}}</td>#}
+{#                    {% endif %}#}
+                    <td>
+                      {{ form['serv{}'.format(serv.id)](class_='form-control', id='selectfield') }}
+                    </td>
                   {% endif %}
                 {% endfor %}
               {% else %}
+{#                <td>#}
+{#                  <select class="form-control" name="serv{{ serv.id }}">#}
+{#                    <option value="1">External</option>#}
+{#                    <option value="2">User</option>#}
+{#                    <option value="3">Admin</option>#}
+{#                    <option value="4" selected>Choose a Role</option>#}
+{#                  </select>#}
+{#                </td>#}
                 <td>
-                  <select class="form-control" name="serv{{ serv.id }}">
-                    <option value="1">External</option>
-                    <option value="2">User</option>
-                    <option value="3">Admin</option>
-                    <option value="4" selected>Choose a Role</option>
-                  </select>
+                  {{ form['serv{}'.format(serv.id)](class_='form-control', id='selectfield-non')  }}
                 </td>
               {% endif %}
             </tr>
@@ -114,4 +124,15 @@
     </div>
     </form>
   </div>
+{% endblock %}
+
+{% block scripts %}
+  <script type="text/javascript">
+    {% for name, chosen in fields.items() %}
+    let els{{ name }} = document.getElementsByName('{{ name }}');
+    for (i = 0; i < els{{ name }}.length; i++) {
+      els{{ name }}[i].options.selectedIndex = {{ chosen }};
+    }
+    {% endfor %}
+  </script>
 {% endblock %}

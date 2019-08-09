@@ -1297,9 +1297,11 @@ def soft_goals(project):
                     flash('Item(s) removed from the database', 'error')
 
             return redirect(url_for('soft_goals', project=project.name))
+        soft_g = [sg for sg in project.soft_goals]
         return render_template('soft_goals.html',
                                title=project.name,
-                               project=project)
+                               project=project,
+                               soft_g=soft_g)
     else:
         flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
@@ -1319,7 +1321,7 @@ def attackers(project):
     choices = [*choices_auth, *choices_conf, *choices_int]
     choices.insert(0, ('x', 'No Soft Goal'))
     setattr(AttackersForm, 'softgoals_list',
-            SelectField('Select a Soft Goal vulnerable to this attacker', default='x', choices=choices))
+            SelectField('Select a Soft Goal the attacker aims to break', default='x', choices=choices))
 
     form = AttackersForm()
     if g.user in project.editors:
@@ -1347,10 +1349,13 @@ def attackers(project):
             else:
                 flash("The attacker field can't be empty", 'error')
                 return redirect(url_for('attackers', project=project.name))
+
+        attackers = [atk for atk in project.attackers]
         return render_template('attackers.html',
                                project=project,
                                title='{} attackers'.format(project.name),
-                               form=form)
+                               form=form,
+                               attackers=attackers)
     else:
         flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
@@ -1438,10 +1443,13 @@ def actors(project):
             else:
                 flash('Actor "{}" already in database'.format(form.actor.data), 'error')
                 return redirect(url_for('actors', project=project.name))
+
+        actors = [a for a in project.actors]
         return render_template('actors.html',
                                title='Actors of {}'.format(project.name),
                                form=form,
-                               project=project)
+                               project=project,
+                               actors=actors)
     else:
         flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))
@@ -1451,6 +1459,12 @@ def actors(project):
 @login_required
 def act(project, id):
     project = Projects.query.filter_by(name=project).first()
+    choices = [(choice.id ,choice.name) for choice in Actors.query.all()]
+    choices.insert(0, ('x', 'Choose a Role'))
+    fields = {}
+    for serv in SubService.query.filter_by(project_id=project.id).all():
+        setattr(ActorsForm, f'serv{serv.id}',
+                SelectField('Actor\'s Role', default='x', choices=choices))
     actor = Aktoren.query.filter_by(id=id, project_id=project.id).first()
     form = ActorsForm()
     if g.user in project.editors:
@@ -1470,16 +1484,22 @@ def act(project, id):
                 db.session.commit()
 
             for field in form_fields:
-                prev_dets = ActorDetails.query.filter_by(actor_id=id, service_id=field[0][4:], role_id=field[1]).first()
-                if prev_dets is None and field[1] != '4':
+                prev_dets = ActorDetails.query.filter_by(actor_id=id, service_id=field[0][4:]).first()
+                if prev_dets is None and field[1] != 'x':
                     details = ActorDetails(actor_id=id, service_id=field[0][4:], role_id=field[1])
                     db.session.add(details)
+                    db.session.commit()
+                elif prev_dets and field[1] != 'x':
+                    prev_dets.role_id = field[1]
                     db.session.commit()
 
             flash('Changes Saved', 'succ')
             return redirect(url_for('actors', project=project.name))
 
         services_used = [serv.service_id for serv in actor.details]
+        for i in services_used:
+            for details in ActorDetails.query.filter_by(actor_id=id, service_id=i).all():
+                fields[f'serv{i}'] = details.role_id
         atkrs = [atkr.id for atkr in actor.attackers]
         return render_template('acts.html',
                                title='{} - {}'.format(project.name, actor.name),
@@ -1487,7 +1507,8 @@ def act(project, id):
                                actor=actor,
                                services_used=services_used,
                                atkrs=atkrs,
-                               form=form)
+                               form=form,
+                               fields=fields)
     else:
         flash('You don\'t have permission to access this project.', 'error')
         return redirect(url_for('index'))

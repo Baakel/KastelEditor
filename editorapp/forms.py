@@ -72,6 +72,7 @@ class BbmForm(FlaskForm):
 class ActorsForm(FlaskForm):
     actor = StringField('Actor name:', validators=[DataRequired()])
     component_access = SelectField('Access to Components', choices=[(1, 'External'), (2, 'User'), (3, 'Admin')])
+    component_access_list = SelectField()
 
 
 class AttackersForm(FlaskForm):

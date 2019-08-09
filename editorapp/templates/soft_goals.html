@@ -9,10 +9,10 @@
     {% endfor %}
     <div class="container-fluid">
       <div class="row align-items-center">
-        <div class="col align-items-center text-center"><a href="{{ url_for('functional_req', project=project.name) }}" class="btn btn-primary btn-raised">Prev</a></div>
-        <div class="col-8"><h1 class="display-2 mt-5 ml-5 mb-3 text-center">Current Soft Goals</h1></div>
-        {% if hardgs %}
-          <div class="col align-items-center text-center"><a href="{{ url_for('bbmech', project=project.name) }}" class="btn btn-primary btn-raised">Next</a></div>
+        <div class="col align-items-center text-center"><a href="{{ url_for('goods', project=project.name) }}" class="btn btn-primary btn-raised">Prev</a></div>
+        <div class="col-8"><h1 class="display-2 mt-5 ml-5 mb-3 text-center">{{ project.name }} Soft Goals</h1></div>
+        {% if soft_g %}
+          <div class="col align-items-center text-center"><a href="{{ url_for('functional_req', project=project.name) }}" class="btn btn-primary btn-raised">Next</a></div>
         {% else %}
           <div class="col"></div>
         {% endif %}

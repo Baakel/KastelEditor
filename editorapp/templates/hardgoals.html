@@ -154,9 +154,9 @@
                         {% for fr in project.functional_req %}
                             {% for serv in fr.services %}
                                 {% if  '{} ensures the {} during the {}'.format(serv.name, sgoal.authenticity, fr.description) in hardgs  %}
-                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.authenticity }}¡{{ serv.id }}" checked><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.authenticity }}¡{{ serv.id }}¡{{ fr.id }}¡{{ sgoal.id }}" checked><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% else %}
-                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.authenticity }}¡{{ serv.id }}"><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.authenticity }}¡{{ serv.id }}¡{{ fr.id }}¡{{ sgoal.id }}"><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% endif %}
                             {% endfor %}
                         {% endfor %}
@@ -170,9 +170,9 @@
                         {% for fr in project.functional_req %}
                             {% for serv in fr.services %}
                                     {% if  '{} ensures the {} during the {}'.format(serv.name, sgoal.confidentiality, fr.description) in hardgs  %}
-                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.confidentiality }}¡{{ serv.id }}" checked><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.confidentiality }}¡{{ serv.id }}¡{{ fr.id }}¡{{ sgoal.id }}" checked><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% else %}
-                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.confidentiality }}¡{{ serv.id }}"><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.confidentiality }}¡{{ serv.id }}¡{{ fr.id }}¡{{ sgoal.id }}"><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% endif %}
                             {% endfor %}
                         {% endfor %}
@@ -186,9 +186,9 @@
                         {% for fr in project.functional_req %}
                             {% for serv in fr.services %}
                                     {% if  '{} ensures the {} during the {}'.format(serv.name, sgoal.integrity, fr.description) in hardgs  %}
-                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.integrity }}¡{{ serv.id }}" checked><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.integrity }}¡{{ serv.id }}¡{{ fr.id }}¡{{ sgoal.id }}" checked><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% else %}
-                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.integrity }}¡{{ serv.id }}"><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
+                                        <td class="text-center"><input type="checkbox" id="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}" name="hglist" value="{{ serv.name }}¡{{ fr.description }}¡{{ sgoal.integrity }}¡{{ serv.id }}¡{{ fr.id }}¡{{ sgoal.id }}"><label for="{{ sgoal.id }}-{{ fr.id }}-{{ serv.id }}">HG{{ sgoal.id }}{{ fr.id }}</label></td>
                                     {% endif %}
                             {% endfor %}
                         {% endfor %}

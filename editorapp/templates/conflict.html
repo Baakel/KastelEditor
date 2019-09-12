@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% for message in get_flashed_messages(category_filter=["succ"]) %}
+        <div class="alert-success" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% for errors in get_flashed_messages(category_filter=["error"]) %}
+        <div class="alert-danger" role="alert">{{ errors }}</div>
+    {% endfor %}
+    <div class="container-fluid mt-5">
+      <div class="row justify-content-center">
+        <div class="col-8"><h1 class="display-2 text-center">Conflict in {{ project_name }}</h1></div>
+      </div>
+      <div class="row align-items-center">
+      <div class="col-sm-3"></div>
+      <div class="col-sm-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title bg-danger">WARNING! {{ project_name }}</h5>
+            <p class="card-text">Your Project has conflicting Hard Goal id's already in the database.</p>
+            <p class="card-text">To solve this, the <b>{{ conflict_proj }} project</b> will be deleted. To proceed please create a backup of the project</p>
+            <a id="oldproj" href="{{ url_for('export', project=conflict_proj, backup=True) }}" class="btn btn-primary btn-raised">Backup</a>
+            <a href="{{ url_for('index') }}" class="btn btn-danger btn-raised">Cancel</a>
+            <a id="import-btn" href="{{ url_for('import_project', dele=conflict_proj) }}" class="btn btn-info btn-raised invisible">Import</a>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-2"></div>
+      </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+  <script type="text/javascript">
+    let link = document.getElementById('oldproj');
+    link.addEventListener('click', function () { document.getElementById('import-btn').classList.remove('invisible')});
+
+
+    function textChange(object) {
+      if (!object.classList.contains('text-success')) {
+        clicks.push(true);
+      }
+      object.classList.add('text-success');
+      if (clicks.length === loop_size) {
+        document.getElementById('import-btn').classList.remove('invisible')
+      }
+    }
+
+  </script>
+{% endblock %}

@@ -156,6 +156,7 @@ class FunctionalRequirement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(280))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    hard_goals = db.relationship('HardGoal', backref='functionalreq')
     services = db.relationship('SubService',
                                secondary=freq_serv,
                                backref=db.backref('functionalreqs', lazy='dynamic'),
@@ -195,6 +196,8 @@ class HardGoal(db.Model):
     integrity = db.Column(db.String(280))
     # applications = db.Column(db.String(280))
     component_id = db.Column(db.Integer, db.ForeignKey('sub_service.id'))
+    freq_id = db.Column(db.Integer, db.ForeignKey('functional_requirement.id'))
+    sg_id = db.Column(db.Integer, db.ForeignKey('soft_goal.id'))
     priority = db.Column(db.Boolean(), default=False)
     cb_value = db.Column(db.String(300))
     description = db.Column(db.String(500))
@@ -202,7 +205,8 @@ class HardGoal(db.Model):
     extra_hg = db.Column(db.Boolean)
     original_hg = db.Column(db.Integer)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
-    soft_goals = db.relationship('SoftGoal', backref='hardgoals', lazy='dynamic')
+    unique_id = db.Column(db.String(200), unique=True)
+    # soft_goals = db.relationship('SoftGoal', backref='hardgoals', lazy='dynamic')
     bbmechanisms = db.relationship('BbMechanisms',
                             secondary=hard_mechanism,
                             # primaryjoin=(hard_mechanism.c.hg_id == id),
@@ -238,7 +242,8 @@ class SoftGoal(db.Model):
     integrity = db.Column(db.String(280))
     priority = db.Column(db.Boolean)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
-    hardgoal_id = db.Column(db.Integer, db.ForeignKey(HardGoal.id))
+    # hardgoal_id = db.Column(db.Integer, db.ForeignKey(HardGoal.id))
+    hard_goals = db.relationship('HardGoal', backref='softgoal')
 
     def __repr__(self):
         return '{}'.format(self.cb_value)

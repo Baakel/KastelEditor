@@ -17,6 +17,7 @@ from flask_admin.contrib import sqla
 from flask_admin import helpers as admin_helpers
 import requests
 import json, re
+from datetime import datetime
 
 
 @app.before_first_request
@@ -204,6 +205,20 @@ def before_request():
         session['current_project'] = None
 
 
+@app.route('/test/<id>', methods=['GET', 'POST'])
+@login_required
+def test(id):
+    arguments = request.args.get('var', None)
+    hg = HardGoal.query.filter_by(id=id).first()
+    print(hg.sg_id)
+    if arguments:
+        print(f'found {arguments} and the urls is: {url_for("test", var="prueba", second="prueba2", _method="GET")}')
+    else:
+        print('no args')
+        print(request.args)
+    return redirect(url_for('index'))
+
+
 @app.route('/<project>/export')
 @app.route('/<project>/export/<backup>')
 @login_required
@@ -311,45 +326,72 @@ def export(project, backup=False):
                     if original is not None:
                         hard_goals_dict[hg.description] = {
                             'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': original.description, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
+                            'extra_hg': hg.extra_hg, 'original_hg': original.description, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name,
+                            'freq_id': FunctionalRequirement.query.filter_by(id=hg.freq_id).first().description,
+                            'sg_id': SoftGoal.query.filter_by(id=hg.sg_id).first().authenticity,
+                            'unique_id': hg.unique_id}
                     else:
                         hard_goals_dict[hg.description] = {
                             'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
+                            'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name,
+                            'freq_id': FunctionalRequirement.query.filter_by(id=hg.freq_id).first().description,
+                            'sg_id': SoftGoal.query.filter_by(id=hg.sg_id).first().authenticity,
+                            'unique_id': hg.unique_id}
                 else:
                     hard_goals_dict[hg.description] = {
                         'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                        'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
+                        'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name,
+                        'freq_id': FunctionalRequirement.query.filter_by(id=hg.freq_id).first().description,
+                        'sg_id': SoftGoal.query.filter_by(id=hg.sg_id).first().authenticity,
+                        'unique_id': hg.unique_id}
             if hg.confidentiality:
                 if hg.original_hg:
                     original = HardGoal.query.filter_by(id=hg.original_hg).first()
                     if original is not None:
                         hard_goals_dict[hg.description] = {
                             'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': original.description, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
+                            'extra_hg': hg.extra_hg, 'original_hg': original.description, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name,
+                            'freq_id': FunctionalRequirement.query.filter_by(id=hg.freq_id).first().description,
+                            'sg_id': SoftGoal.query.filter_by(id=hg.sg_id).first().confidentiality,
+                            'unique_id': hg.unique_id}
                     else:
                         hard_goals_dict[hg.description] = {
                             'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
+                            'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name,
+                            'freq_id': FunctionalRequirement.query.filter_by(id=hg.freq_id).first().description,
+                            'sg_id': SoftGoal.query.filter_by(id=hg.sg_id).first().confidentiality,
+                            'unique_id': hg.unique_id}
                 else:
                     hard_goals_dict[hg.description] = {
                         'confidentiality': hg.confidentiality, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                        'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
+                        'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name,
+                        'freq_id': FunctionalRequirement.query.filter_by(id=hg.freq_id).first().description,
+                        'sg_id': SoftGoal.query.filter_by(id=hg.sg_id).first().confidentiality,
+                        'unique_id': hg.unique_id}
             if hg.integrity:
                 if hg.original_hg:
                     original = HardGoal.query.filter_by(id=hg.original_hg).first()
                     if original is not None:
                         hard_goals_dict[hg.description] = {
                             'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': original.description, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
+                            'extra_hg': hg.extra_hg, 'original_hg': original.description, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name,
+                            'freq_id': FunctionalRequirement.query.filter_by(id=hg.freq_id).first().description,
+                            'sg_id': SoftGoal.query.filter_by(id=hg.sg_id).first().integrity,
+                            'unique_id': hg.unique_id}
                     else:
                         hard_goals_dict[hg.description] = {
                             'authenticity': hg.authenticity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                            'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
+                            'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name,
+                            'freq_id': FunctionalRequirement.query.filter_by(id=hg.freq_id).first().description,
+                            'sg_id': SoftGoal.query.filter_by(id=hg.sg_id).first().integrity,
+                            'unique_id': hg.unique_id}
                 else:
                     hard_goals_dict[hg.description] = {
                         'integrity': hg.integrity, 'priority': hg.priority, 'extra_hg_used': hg.extra_hg_used,
-                        'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name}
+                        'extra_hg': hg.extra_hg, 'original_hg': None, 'component_id': SubService.query.filter_by(id=hg.component_id).first().name,
+                        'freq_id': FunctionalRequirement.query.filter_by(id=hg.freq_id).first().description,
+                        'sg_id': SoftGoal.query.filter_by(id=hg.sg_id).first().integrity,
+                        'unique_id': hg.unique_id}
             for bbm in hg.bbmechanisms:
                 hard_bb_mechanism_relationship[hg.description] = bbm.name
         project_dict['Hard Mechanism Relationship']  = hard_bb_mechanism_relationship
@@ -389,8 +431,9 @@ def export(project, backup=False):
 
 
 @app.route('/import', methods=['POST', 'GET'])
+@app.route('/import/<dele>', methods=['POST', 'GET', 'DELETE'])
 @login_required
-def import_project():
+def import_project(dele=False):
     try:
         # file = request.files['inputFile']
         # read_file = file.read()
@@ -399,6 +442,56 @@ def import_project():
         # original_project = Projects.query.filter_by(name=json_data['Project']).first()
         # if original_project:
         #     print(original_project)
+
+        if dele:
+            project = Projects.query.filter_by(name=dele).first()
+            stakeholders = Stakeholder.query.filter_by(project_id=project.id).all()
+            for stkhld in stakeholders:
+                db.session.delete(stkhld)
+                db.session.commit()
+            softgoals = SoftGoal.query.filter_by(project_id=project.id).all()
+            for sftgl in softgoals:
+                db.session.delete(sftgl)
+                db.session.commit()
+            functional_reqs = FunctionalRequirement.query.filter_by(project_id=project.id).all()
+            for fr in functional_reqs:
+                db.session.delete(fr)
+                db.session.commit()
+            services = SubService.query.filter_by(project_id=project.id).all()
+            for serv in services:
+                db.session.delete(serv)
+                db.session.commit()
+            goods = Good.query.filter_by(project_id=project.id).all()
+            for gd in goods:
+                db.session.delete(gd)
+                db.session.commit()
+            attackers = Attacker.query.filter_by(project_id=project.id).all()
+            for atk in attackers:
+                for sg in atk.soft_goals:
+                    atk.remove_sg(sg)
+                db.session.delete(atk)
+                db.session.commit()
+            actors = Aktoren.query.filter_by(project_id=project.id).all()
+            for act in actors:
+                for atk in act.attackers:
+                    act.remove_atk(atk)
+                for det in act.details:
+                    ActorDetails.query.filter_by(id=det.id).delete()
+                db.session.delete(act)
+                db.session.commit()
+            hard_goals = HardGoal.query.filter_by(project_id=project.id).all()
+            for hg in hard_goals:
+                for bbm in hg.bbmechanisms:
+                    hg.remove_bb(bbm)
+                db.session.delete(hg)
+                db.session.commit()
+            for editor in project.editors:
+                u = editor.revoke_access(project)
+                db.session.add(u)
+                db.session.commit()
+            db.session.delete(project)
+            db.session.commit()
+
         json_data = session['json_data']
         project_name = Projects.make_unique_name(json_data['Project'])
         new_project = Projects(creator=g.user.id, name=project_name,
@@ -498,8 +591,18 @@ def import_project():
                 db.session.add(act_det)
             db.session.commit()
         for hard_goal in json_data['Hard Goals']:
-            component_id = SubService.query.filter_by(name=json_data['Hard Goals'][hard_goal]['component_id'], project_id=curr_project.id).first().id
-            json_data['Hard Goals'][hard_goal]['component_id'] = component_id
+            component_id = SubService.query.filter_by(name=json_data['Hard Goals'][hard_goal]['component_id'], project_id=curr_project.id).first()
+            freq_id = FunctionalRequirement.query.filter_by(description=json_data['Hard Goals'][hard_goal]['freq_id'], project_id=curr_project.id).first()
+            if "Authenticity" in json_data['Hard Goals'][hard_goal]['sg_id']:
+                sg_id = SoftGoal.query.filter_by(authenticity=json_data['Hard Goals'][hard_goal]['sg_id'], project_id=curr_project.id).first()
+            elif "Confidentiality" in json_data['Hard Goals'][hard_goal]['sg_id']:
+                sg_id = SoftGoal.query.filter_by(confidentiality=json_data['Hard Goals'][hard_goal]['sg_id'], project_id=curr_project.id).first()
+            else:
+                sg_id = SoftGoal.query.filter_by(integrity=json_data['Hard Goals'][hard_goal]['sg_id'], project_id=curr_project.id).first()
+            json_data['Hard Goals'][hard_goal]['component_id'] = component_id.id
+            json_data['Hard Goals'][hard_goal]['freq_id'] = freq_id.id
+            json_data['Hard Goals'][hard_goal]['sg_id'] = sg_id.id
+            # json_data['Hard Goals'][hard_goal]['unique_id'] = hg_id_gen(curr_project, freq_id, component_id, sg_id)
             hg = HardGoal(description=hard_goal, project_id=curr_project.id, **json_data['Hard Goals'][hard_goal])
             db.session.add(hg)
             db.session.commit()
@@ -582,6 +685,43 @@ def import_project():
         flash('An error occurred while importing project. Information might not be complete', 'error')
         return redirect(url_for('index'))
 
+@app.route('/uidcheck', methods=['POST','GET'])
+@login_required
+def check_uid():
+    try:
+        json_data = session['json_data']
+
+        conflicting_ids = []
+        for hg, hg_dict in json_data['Hard Goals'].items():
+            existing_hg = HardGoal.query.filter_by(unique_id=hg_dict['unique_id']).first()
+            if existing_hg:
+                conflicting_ids.append(existing_hg)
+
+        if conflicting_ids:
+            conf_projects = []
+            for id in conflicting_ids:
+                conf_proj = Projects.query.filter_by(id=id.project_id).first()
+                conf_projects.append(conf_proj)
+
+            conf_projects_set = set(conf_projects)
+
+            if len(conf_projects_set) == 1:
+                conf_project_name = conf_projects[0].name
+                return render_template('conflict.html',
+                                       title=f'Conflict in {json_data["Project"]}',
+                                       project_name=json_data['Project'],
+                                       conflict_proj=conf_project_name)
+            else:
+                print('More than 1 project conflict')
+                flash('An error occurred, please contact the admin with error code 23420', 'error')
+                return redirect(url_for('index'))
+        else:
+            return redirect(url_for('import_project'))
+    except Exception as e:
+        print(e)
+        flash('error occurred while importing', 'error')
+        return redirect(url_for('index'))
+
 
 @app.route('/preprocess', methods=['POST'])
 @login_required
@@ -648,6 +788,15 @@ def tree(project):
 @app.route('/testdata')
 def testdata():
     proj = request.args.get('project')
+    stakeholders = request.args.get('stakeholders', False)
+    attackers = request.args.get('attackers', False)
+    actors = request.args.get('actors', False)
+    bbms = request.args.get('bbms', False)
+    sgs = request.args.get('sgs', False)
+    hgs = request.args.get('hgs', False)
+    req = [stakeholders, attackers, actors, bbms, sgs, hgs]
+    # for i, r in enumerate(req):
+    #     print(f'r is {r} and iter is {i}')
     project = Projects.query.filter_by(name=proj).first()
     dictionary = {
         'chart': {
@@ -675,125 +824,200 @@ def testdata():
         }
 
     }
-    auth_gen = (sg for sg in project.soft_goals if sg.authenticity)
-    for softg in auth_gen:
-        curr_dict = { 'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
-                      'children': [],
-                      'HTMLclass': 'yellow',
-                      'collapsable': True}
-        for asset in project.goods:
-            if asset.description in softg.authenticity:
-                for stakeholder in asset.stakeholders:
-                    children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
-                                     'children': [],
-                                     'HTMLclass': 'red'}
-                    curr_dict['children'].append(children_dict)
-        auth_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.authenticity in hg.description)
-        for hardg in auth_hg_gen:
-            if hardg.priority:
-                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                           'children': [],
-                           'HTMLclass': 'blue'}
-            else:
-                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                           'children': [],
-                           'HTMLclass': 'grey'}
-            for bbm in hardg.bbmechanisms:
-                bbm_dict = { 'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
-                             'children': [],
-                             'HTMLclass': 'dark',
-                             'collapsable': True}
-                for ass in bbm.assumptions:
-                    ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
+    auth_gen = [sg for sg in project.soft_goals if sg.authenticity]
+    conf_gen = [sg for sg in project.soft_goals if sg.confidentiality]
+    int_gen = [sg for sg in project.soft_goals if sg.integrity]
+    auth_hg_gen = [hg for hg in project.hard_goals if hg.description and hg.authenticity]
+    for a in auth_hg_gen:
+        print(a.description)
+    conf_hg_gen = [hg for hg in project.hard_goals if hg.description and hg.confidentiality]
+    int_hg_gen = [hg for hg in project.hard_goals if hg.description and hg.integrity]
+    if sgs and stakeholders and hgs and bbms:
+        for softg in auth_gen:
+            curr_dict = { 'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
+                          'children': [],
+                          'HTMLclass': 'yellow',
+                          'collapsable': True}
+            for asset in project.goods:
+                if asset.description in softg.authenticity:
+                    for stakeholder in asset.stakeholders:
+                        children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
+                                         'children': [],
+                                         'HTMLclass': 'red'}
+                        curr_dict['children'].append(children_dict)
+            # auth_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.authenticity in hg.description)
+            for hardg in auth_hg_gen:
+                if hardg.priority:
+                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                               'children': [],
+                               'HTMLclass': 'blue'}
+                else:
+                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                               'children': [],
+                               'HTMLclass': 'grey'}
+                for bbm in hardg.bbmechanisms:
+                    bbm_dict = { 'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
+                                 'children': [],
+                                 'HTMLclass': 'dark',
+                                 'collapsable': True}
+                    for ass in bbm.assumptions:
+                        ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
+                                    'children': [],
+                                    'HTMLclass': 'green'}
+                        bbm_dict['children'].append(ass_dict)
+
+                    hg_dict['children'].append(bbm_dict)
+
+                curr_dict['children'].append(hg_dict)
+
+            dictionary['nodeStructure']['children'].append(curr_dict)
+
+        for softg in conf_gen:
+            curr_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
+                         'children': [],
+                         'HTMLclass': 'yellow',
+                         'collapsable': True}
+            for asset in project.goods:
+                if asset.description in softg.confidentiality:
+                    for stakeholder in asset.stakeholders:
+                        children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
+                                         'children': [],
+                                         'HTMLclass': 'red'}
+                        curr_dict['children'].append(children_dict)
+            # conf_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.confidentiality in hg.description)
+            for hardg in conf_hg_gen:
+                if hardg.priority:
+                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                               'children': [],
+                               'HTMLclass': 'blue'}
+                else:
+                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                               'children': [],
+                               'HTMLclass': 'grey'}
+                for bbm in hardg.bbmechanisms:
+                    bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
                                 'children': [],
-                                'HTMLclass': 'green'}
-                    bbm_dict['children'].append(ass_dict)
+                                'HTMLclass': 'dark',
+                                'collapsable': True}
+                    for ass in bbm.assumptions:
+                        ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
+                                    'children': [],
+                                    'HTMLclass': 'green'}
+                        bbm_dict['children'].append(ass_dict)
 
-                hg_dict['children'].append(bbm_dict)
+                    hg_dict['children'].append(bbm_dict)
 
-            curr_dict['children'].append(hg_dict)
+                curr_dict['children'].append(hg_dict)
 
-        dictionary['nodeStructure']['children'].append(curr_dict)
+            dictionary['nodeStructure']['children'].append(curr_dict)
 
-    conf_gen = (sg for sg in project.soft_goals if sg.confidentiality)
-    for softg in conf_gen:
-        curr_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
-                     'children': [],
-                     'HTMLclass': 'yellow',
-                     'collapsable': True}
-        for asset in project.goods:
-            if asset.description in softg.confidentiality:
-                for stakeholder in asset.stakeholders:
-                    children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
-                                     'children': [],
-                                     'HTMLclass': 'red'}
-                    curr_dict['children'].append(children_dict)
-        conf_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.confidentiality in hg.description)
-        for hardg in conf_hg_gen:
-            if hardg.priority:
-                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                           'children': [],
-                           'HTMLclass': 'blue'}
-            else:
-                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                           'children': [],
-                           'HTMLclass': 'grey'}
-            for bbm in hardg.bbmechanisms:
-                bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
-                            'children': [],
-                            'HTMLclass': 'dark',
-                            'collapsable': True}
-                for ass in bbm.assumptions:
-                    ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
+        for softg in int_gen:
+            curr_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
+                         'children': [],
+                         'HTMLclass': 'yellow',
+                         'collapsable': True}
+            for asset in project.goods:
+                if asset.description in softg.integrity:
+                    for stakeholder in asset.stakeholders:
+                        children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
+                                         'children': [],
+                                         'HTMLclass': 'red'}
+                        curr_dict['children'].append(children_dict)
+            # int_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.integrity in hg.description)
+            for hardg in int_hg_gen:
+                if hardg.priority:
+                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                               'children': [],
+                               'HTMLclass': 'blue'}
+                else:
+                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+                               'children': [],
+                               'HTMLclass': 'grey'}
+                for bbm in hardg.bbmechanisms:
+                    bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
                                 'children': [],
-                                'HTMLclass': 'green'}
-                    bbm_dict['children'].append(ass_dict)
+                                'HTMLclass': 'dark',
+                                'collapsable': True}
+                    for ass in bbm.assumptions:
+                        ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
+                                    'children': [],
+                                    'HTMLclass': 'green'}
+                        bbm_dict['children'].append(ass_dict)
 
-                hg_dict['children'].append(bbm_dict)
+                    hg_dict['children'].append(bbm_dict)
 
-            curr_dict['children'].append(hg_dict)
+                curr_dict['children'].append(hg_dict)
 
-        dictionary['nodeStructure']['children'].append(curr_dict)
+            dictionary['nodeStructure']['children'].append(curr_dict)
+    elif sgs and attackers:                                                                   #INSERTING SG's and COMP TODO: fix this part
+        for softg in auth_gen:
+            sg_dict = {'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
+                         'children': [],
+                         'HTMLclass': 'yellow',
+                         'collapsable': True}
+            for hg in auth_hg_gen:
+                print(f'{hg.id} {hg.authenticity} desc {hg.description} comp {SubService.query.filter_by(id=hg.component_id).first().name} sgs {softg.authenticity}')
+                if hg.sg_id == softg.id:
+                    component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
+                                               'desc': 'Component'},
+                                      'children': [],
+                                      'HTMLclass': 'blue',
+                                      'collapsable': True}
+                    sg_dict['children'].append(component_dict)
+            dictionary['nodeStructure']['children'].append(sg_dict)
+        for softg in conf_gen:
+            sg_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
+                       'children': [],
+                       'HTMLclass': 'yellow',
+                       'collapsable': True}
+            for hg in conf_hg_gen:
+                if hg.sg_id == softg.id:
+                    component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
+                                               'desc': 'Component'},
+                                      'children': [],
+                                      'HTMLclass': 'blue',
+                                      'collapsable': True}
+                    sg_dict['children'].append(component_dict)
+            dictionary['nodeStructure']['children'].append(sg_dict)
 
-    int_gen = (sg for sg in project.soft_goals if sg.integrity)
-    for softg in int_gen:
-        curr_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
-                     'children': [],
-                     'HTMLclass': 'yellow',
-                     'collapsable': True}
-        for asset in project.goods:
-            if asset.description in softg.integrity:
-                for stakeholder in asset.stakeholders:
-                    children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
-                                     'children': [],
-                                     'HTMLclass': 'red'}
-                    curr_dict['children'].append(children_dict)
-        int_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.integrity in hg.description)
-        for hardg in int_hg_gen:
-            if hardg.priority:
-                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                           'children': [],
-                           'HTMLclass': 'blue'}
-            else:
-                hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                           'children': [],
-                           'HTMLclass': 'grey'}
-            for bbm in hardg.bbmechanisms:
-                bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
-                            'children': [],
-                            'HTMLclass': 'dark',
-                            'collapsable': True}
-                for ass in bbm.assumptions:
-                    ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
-                                'children': [],
-                                'HTMLclass': 'green'}
-                    bbm_dict['children'].append(ass_dict)
+        for softg in int_gen:
+            sg_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
+                       'children': [],
+                       'HTMLclass': 'yellow',
+                       'collapsable': True}
+            for hg in int_hg_gen:
+                if hg.sg_id == softg.id:
+                    component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
+                                               'desc': 'Component'},
+                                      'children': [],
+                                      'HTMLclass': 'blue',
+                                      'collapsable': True}
+                    sg_dict['children'].append(component_dict)
+            dictionary['nodeStructure']['children'].append(sg_dict)
 
-                hg_dict['children'].append(bbm_dict)
+    elif sgs:                                                                                     #INSERTING ONLY SG's
+        for softg in auth_gen:
+            sg_dict = {'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
+                         'children': [],
+                         'HTMLclass': 'yellow',
+                         'collapsable': True}
+            dictionary['nodeStructure']['children'].append(sg_dict)
+        for softg in conf_gen:
+            sg_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
+                       'children': [],
+                       'HTMLclass': 'yellow',
+                       'collapsable': True}
+            dictionary['nodeStructure']['children'].append(sg_dict)
 
-            curr_dict['children'].append(hg_dict)
+        for softg in int_gen:
+            sg_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
+                       'children': [],
+                       'HTMLclass': 'yellow',
+                       'collapsable': True}
+            dictionary['nodeStructure']['children'].append(sg_dict)
 
-        dictionary['nodeStructure']['children'].append(curr_dict)
+    else:
+        pass
     return jsonify(dictionary)
     # return jsonify({'results': sample(range(1,10), 5)})
 
@@ -1812,10 +2036,20 @@ def hard_goals(project):
             if callback_list:
                 for item in callback_list:
                     item_parts = item.split('¡')
+                    fr = FunctionalRequirement.query.filter_by(description=item_parts[1], project_id=project.id).first()
+                    comp = SubService.query.filter_by(name=item_parts[0], project_id=project.id).first()
+                    if "Authenticity" in item_parts[2]:
+                        sg = SoftGoal.query.filter_by(authenticity=item_parts[2], project_id=project.id).first()
+                    elif "Confidentiality" in item_parts[2]:
+                        sg = SoftGoal.query.filter_by(confidentiality=item_parts[2], project_id=project.id).first()
+                    elif "Integrity" in item_parts[2]:
+                        sg = SoftGoal.query.filter_by(integrity=item_parts[2], project_id=project.id).first()
+                    else:
+                        sg = None
                     final_string = '{} ensures the {} during the {}'.format(item_parts[0], item_parts[2], item_parts[1])
                     nhg = HardGoal.query.filter_by(description=final_string, project_id=project.id).first()
                     if nhg is None:
-                        new_hg = HardGoal(project_id=project.id, description=final_string, component_id=item_parts[3])
+                        new_hg = HardGoal(project_id=project.id, description=final_string, component_id=item_parts[3], freq_id=item_parts[4], sg_id=item_parts[5], unique_id=hg_id_gen(project, fr, comp, sg))
                         current_hgs = HardGoal.query.filter_by(project_id=project.id, priority=True).all()
                         for chg in current_hgs:
                             if chg.authenticity:
@@ -2160,3 +2394,7 @@ def security_context_processor():
         h=admin_helpers,
         get_url=url_for,
     )
+
+
+def hg_id_gen(proj, fr, comp, sg):
+    return f"HGP{proj.id}F{fr.id}C{comp.id}SG{sg.id}T{datetime.now().strftime('%d%m%y%H%M%S%f')}"

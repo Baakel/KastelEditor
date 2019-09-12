@@ -5,6 +5,16 @@
   <link rel="stylesheet" href="/static/css/tree.css" type="text/css">
   {% endblock %}
   {% block content %}
+    <nav class="navbar navbar-fixed-top navbar-dark bg-dark">
+      <div class="switch"><label class="text-light"><input type="checkbox" id="componentsSwitch" value="components"><span class="bmd-switch-track"><div class="ripple-container"></div></span>Components</label></div>
+      <div class="switch"><label class="text-light"><input type="checkbox" id="stakeholdersSwitch" value="stakeholders"><span class="bmd-switch-track"><div class="ripple-container"></div></span>Stakeholders</label></div>
+      <div class="switch"><label class="text-light"><input type="checkbox" id="attackersSwitch" value="attackers"><span class="bmd-switch-track"><div class="ripple-container"></div></span>Attackers</label></div>
+      <div class="switch"><label class="text-light"><input type="checkbox" id="actorsSwitch" value="actors"><span class="bmd-switch-track"><div class="ripple-container"></div></span>Actors</label></div>
+      <div class="switch"><label class="text-light"><input type="checkbox" id="bbmsSwitch" value="bbms" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>BBM's</label></div>
+      <div class="switch"><label class="text-light"><input type="checkbox" id="sgsSwitch" value="sgs" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>Soft Goals</label></div>
+      <div class="switch"><label class="text-light"><input type="checkbox" id="hgsSwitch" value="hgs" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>Hard Goals</label></div>
+
+    </nav>
   <div class="chart align-middle" id="tree-simple"></div>
   {% endblock %}
   {% block scripts %}
@@ -15,12 +25,144 @@
   <script src="/static/js/Treant/vendor/jquery.mousewheel.js"></script>
 
   <script>
+    let components = document.getElementById("componentsSwitch");
+    let stakeholders = document.getElementById("stakeholdersSwitch");
+    let attackers = document.getElementById("attackersSwitch");
+    let actors = document.getElementById("actorsSwitch");
+    let bbms = document.getElementById("bbmsSwitch");
+    let sg = document.getElementById("sgsSwitch");
+    let hg = document.getElementById("hgsSwitch");
+    let switches = [components, stakeholders, attackers, actors, bbms, sg, hg];
 
-    var getChart = $.get('/testdata', {'project': '{{ project.name }}'});
+    function switchesState() {
+      let url_params = {};
+      for (i = 0; i < switches.length; i++) {
+        if (switches[i].checked) {
+          url_params[switches[i].value] = true;
+        }
+      }
+      url_params['project'] = "{{ project.name }}";
+      return url_params
+    }
 
-    getChart.done(function(object) {
-      var chart = new Treant(object);
+    let getChart = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+      window.object = object;
+      window.ochart = new Treant(object);
     });
 
+    for (i = 0; i < switches.length ; i++) {
+      switch(i) {
+        case 0:
+        case 1:
+        case 2:
+          switches[i].addEventListener("change", function() {
+            if (this.checked) {
+              sg.checked = true;
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object)
+              })
+            } else {
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object);
+              })
+            }
+          });
+          break;
+
+        case 3:
+          switches[i].addEventListener("change", function() {
+            if (this.checked) {
+              sg.checked = true;
+              hg.checked = true;
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object)
+              })
+            } else {
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object);
+              })
+            }
+          });
+          break;
+
+        case 4:
+          switches[i].addEventListener("change", function() {
+            if (this.checked) {
+              sg.checked = true;
+              hg.checked = true;
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object)
+              })
+            } else {
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object);
+              })
+            }
+          });
+          break;
+
+        case 5:
+          switches[i].addEventListener("change", function() {
+            if (this.checked) {
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object)
+              })
+            } else {
+              components.checked = false;
+              hg.checked = false;
+              attackers.checked = false;
+              stakeholders.checked = false;
+              actors.checked = false;
+              bbms.checked = false;
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object);
+              })
+            }
+          });
+          break;
+
+        case 6:
+          switches[i].addEventListener("change", function() {
+            if (this.checked) {
+              sg.checked = true;
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object)
+              })
+            } else {
+              actors.checked = false;
+              bbms.checked = false;
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object);
+              })
+            }
+          });
+          break;
+
+        default:
+          switches[i].addEventListener("change", function() {
+            if (this.checked) {
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object);
+              })
+            } else {
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object);
+              })
+            }
+          })
+      }
+    }
   </script>
   {% endblock %}

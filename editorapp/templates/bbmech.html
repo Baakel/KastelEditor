@@ -77,11 +77,14 @@
                                                 {% if bbm.against_actor %}
                                                     {% for actor in bbm.against_actor %}
                                                       {% for role in current_bbms['components'][hgoal.component_id] %}
-                                                        {% if actor.id == role %}
+                                                        {% if actor.id == role and actor.name != 'No Role' %}
                                                         <tr>
                                                           <td>
                                                             <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}" checked><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
                                                           </td>
+{#                                                          <td>#}
+{#                                                            actor:{{ actor }} role:{{ role }}#}
+{#                                                          </td>#}
                                                         </tr>
                                                         {% endif %}
                                                       {% endfor %}
@@ -94,11 +97,14 @@
                                                   {% if bbm.against_actor %}
                                                     {% for actor in bbm.against_actor %}
                                                       {% for role in current_bbms['components'][hgoal.component_id] %}
-                                                        {% if actor.id == role %}
+                                                        {% if actor.id == role and actor.name != 'No Role' %}
                                                         <tr>
                                                           <td>
                                                             <input type="radio" name="{{ hgoal.id }}" id="{{ hgoal.id }}_{{ bbm.id }}" value="{{ bbm.id }}"><label for="{{ hgoal.id }}_{{ bbm.id }}">{{ bbm.name }}</label>
                                                           </td>
+{#                                                          <td>#}
+{#                                                            actor:{{ actor }} role:{{ role }}#}
+{#                                                          </td>#}
                                                         </tr>
                                                         {% endif %}
                                                       {% endfor %}

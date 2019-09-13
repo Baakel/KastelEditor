@@ -35,16 +35,5 @@
     let link = document.getElementById('oldproj');
     link.addEventListener('click', function () { document.getElementById('import-btn').classList.remove('invisible')});
 
-
-    function textChange(object) {
-      if (!object.classList.contains('text-success')) {
-        clicks.push(true);
-      }
-      object.classList.add('text-success');
-      if (clicks.length === loop_size) {
-        document.getElementById('import-btn').classList.remove('invisible')
-      }
-    }
-
   </script>
 {% endblock %}

@@ -828,196 +828,228 @@ def testdata():
     conf_gen = [sg for sg in project.soft_goals if sg.confidentiality]
     int_gen = [sg for sg in project.soft_goals if sg.integrity]
     auth_hg_gen = [hg for hg in project.hard_goals if hg.description and hg.authenticity]
-    for a in auth_hg_gen:
-        print(a.description)
     conf_hg_gen = [hg for hg in project.hard_goals if hg.description and hg.confidentiality]
     int_hg_gen = [hg for hg in project.hard_goals if hg.description and hg.integrity]
-    if sgs and stakeholders and hgs and bbms:
-        for softg in auth_gen:
-            curr_dict = { 'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
-                          'children': [],
-                          'HTMLclass': 'yellow',
-                          'collapsable': True}
-            for asset in project.goods:
-                if asset.description in softg.authenticity:
-                    for stakeholder in asset.stakeholders:
-                        children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
-                                         'children': [],
-                                         'HTMLclass': 'red'}
-                        curr_dict['children'].append(children_dict)
-            # auth_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.authenticity in hg.description)
-            for hardg in auth_hg_gen:
-                if hardg.priority:
-                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                               'children': [],
-                               'HTMLclass': 'blue'}
-                else:
-                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                               'children': [],
-                               'HTMLclass': 'grey'}
-                for bbm in hardg.bbmechanisms:
-                    bbm_dict = { 'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
-                                 'children': [],
-                                 'HTMLclass': 'dark',
-                                 'collapsable': True}
-                    for ass in bbm.assumptions:
-                        ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
-                                    'children': [],
-                                    'HTMLclass': 'green'}
-                        bbm_dict['children'].append(ass_dict)
+    component_gen = [comp for comp in project.sub_services]
+    for comp in component_gen:
+        comp_dict = {'text': {'name': comp.name, 'desc': 'Component'},
+                     'children': [],
+                     'HTMLclass': 'blue',
+                     'collapsable': True}
+        if sgs:
+            hg_auth_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.authenticity]
+            sg_auth_gen = [sg for sg in project.soft_goals if sg.authenticity and sg.id in hg_auth_sgid_gen]
+            for sg in sg_auth_gen:
+                sg_dict = {'text': {'name': sg.authenticity, 'desc': 'Soft Goal'},
+                           'children': [],
+                           'HTMLclass': 'yellow',
+                           'collapsable': True}
+                comp_dict['children'].append(sg_dict)
 
-                    hg_dict['children'].append(bbm_dict)
+            hg_conf_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.confidentiality]
+            sg_conf_gen = [sg for sg in project.soft_goals if sg.confidentiality and sg.id in hg_conf_sgid_gen]
+            for sg in sg_conf_gen:
+                sg_dict = {'text': {'name': sg.confidentiality, 'desc': 'Soft Goal'},
+                           'children': [],
+                           'HTMLclass': 'yellow',
+                           'collapsable': True}
+                comp_dict['children'].append(sg_dict)
 
-                curr_dict['children'].append(hg_dict)
-
-            dictionary['nodeStructure']['children'].append(curr_dict)
-
-        for softg in conf_gen:
-            curr_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
-                         'children': [],
-                         'HTMLclass': 'yellow',
-                         'collapsable': True}
-            for asset in project.goods:
-                if asset.description in softg.confidentiality:
-                    for stakeholder in asset.stakeholders:
-                        children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
-                                         'children': [],
-                                         'HTMLclass': 'red'}
-                        curr_dict['children'].append(children_dict)
-            # conf_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.confidentiality in hg.description)
-            for hardg in conf_hg_gen:
-                if hardg.priority:
-                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                               'children': [],
-                               'HTMLclass': 'blue'}
-                else:
-                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                               'children': [],
-                               'HTMLclass': 'grey'}
-                for bbm in hardg.bbmechanisms:
-                    bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
-                                'children': [],
-                                'HTMLclass': 'dark',
-                                'collapsable': True}
-                    for ass in bbm.assumptions:
-                        ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
-                                    'children': [],
-                                    'HTMLclass': 'green'}
-                        bbm_dict['children'].append(ass_dict)
-
-                    hg_dict['children'].append(bbm_dict)
-
-                curr_dict['children'].append(hg_dict)
-
-            dictionary['nodeStructure']['children'].append(curr_dict)
-
-        for softg in int_gen:
-            curr_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
-                         'children': [],
-                         'HTMLclass': 'yellow',
-                         'collapsable': True}
-            for asset in project.goods:
-                if asset.description in softg.integrity:
-                    for stakeholder in asset.stakeholders:
-                        children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
-                                         'children': [],
-                                         'HTMLclass': 'red'}
-                        curr_dict['children'].append(children_dict)
-            # int_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.integrity in hg.description)
-            for hardg in int_hg_gen:
-                if hardg.priority:
-                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                               'children': [],
-                               'HTMLclass': 'blue'}
-                else:
-                    hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-                               'children': [],
-                               'HTMLclass': 'grey'}
-                for bbm in hardg.bbmechanisms:
-                    bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
-                                'children': [],
-                                'HTMLclass': 'dark',
-                                'collapsable': True}
-                    for ass in bbm.assumptions:
-                        ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
-                                    'children': [],
-                                    'HTMLclass': 'green'}
-                        bbm_dict['children'].append(ass_dict)
-
-                    hg_dict['children'].append(bbm_dict)
-
-                curr_dict['children'].append(hg_dict)
-
-            dictionary['nodeStructure']['children'].append(curr_dict)
-    elif sgs and attackers:                                                                   #INSERTING SG's and COMP TODO: fix this part
-        for softg in auth_gen:
-            sg_dict = {'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
-                         'children': [],
-                         'HTMLclass': 'yellow',
-                         'collapsable': True}
-            for hg in auth_hg_gen:
-                print(f'{hg.id} {hg.authenticity} desc {hg.description} comp {SubService.query.filter_by(id=hg.component_id).first().name} sgs {softg.authenticity}')
-                if hg.sg_id == softg.id:
-                    component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
-                                               'desc': 'Component'},
-                                      'children': [],
-                                      'HTMLclass': 'blue',
-                                      'collapsable': True}
-                    sg_dict['children'].append(component_dict)
-            dictionary['nodeStructure']['children'].append(sg_dict)
-        for softg in conf_gen:
-            sg_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
-                       'children': [],
-                       'HTMLclass': 'yellow',
-                       'collapsable': True}
-            for hg in conf_hg_gen:
-                if hg.sg_id == softg.id:
-                    component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
-                                               'desc': 'Component'},
-                                      'children': [],
-                                      'HTMLclass': 'blue',
-                                      'collapsable': True}
-                    sg_dict['children'].append(component_dict)
-            dictionary['nodeStructure']['children'].append(sg_dict)
-
-        for softg in int_gen:
-            sg_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
-                       'children': [],
-                       'HTMLclass': 'yellow',
-                       'collapsable': True}
-            for hg in int_hg_gen:
-                if hg.sg_id == softg.id:
-                    component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
-                                               'desc': 'Component'},
-                                      'children': [],
-                                      'HTMLclass': 'blue',
-                                      'collapsable': True}
-                    sg_dict['children'].append(component_dict)
-            dictionary['nodeStructure']['children'].append(sg_dict)
-
-    elif sgs:                                                                                     #INSERTING ONLY SG's
-        for softg in auth_gen:
-            sg_dict = {'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
-                         'children': [],
-                         'HTMLclass': 'yellow',
-                         'collapsable': True}
-            dictionary['nodeStructure']['children'].append(sg_dict)
-        for softg in conf_gen:
-            sg_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
-                       'children': [],
-                       'HTMLclass': 'yellow',
-                       'collapsable': True}
-            dictionary['nodeStructure']['children'].append(sg_dict)
-
-        for softg in int_gen:
-            sg_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
-                       'children': [],
-                       'HTMLclass': 'yellow',
-                       'collapsable': True}
-            dictionary['nodeStructure']['children'].append(sg_dict)
-
-    else:
-        pass
+            hg_int_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.integrity]
+            sg_int_gen = [sg for sg in project.soft_goals if sg.integrity and sg.id in hg_int_sgid_gen]
+            for sg in sg_int_gen:
+                sg_dict = {'text': {'name': sg.integrity, 'desc': 'Soft Goal'},
+                           'children': [],
+                           'HTMLclass': 'yellow',
+                           'collapsable': True}
+                comp_dict['children'].append(sg_dict)
+        dictionary['nodeStructure']['children'].append(comp_dict)
+    # if sgs and stakeholders and hgs and bbms:
+    #     for softg in auth_gen:
+    #         curr_dict = { 'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
+    #                       'children': [],
+    #                       'HTMLclass': 'yellow',
+    #                       'collapsable': True}
+    #         for asset in project.goods:
+    #             if asset.description in softg.authenticity:
+    #                 for stakeholder in asset.stakeholders:
+    #                     children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
+    #                                      'children': [],
+    #                                      'HTMLclass': 'red'}
+    #                     curr_dict['children'].append(children_dict)
+    #         # auth_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.authenticity in hg.description)
+    #         for hardg in auth_hg_gen:
+    #             if hardg.priority:
+    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+    #                            'children': [],
+    #                            'HTMLclass': 'blue'}
+    #             else:
+    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+    #                            'children': [],
+    #                            'HTMLclass': 'grey'}
+    #             for bbm in hardg.bbmechanisms:
+    #                 bbm_dict = { 'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
+    #                              'children': [],
+    #                              'HTMLclass': 'dark',
+    #                              'collapsable': True}
+    #                 for ass in bbm.assumptions:
+    #                     ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
+    #                                 'children': [],
+    #                                 'HTMLclass': 'green'}
+    #                     bbm_dict['children'].append(ass_dict)
+    #
+    #                 hg_dict['children'].append(bbm_dict)
+    #
+    #             curr_dict['children'].append(hg_dict)
+    #
+    #         dictionary['nodeStructure']['children'].append(curr_dict)
+    #
+    #     for softg in conf_gen:
+    #         curr_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
+    #                      'children': [],
+    #                      'HTMLclass': 'yellow',
+    #                      'collapsable': True}
+    #         for asset in project.goods:
+    #             if asset.description in softg.confidentiality:
+    #                 for stakeholder in asset.stakeholders:
+    #                     children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
+    #                                      'children': [],
+    #                                      'HTMLclass': 'red'}
+    #                     curr_dict['children'].append(children_dict)
+    #         # conf_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.confidentiality in hg.description)
+    #         for hardg in conf_hg_gen:
+    #             if hardg.priority:
+    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+    #                            'children': [],
+    #                            'HTMLclass': 'blue'}
+    #             else:
+    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+    #                            'children': [],
+    #                            'HTMLclass': 'grey'}
+    #             for bbm in hardg.bbmechanisms:
+    #                 bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
+    #                             'children': [],
+    #                             'HTMLclass': 'dark',
+    #                             'collapsable': True}
+    #                 for ass in bbm.assumptions:
+    #                     ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
+    #                                 'children': [],
+    #                                 'HTMLclass': 'green'}
+    #                     bbm_dict['children'].append(ass_dict)
+    #
+    #                 hg_dict['children'].append(bbm_dict)
+    #
+    #             curr_dict['children'].append(hg_dict)
+    #
+    #         dictionary['nodeStructure']['children'].append(curr_dict)
+    #
+    #     for softg in int_gen:
+    #         curr_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
+    #                      'children': [],
+    #                      'HTMLclass': 'yellow',
+    #                      'collapsable': True}
+    #         for asset in project.goods:
+    #             if asset.description in softg.integrity:
+    #                 for stakeholder in asset.stakeholders:
+    #                     children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
+    #                                      'children': [],
+    #                                      'HTMLclass': 'red'}
+    #                     curr_dict['children'].append(children_dict)
+    #         # int_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.integrity in hg.description)
+    #         for hardg in int_hg_gen:
+    #             if hardg.priority:
+    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+    #                            'children': [],
+    #                            'HTMLclass': 'blue'}
+    #             else:
+    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
+    #                            'children': [],
+    #                            'HTMLclass': 'grey'}
+    #             for bbm in hardg.bbmechanisms:
+    #                 bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
+    #                             'children': [],
+    #                             'HTMLclass': 'dark',
+    #                             'collapsable': True}
+    #                 for ass in bbm.assumptions:
+    #                     ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
+    #                                 'children': [],
+    #                                 'HTMLclass': 'green'}
+    #                     bbm_dict['children'].append(ass_dict)
+    #
+    #                 hg_dict['children'].append(bbm_dict)
+    #
+    #             curr_dict['children'].append(hg_dict)
+    #
+    #         dictionary['nodeStructure']['children'].append(curr_dict)
+    # elif sgs and attackers:                                                                   #INSERTING SG's and COMP TODO: fix this part
+    #     for softg in auth_gen:
+    #         sg_dict = {'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
+    #                      'children': [],
+    #                      'HTMLclass': 'yellow',
+    #                      'collapsable': True}
+    #         for hg in auth_hg_gen:
+    #             print(f'{hg.id} {hg.authenticity} desc {hg.description} comp {SubService.query.filter_by(id=hg.component_id).first().name} sgs {softg.authenticity}')
+    #             if hg.sg_id == softg.id:
+    #                 component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
+    #                                            'desc': 'Component'},
+    #                                   'children': [],
+    #                                   'HTMLclass': 'blue',
+    #                                   'collapsable': True}
+    #                 sg_dict['children'].append(component_dict)
+    #         dictionary['nodeStructure']['children'].append(sg_dict)
+    #     for softg in conf_gen:
+    #         sg_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
+    #                    'children': [],
+    #                    'HTMLclass': 'yellow',
+    #                    'collapsable': True}
+    #         for hg in conf_hg_gen:
+    #             if hg.sg_id == softg.id:
+    #                 component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
+    #                                            'desc': 'Component'},
+    #                                   'children': [],
+    #                                   'HTMLclass': 'blue',
+    #                                   'collapsable': True}
+    #                 sg_dict['children'].append(component_dict)
+    #         dictionary['nodeStructure']['children'].append(sg_dict)
+    #
+    #     for softg in int_gen:
+    #         sg_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
+    #                    'children': [],
+    #                    'HTMLclass': 'yellow',
+    #                    'collapsable': True}
+    #         for hg in int_hg_gen:
+    #             if hg.sg_id == softg.id:
+    #                 component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
+    #                                            'desc': 'Component'},
+    #                                   'children': [],
+    #                                   'HTMLclass': 'blue',
+    #                                   'collapsable': True}
+    #                 sg_dict['children'].append(component_dict)
+    #         dictionary['nodeStructure']['children'].append(sg_dict)
+    #
+    # elif sgs:                                                                                     #INSERTING ONLY SG's
+    #     for softg in auth_gen:
+    #         sg_dict = {'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
+    #                      'children': [],
+    #                      'HTMLclass': 'yellow',
+    #                      'collapsable': True}
+    #         dictionary['nodeStructure']['children'].append(sg_dict)
+    #     for softg in conf_gen:
+    #         sg_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
+    #                    'children': [],
+    #                    'HTMLclass': 'yellow',
+    #                    'collapsable': True}
+    #         dictionary['nodeStructure']['children'].append(sg_dict)
+    #
+    #     for softg in int_gen:
+    #         sg_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
+    #                    'children': [],
+    #                    'HTMLclass': 'yellow',
+    #                    'collapsable': True}
+    #         dictionary['nodeStructure']['children'].append(sg_dict)
+    #
+    # else:
+    #     pass
     return jsonify(dictionary)
     # return jsonify({'results': sample(range(1,10), 5)})
 
@@ -2237,6 +2269,7 @@ def bbmech(project):
                         hg.remove_bb(valu)
             project.final_assumptions = False
             db.session.commit()
+
             flash('Black Box Mechanisms updated', 'succ')
             return redirect(url_for('assumptions', project=project.name))
         return render_template('bbmech.html',

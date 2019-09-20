@@ -602,6 +602,9 @@ def import_project(dele=False):
             json_data['Hard Goals'][hard_goal]['component_id'] = component_id.id
             json_data['Hard Goals'][hard_goal]['freq_id'] = freq_id.id
             json_data['Hard Goals'][hard_goal]['sg_id'] = sg_id.id
+            if 'unique_id' not in json_data['Hard Goals'][hard_goal].keys():
+                json_data['Hard Goals'][hard_goal]['unique_id'] = hg_id_gen(curr_project, freq_id, component_id, sg_id)
+                print('generating uids')
             # json_data['Hard Goals'][hard_goal]['unique_id'] = hg_id_gen(curr_project, freq_id, component_id, sg_id)
             hg = HardGoal(description=hard_goal, project_id=curr_project.id, **json_data['Hard Goals'][hard_goal])
             db.session.add(hg)
@@ -693,6 +696,8 @@ def check_uid():
 
         conflicting_ids = []
         for hg, hg_dict in json_data['Hard Goals'].items():
+            if 'unique_id' not in hg_dict.keys():
+                continue
             existing_hg = HardGoal.query.filter_by(unique_id=hg_dict['unique_id']).first()
             if existing_hg:
                 conflicting_ids.append(existing_hg)

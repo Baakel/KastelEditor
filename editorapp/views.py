@@ -604,7 +604,6 @@ def import_project(dele=False):
             json_data['Hard Goals'][hard_goal]['sg_id'] = sg_id.id
             if 'unique_id' not in json_data['Hard Goals'][hard_goal].keys():
                 json_data['Hard Goals'][hard_goal]['unique_id'] = hg_id_gen(curr_project, freq_id, component_id, sg_id)
-                print('generating uids')
             # json_data['Hard Goals'][hard_goal]['unique_id'] = hg_id_gen(curr_project, freq_id, component_id, sg_id)
             hg = HardGoal(description=hard_goal, project_id=curr_project.id, **json_data['Hard Goals'][hard_goal])
             db.session.add(hg)
@@ -819,7 +818,11 @@ def testdata():
             'connectors': {
                 'type': 'curve'
             },
-            'drawLineThrough': True
+            'drawLineThrough': True,
+            'siblingSeparation': 100,
+            'subTeeSeparation': 60,
+            'levelSeparation': 15,
+            'nodeAlign': 'BOTTOM'
         },
         'nodeStructure': {
             'text': {'name': project.name, 'desc': 'Project'},
@@ -829,19 +832,66 @@ def testdata():
         }
 
     }
-    auth_gen = [sg for sg in project.soft_goals if sg.authenticity]
-    conf_gen = [sg for sg in project.soft_goals if sg.confidentiality]
-    int_gen = [sg for sg in project.soft_goals if sg.integrity]
-    auth_hg_gen = [hg for hg in project.hard_goals if hg.description and hg.authenticity]
-    conf_hg_gen = [hg for hg in project.hard_goals if hg.description and hg.confidentiality]
-    int_hg_gen = [hg for hg in project.hard_goals if hg.description and hg.integrity]
+
     component_gen = [comp for comp in project.sub_services]
     for comp in component_gen:
         comp_dict = {'text': {'name': comp.name, 'desc': 'Component'},
                      'children': [],
                      'HTMLclass': 'blue',
                      'collapsable': True}
-        if sgs:
+
+        if sgs and stakeholders:
+            hg_auth_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.authenticity]
+            sg_auth_gen = [sg for sg in project.soft_goals if sg.authenticity and sg.id in hg_auth_sgid_gen]
+            for sg in sg_auth_gen:
+                sg_dict = {'text': {'name': sg.authenticity, 'desc': 'Soft Goal'},
+                           'children': [],
+                           'HTMLclass': 'yellow',
+                           'collapsable': True}
+                for asset in project.goods:
+                    if asset.description in sg.authenticity:
+                        for stakeholder in asset.stakeholders:
+                            stk_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to: '},
+                                        'children': [],
+                                        'HTMLclass': 'magenta',
+                                        'collapsable': False}
+                            sg_dict['children'].append(stk_dict)
+                comp_dict['children'].append(sg_dict)
+
+            hg_conf_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.confidentiality]
+            sg_conf_gen = [sg for sg in project.soft_goals if sg.confidentiality and sg.id in hg_conf_sgid_gen]
+            for sg in sg_conf_gen:
+                sg_dict = {'text': {'name': sg.confidentiality, 'desc': 'Soft Goal'},
+                           'children': [],
+                           'HTMLclass': 'yellow',
+                           'collapsable': True}
+                for asset in project.goods:
+                    if asset.description in sg.confidentiality:
+                        for stakeholder in asset.stakeholders:
+                            stk_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to: '},
+                                        'children': [],
+                                        'HTMLclass': 'magenta',
+                                        'collapsable': False}
+                            sg_dict['children'].append(stk_dict)
+                comp_dict['children'].append(sg_dict)
+
+            hg_int_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.integrity]
+            sg_int_gen = [sg for sg in project.soft_goals if sg.integrity and sg.id in hg_int_sgid_gen]
+            for sg in sg_int_gen:
+                sg_dict = {'text': {'name': sg.integrity, 'desc': 'Soft Goal'},
+                           'children': [],
+                           'HTMLclass': 'yellow',
+                           'collapsable': True}
+                for asset in project.goods:
+                    if asset.description in sg.integrity:
+                        for stakeholder in asset.stakeholders:
+                            stk_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to: '},
+                                        'children': [],
+                                        'HTMLclass': 'magenta',
+                                        'collapsable': False}
+                            sg_dict['children'].append(stk_dict)
+                comp_dict['children'].append(sg_dict)
+        elif sgs:
             hg_auth_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.authenticity]
             sg_auth_gen = [sg for sg in project.soft_goals if sg.authenticity and sg.id in hg_auth_sgid_gen]
             for sg in sg_auth_gen:
@@ -868,7 +918,60 @@ def testdata():
                            'HTMLclass': 'yellow',
                            'collapsable': True}
                 comp_dict['children'].append(sg_dict)
+
+        if attackers:
+            for attacker in project.attackers:
+                sgs_auth_list = [sg.authenticity for sg in attacker.soft_goals if sg.authenticity is not None]
+                sgs_conf_list = [sg.confidentiality for sg in attacker.soft_goals if sg.confidentiality is not None]
+                sgs_int_list = [sg.integrity for sg in attacker.soft_goals if sg.integrity is not None]
+                for entry in comp_dict['children']:
+                    if entry['text']['name'] in sgs_auth_list or entry['text']['name'] in sgs_conf_list or entry['text']['name'] in sgs_int_list:
+                        atk_dict = {'text': {'name': attacker.name, 'desc': 'At Risk From: '},
+                                    'children': [],
+                                    'HTMLclass': 'red',
+                                    'collapsable': False}
+                        entry['children'].append(atk_dict)
+
+        if hgs:
+            for hg in project.hard_goals:
+                for entry in comp_dict['children']:
+                    sg_used = SoftGoal.query.filter_by(id=hg.sg_id).first()
+                    if entry['text']['name'] == sg_used.authenticity or entry['text']['name'] == sg_used.confidentiality or entry['text']['name'] == sg_used.integrity:
+                        hg_dict = {'text': {'name': hg.description, 'desc': 'Hard Goal'},
+                                   'children': [],
+                                   'HTMLclass': 'green',
+                                   'collapsable': True,
+                                   'connectors': {'type': 'curve'}}
+                        entry['children'].append(hg_dict)
+
+        if bbms:
+            for hg in project.hard_goals:
+                for softg_dict in comp_dict['children']:
+                    for entry in softg_dict['children']:
+                        if hg.description == entry['text']['name']:
+                            for bbm in hg.bbmechanisms:
+                                bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
+                                            'children': [],
+                                            'HTMLclass': 'dark'}
+                                entry['children'].append(bbm_dict)
+
+
+        if actors:
+            for actor in project.actors:
+                for softg_dict in comp_dict['children']:
+                    for entry in softg_dict['children']:
+                        for hg in project.hard_goals:
+                            if hg.description == entry['text']['name']:
+                                roles_id = [detail.role_id for detail in actor.details]
+                                roles = [Actors.query.filter_by(id=role).first().name for role in roles_id]
+                                actor_dict = {'text': {'name': actor.name, 'desc': f'Attacker Access Level: {roles}'},
+                                              'children': [],
+                                              'HTMLclass': 'grey',
+                                              'collapsable': False,
+                                              'connectors': {'type': 'straight'}}
+                                entry['children'].append(actor_dict)
         dictionary['nodeStructure']['children'].append(comp_dict)
+
     # if sgs and stakeholders and hgs and bbms:
     #     for softg in auth_gen:
     #         curr_dict = { 'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},

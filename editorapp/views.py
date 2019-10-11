@@ -5,7 +5,7 @@ from flask_login import login_required
 from wtforms import SelectField
 from wtforms.validators import DataRequired
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, \
-    HardGoalsForm, BbmForm, FlaskForm, ActorsForm, AttackersForm
+    HardGoalsForm, BbmForm, FlaskForm, ActorsForm, AttackersForm, ExtraHgForm
 from .models import Stakeholder, Users, Projects, Good, FunctionalRequirement,\
     HardGoal, Role, BbMechanisms,  Assumptions, SubService, freq_serv, hard_mechanism, SoftGoal, Attacker, Actors,\
     Aktoren, ActorDetails
@@ -2456,10 +2456,26 @@ def ebbm(project, hg):
     access = check_permission(project)
     project = Projects.query.filter_by(name=project).first()
     if access:
+        form = ExtraHgForm()
         hg = HardGoal.query.filter_by(id=hg).first()
+        fr = FunctionalRequirement.query.filter_by(id=hg.freq_id).first()
+        component = SubService.query.filter_by(id=hg.component_id).first()
+        if hg.authenticity:
+            goal = 'auth'
+        elif hg.confidentiality:
+            goal = 'conf'
+        else:
+            goal = 'int'
+        mecha = [bbm for bbm in hg.bbmechanisms][0]
         return render_template("ebbm.html",
                                title=hg.description,
-                               project=project.name)
+                               project=project.name,
+                               hg=hg,
+                               mecha=mecha,
+                               form=form,
+                               fr=fr,
+                               component=component,
+                               goal=goal)
     else:
         flash('You don\'t have permission to access this page', 'error')
         return redirect(url_for('index'))

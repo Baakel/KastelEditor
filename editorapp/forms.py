@@ -78,3 +78,7 @@ class ActorsForm(FlaskForm):
 class AttackersForm(FlaskForm):
     attacker = StringField('Attacker name:', validators=[DataRequired()])
     softgoals_list = SelectField()
+
+
+class ExtraHgForm(FlaskForm):
+    extrahg = StringField('Extra service required: ', validators=[])

@@ -32,7 +32,7 @@ body { background: #fff; }
 /*}*/
 
 .grey {
-    background-color: #dddfe2;
+    background-color: #bdecc7;
   color: #000;
   font-weight: normal;
 }
@@ -50,14 +50,14 @@ body { background: #fff; }
 }
 
 .red {
-    background-color: #db444c;
+    background-color: #d35654;
     color: #000;
     font-weight: normal;
 }
 
 .blue {
-    background-color: #c1e2fc;
-  color: #000;
+    background-color: #19444a;
+  color: #ffffff;
   font-weight: normal;
 }
 
@@ -68,6 +68,12 @@ body { background: #fff; }
 
 .magenta {
   background-color: #a944db;
+  color: #000;
+  font-weight: normal;
+}
+
+.orange {
+  background-color: #dd8341;
   color: #000;
   font-weight: normal;
 }

@@ -71,8 +71,6 @@
         case 2:
           switches[i].addEventListener("change", function() {
             if (this.checked) {
-              sg.checked = true;
-              hg.checked = true;
               window.ochart.destroy();
               let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
                 window.ochart = new Treant(object)

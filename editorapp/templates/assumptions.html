@@ -43,8 +43,10 @@
                                 {% endfor %}
                                 {% if bbm.extra_hg and not hgoal.extra_hg_used %}
                                   <tr class="table-primary">
-                                    <td><b>A new Hardgoal with "{{ bbm.extra_hg }}" needs to be created</b>
-                                    <button type="submit" class="btn btn-raised btn-primary btn-sm" name="ehg" value="{{ bbm.id }}-{{ hgoal.id }}">Add</button></td>
+                                    <td><b>Additional steps are required for this Hard Goal</b>
+{#                                    <button type="submit" class="btn btn-raised btn-primary btn-sm" name="ehg" value="{{ bbm.id }}-{{ hgoal.id }}">Add</button></td>#}
+                                      <a class="btn btn-raised btn-primary" href="{{ url_for("ebbm", project=project, hg=hgoal.id) }}">Edit</a>
+                                    </td>
                                   </tr>
                                 {% endif %}
                                 </tbody>
@@ -78,8 +80,10 @@
                                     {% endfor %}
                                     {% if bbm.extra_hg and not hgoal.extra_hg_used %}
                                       <tr class="table-secondary">
-                                        <td><b>A new Hardgoal with "{{ bbm.extra_hg }}" needs to be created</b>
-                                        <button type="submit" class="btn btn-raised btn-primary btn-sm" name="ehg" value="{{ bbm.id }}-{{ hgoal.id }}">Add</button></td>
+                                        <td><b>Additional steps are required for this Hard Goal</b>
+{#                                        <button type="submit" class="btn btn-raised btn-primary btn-sm" name="ehg" value="{{ bbm.id }}-{{ hgoal.id }}">Add</button></td>#}
+                                          <a class="btn btn-raised btn-primary" href="{{ url_for("ebbm", project=project, hg=hgoal.id) }}">Edit</a>
+                                        </td>
                                       </tr>
                                     {% endif %}
                                     </tbody>

@@ -958,18 +958,15 @@ def testdata():
 
         if actors:
             for actor in project.actors:
-                for softg_dict in comp_dict['children']:
-                    for entry in softg_dict['children']:
-                        for hg in project.hard_goals:
-                            if hg.description == entry['text']['name']:
-                                roles_id = [detail.role_id for detail in actor.details]
-                                roles = [Actors.query.filter_by(id=role).first().name for role in roles_id]
-                                actor_dict = {'text': {'name': actor.name, 'desc': f'Attacker Access Level: {roles}'},
-                                              'children': [],
-                                              'HTMLclass': 'grey',
-                                              'collapsable': False,
-                                              'connectors': {'type': 'straight'}}
-                                entry['children'].append(actor_dict)
+                roles_id = [detail.role_id for detail in actor.details if SubService.query.filter_by(id=detail.service_id).first().name == comp_dict['text']['name']]
+                roles = [Actors.query.filter_by(id=role).first().name for role in roles_id]
+                if roles:
+                    actor_dict = {'text': {'name': actor.name, 'desc': f'Attacker Access Level: {roles}'},
+                                  'children': [],
+                                  'HTMLclass': 'orange',
+                                  'collapsable': False,
+                                  'connectors': {'type': 'straight'}}
+                    comp_dict['children'].append(actor_dict)
         dictionary['nodeStructure']['children'].append(comp_dict)
 
     # if sgs and stakeholders and hgs and bbms:
@@ -2186,7 +2183,7 @@ def hard_goals(project):
                         sg = SoftGoal.query.filter_by(integrity=item_parts[2], project_id=project.id).first()
                     else:
                         sg = None
-                    final_string = '{} ensures the {} during the {}'.format(item_parts[0], item_parts[2], item_parts[1])
+                    final_string = '{} ensures the {} during the process of {}'.format(item_parts[0], item_parts[2], item_parts[1])
                     nhg = HardGoal.query.filter_by(description=final_string, project_id=project.id).first()
                     if nhg is None:
                         new_hg = HardGoal(project_id=project.id, description=final_string, component_id=item_parts[3], freq_id=item_parts[4], sg_id=item_parts[5], unique_id=hg_id_gen(project, fr, comp, sg))
@@ -2418,7 +2415,7 @@ def assumptions(project):
             cb_values = request.form.get('ehg').split('-')
             hg = HardGoal.query.filter_by(id=cb_values[1]).first()
             bbm = BbMechanisms.query.filter_by(id=cb_values[0]).first()
-            new_hg_start = hg.description.find('during the ')
+            new_hg_start = hg.description.find('during the process of ')
             new_hg_service = hg.description.find('ensures the ')
             new_hg = hg.description[:new_hg_service] + 'ensures the ' + bbm.extra_hg + ' ' + hg.description[new_hg_start:]
             if 'authenticity' in  bbm.extra_hg.lower():
@@ -2445,11 +2442,26 @@ def assumptions(project):
 
         return render_template('assumptions.html',
                                title=project.name,
-                               project=project,
+                               project=project.name,
                                current_hardgoals=current_hardgoals,
                                empty_hgoals=empty_hgoals)
     else:
         flash('You don\'t have permission to access this project', 'error')
+        return redirect(url_for('index'))
+
+
+@app.route('/bbmech/<project>/<hg>', methods=['GET', 'POST'])
+@login_required
+def ebbm(project, hg):
+    access = check_permission(project)
+    project = Projects.query.filter_by(name=project).first()
+    if access:
+        hg = HardGoal.query.filter_by(id=hg).first()
+        return render_template("ebbm.html",
+                               title=hg.description,
+                               project=project.name)
+    else:
+        flash('You don\'t have permission to access this page', 'error')
         return redirect(url_for('index'))
 
 

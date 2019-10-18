@@ -23,23 +23,37 @@
       <div class="card-body">
         <h5 class="card-title">Hard Goal: {{ hg.unique_id }}</h5>
         <h6 class="card-subtitle mb-2 text-muted">{{ hg.description }}</h6>
-        <p class="card-text">To use the BBM <i class="bg-secondary">{{ mecha.name }}</i> with HG <i class="bg-info">{{ hg.unique_id }}</i> a new Hard Goal
+        <p class="card-text">To use the BBM <i class="bg-secondary">{{ mecha.name }}</i> with HG <i class="bg-info">{{ hg.description }}</i> a new Hard Goal
           with Asset <i class="bg-warning">{{ mecha.extra_hg }}</i> needs to be created</p>
         <p>
           &nbsp;
         </p>
-        {% if hg.authenticity %}
-          <p>Preview of the new HG: <span id="{{ goal }}-sentence">{{ component.name }} ensures the Authenticity of {{ mecha.extra_hg }} during the process of <span id="freq">{{ fr.description }}</span></span></p>
-        {% elif hg.confidentiality %}
-          <p>Preview of the new HG: <span id="{{ goal }}-sentence">{{ component.name }} ensures the Confidentiality of {{ mecha.extra_hg }} during the process of <span id="freq">{{ fr.description }}</span></span></p>
-        {% elif hg.integrity %}
-          <p>Preview of the new HG: <span id="{{ goal }}-sentence">{{ component.name }} ensures the Integrity of {{ mecha.extra_hg }} during the process of <span id="freq">{{ fr.description }}</span></span></p>
-        {% endif %}
+        <h6>New HG's to be Created</h6>
+{#        <form class="form-inline">#}
+        <ul>
+          {% for asset in mecha.extra_assets %}
+            {% for sg in mecha.extra_softgoals %}
+              {% for fr in mecha.extra_func_req %}
+                <li id="sentence">
+                  <div class="form-group"><label for="comp-{{ component.id }}-{{ asset.id }}-{{ sg.id }}-{{ fr.id }}" class="bmd-label-floating">Optional Component Change:</label><input type="text" class="form-control" id="comp-{{ component.id }}-{{ asset.id }}-{{ sg.id }}-{{ fr.id }}" name="comp-{{ component.id }}-{{ asset.id }}-{{ sg.id }}-{{ fr.id }}" value="{{ component.name }}"> </div><span class="form-group bmd-form-group">ensures the {{ sg.name }} during the process of {{ fr.name }}</span>
+                </li>
+              {% endfor %}
+            {% endfor %}
+          {% endfor %}
+        </ul>
+{#        </form>#}
+{#        {% if hg.authenticity %}#}
+{#          <p>Preview of the new HG: <b><span id="{{ goal }}-sentence"><span class="bg-info" id="comp">{{ component.name }}</span> ensures the Authenticity of <span class="bg-warning" id="asset">{{ mecha.extra_hg }}</span> during the process of <span class="bg-primary" id="freq">{{ fr.description }}</span></span></b></p>#}
+{#        {% elif hg.confidentiality %}#}
+{#          <p>Preview of the new HG: <b><span id="{{ goal }}-sentence">{{ component.name }} ensures the {{ mecha.extra_hg }} during the process of <span id="freq">{{ fr.description }}</span></span></b></p>#}
+{#        {% elif hg.integrity %}#}
+{#          <p>Preview of the new HG: <b><span id="{{ goal }}-sentence">{{ component.name }} ensures the Integrity of {{ mecha.extra_hg }} during the process of <span id="freq">{{ fr.description }}</span></span></b></p>#}
+{#        {% endif %}#}
       </div>
     </div>
       <table class="table">
           <tr>
-              <td colspan="2"><div class="form-group mb-4">{{ form.extrahg.label(class_="form-control-label") }}{{ form.extrahg(class_="form-control", placeholder="Add a service", onchange="ChangeTxt()") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
+            <td colspan="2"><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
           </tr>
       </table>
   </div>
@@ -48,7 +62,8 @@
 
 {% block scripts %}
   <script type="text/javascript">
-    console.log(document.getElementById("{{ goal }}-sentence"));
+    console.log(document.getElementById('sentence').innerText);
+    {#console.log(document.getElementById("{{ goal }}-sentence"));#}
     function ChangeTxt() {
       if (document.getElementById('extrahg').value !== '') {
         document.getElementById('freq').innerHTML = document.getElementById('extrahg').value
@@ -56,5 +71,6 @@
         document.getElementById('freq').innerHTML = "{{ fr.description }}"
       }
     }
+
   </script>
 {% endblock %}

@@ -311,7 +311,13 @@ class BbMechanisms(db.Model):
     authenticity = db.Column(db.Boolean, default=False)
     confidentiality = db.Column(db.Boolean, default=False)
     integrity = db.Column(db.Boolean, default=False)
-    extra_hg = db.Column(db.String(280))
+    extra_assets = db.relationship('ExtraAsset', backref='bbm')
+    extra_softgoals = db.relationship('ExtraSoftGoal', backref='bbm')
+    extra_func_req = db.relationship('ExtraFreqReq', backref='bbm')
+    # extra_hg = db.Column(db.String(280))
+    # extra_asset = db.Column(db.String(280))
+    # extra_softgoal = db.Column(db.String(280))
+    # extra_functional_requirement = db.Column(db.String(280))
     against_actor = db.relationship('Actors',
                                     secondary=bb_actors,
                                     backref=db.backref('bb_mechanisms'))
@@ -355,6 +361,35 @@ class BbMechanisms(db.Model):
         if self.role_alrdy_used(role):
             self.against_actor.remove(role)
             return self
+
+
+class ExtraAsset(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    bbm_id = db.Column(db.Integer, db.ForeignKey('bb_mechanisms.id'))
+
+    def __repr__(self):
+        return self.name
+
+
+class ExtraSoftGoal(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    bbm_id = db.Column(db.Integer, db.ForeignKey('bb_mechanisms.id'))
+
+    def __repr__(self):
+        return self.name
+
+
+class ExtraFreqReq(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    bbm_id = db.Column(db.Integer, db.ForeignKey('bb_mechanisms.id'))
+
+    def __repr__(self):
+        return self.name
+
+
 
 class Attacker(db.Model):
     id = db.Column(db.Integer, primary_key=True)

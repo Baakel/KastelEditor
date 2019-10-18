@@ -8,7 +8,7 @@ from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequireme
     HardGoalsForm, BbmForm, FlaskForm, ActorsForm, AttackersForm, ExtraHgForm
 from .models import Stakeholder, Users, Projects, Good, FunctionalRequirement,\
     HardGoal, Role, BbMechanisms,  Assumptions, SubService, freq_serv, hard_mechanism, SoftGoal, Attacker, Actors,\
-    Aktoren, ActorDetails
+    Aktoren, ActorDetails, ExtraAsset, ExtraFreqReq, ExtraSoftGoal
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 # from flask_security.utils import hash_password, verify_password, get_hmac
 import flask_admin
@@ -78,7 +78,7 @@ def create_db_data():
             kw = {'name': name, **vals_dict}
             bbmech = BbMechanisms(**kw)
             if bbmech.name == 'Asymmetric or Hybrid Encryption':
-                bbmech.extra_hg = 'Authenticity of the Encrypted Material'
+                bbmech.extra_asset = 'Authenticity of the Encrypted Material'
             db.session.add(bbmech)
             db.session.commit()
 
@@ -400,8 +400,10 @@ def export(project, backup=False):
         for bb in BbMechanisms.query.all():
             black_box_mechanisms_dict[bb.name] = {}
             black_box_mechanisms_dict[bb.name]['base'] = {'authenticity': bb.authenticity, 'integrity': bb.integrity,
-                                                  'confidentiality': bb.confidentiality,
-                                                  'extra_hg': bb.extra_hg}
+                                                          'confidentiality': bb.confidentiality,
+                                                          'extra_asset': bb.extra_asset,
+                                                          'extra_softgoal': bb.extra_softgoal,
+                                                          'extra_functional_requirement': bb.extra_functional_requirement}
             black_box_mechanisms_dict[bb.name]['role'] = [act.name for act in bb.against_actor]
         project_dict['Black Box Mechanisms'] = black_box_mechanisms_dict
         actor_roles = Actors.query.all()
@@ -642,7 +644,9 @@ def import_project(dele=False):
                     existing_bb.authenticity = json_data['Black Box Mechanisms'][bbm]['base']['authenticity']
                     existing_bb.confidentiality = json_data['Black Box Mechanisms'][bbm]['base']['confidentiality']
                     existing_bb.integrity = json_data['Black Box Mechanisms'][bbm]['base']['integrity']
-                    existing_bb.extra_hg = json_data['Black Box Mechanisms'][bbm]['base']['extra_hg']
+                    existing_bb.extra_asset = json_data['Black Box Mechanisms'][bbm]['base']['extra_asset']
+                    existing_bb.extra_softgoal = json_data['Black Box Mechanisms'][bbm]['base']['extra_softgoal']
+                    existing_bb.extra_functional_requirement = json_data['Black Box Mechanisms'][bbm]['base']['extra_functional_requirement']
                     current_role = [role for role in existing_bb.against_actor]
                     if current_role:
                             for role in current_role:
@@ -2338,8 +2342,8 @@ def bbmech(project):
                             if hg.extra_hg_used and not hg.extra_hg:
                                 match = False
                                 ehg = HardGoal.query.filter_by(id=hg.original_hg).first()
-                                if bbm.extra_hg:
-                                    if bbm.extra_hg in ehg.description:
+                                if bbm.extra_asset:
+                                    if bbm.extra_asset in ehg.description:
                                         match = True
                                 if not match:
                                     if ehg:
@@ -2356,8 +2360,8 @@ def bbmech(project):
                             if hg.extra_hg_used and not hg.extra_hg:
                                 match = False
                                 ehg = HardGoal.query.filter_by(id=hg.original_hg).first()
-                                if bbm.extra_hg:
-                                    if bbm.extra_hg in ehg.description:
+                                if bbm.extra_asset:
+                                    if bbm.extra_asset in ehg.description:
                                         match = True
                                 if not match:
                                     if ehg:
@@ -2417,20 +2421,20 @@ def assumptions(project):
             bbm = BbMechanisms.query.filter_by(id=cb_values[0]).first()
             new_hg_start = hg.description.find('during the process of ')
             new_hg_service = hg.description.find('ensures the ')
-            new_hg = hg.description[:new_hg_service] + 'ensures the ' + bbm.extra_hg + ' ' + hg.description[new_hg_start:]
-            if 'authenticity' in  bbm.extra_hg.lower():
+            new_hg = hg.description[:new_hg_service] + 'ensures the ' + bbm.extra_asset + ' ' + hg.description[new_hg_start:]
+            if 'authenticity' in  bbm.extra_asset.lower():
                 n_hg = HardGoal(authenticity='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id, component_id=hg.component_id)
                 db.session.add(n_hg)
                 db.session.commit()
                 hg.extra_hg_used = True
                 hg.original_hg = n_hg.id
-            elif 'confidentiality' in bbm.extra_hg.lower():
+            elif 'confidentiality' in bbm.extra_asset.lower():
                 n_hg = HardGoal(confidentiality='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id, component_id=hg.component_id)
                 db.session.add(n_hg)
                 db.session.commit()
                 hg.extra_hg_used = True
                 hg.original_hg = n_hg.id
-            elif 'integrity' in bbm.extra_hg.lower():
+            elif 'integrity' in bbm.extra_asset.lower():
                 n_hg = HardGoal(integrity='yes', description=new_hg, project_id=hg.project_id, priority=hg.priority, extra_hg_used=True, extra_hg=True, original_hg=hg.id, component_id=hg.component_id)
                 db.session.add(n_hg)
                 db.session.commit()
@@ -2458,7 +2462,7 @@ def ebbm(project, hg):
     if access:
         form = ExtraHgForm()
         hg = HardGoal.query.filter_by(id=hg).first()
-        fr = FunctionalRequirement.query.filter_by(id=hg.freq_id).first()
+        # fr = FunctionalRequirement.query.filter_by(id=hg.freq_id).first()
         component = SubService.query.filter_by(id=hg.component_id).first()
         if hg.authenticity:
             goal = 'auth'
@@ -2467,15 +2471,30 @@ def ebbm(project, hg):
         else:
             goal = 'int'
         mecha = [bbm for bbm in hg.bbmechanisms][0]
+        mecha_list = [len(mecha.extra_assets), len(mecha.extra_softgoals), len(mecha.extra_func_req)]
+        longer = max(range(len(mecha_list)), key=mecha_list.__getitem__)
+        # print(longer)
+        if request.method == 'POST':
+            for field, value in request.form.items():
+                if field == 'csrf_token':
+                    continue
+                else:
+                    _, component_id, asset_id, sg_id, fr_id = field.split('-')
+                    extra_component = SubService.query.filter_by(id=component_id).first()
+                    extra_asset = ExtraAsset.query.filter_by(id=asset_id).first()
+                    extra_sg = ExtraSoftGoal.query.filter_by(id=sg_id).first()
+                    extra_fr = ExtraFreqReq.query.filter_by(id=fr_id).first()
+                    print(component_id, asset_id, sg_id, fr_id)
         return render_template("ebbm.html",
                                title=hg.description,
                                project=project.name,
                                hg=hg,
                                mecha=mecha,
                                form=form,
-                               fr=fr,
+                               # fr=fr,
                                component=component,
-                               goal=goal)
+                               goal=goal,
+                               longer=longer)
     else:
         flash('You don\'t have permission to access this page', 'error')
         return redirect(url_for('index'))
@@ -2517,8 +2536,9 @@ class MyModelViewBbMech(sqla.ModelView):
     edit_modal = True
     # column_list = ['name', 'assumptionz']
     # column_display_all_relations = True
-    column_list = ['name','authenticity','confidentiality','integrity','extra_hg','assumptions', 'against_actor']
-    # inline_models = (Assumptions, )
+    column_list = ['name','authenticity','confidentiality','integrity', 'extra_assets', 'extra_softgoals', 'extra_func_req','assumptions', 'against_actor']
+    # column_editable_list = ['extra_assets']
+    inline_models = (ExtraAsset, ExtraSoftGoal, ExtraFreqReq)
 
     # can_view_details = True
 

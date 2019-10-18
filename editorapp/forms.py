@@ -81,4 +81,4 @@ class AttackersForm(FlaskForm):
 
 
 class ExtraHgForm(FlaskForm):
-    extrahg = StringField('Extra service required: ', validators=[])
+    extrahg = StringField('New service (Optional): ', validators=[])

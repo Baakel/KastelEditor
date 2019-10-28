@@ -23,23 +23,48 @@
       <div class="card-body">
         <h5 class="card-title">Hard Goal: {{ hg.unique_id }}</h5>
         <h6 class="card-subtitle mb-2 text-muted">{{ hg.description }}</h6>
-        <p class="card-text">To use the BBM <i class="bg-secondary">{{ mecha.name }}</i> with HG <i class="bg-info">{{ hg.description }}</i> a new Hard Goal
-          with Asset <i class="bg-warning">{{ mecha.extra_hg }}</i> needs to be created</p>
+        <p class="card-text">To use the BBM <b>{{ mecha.name }}</b> with HG <b>{{ hg.description }}</b> new Hard Goals need to be created</p>
         <p>
           &nbsp;
         </p>
         <h6>New HG's to be Created</h6>
 {#        <form class="form-inline">#}
         <ul>
-          {% for asset in mecha.extra_assets %}
-            {% for sg in mecha.extra_softgoals %}
+{#          {% for asset in mecha.extra_assets %}#}
+{#            {% if asset|lower() in e_sg|map('lower')|join(', ') %}#}
+          {% if e_sg %}
+          {% for sg in mecha.extra_softgoals %}
+            {% if e_fr %}
+            {% for fr in mecha.extra_func_req %}
+              <li id="sentence">
+                <div class="form-group"><label for="comp-{{ component.id }}-{{ sg.id }}-{{ fr.id }}" class="bmd-label-floating">Optional Component Change:</label><input type="text" class="form-control" id="comp-{{ component.id }}-{{ sg.id }}-{{ fr.id }}" name="comp-{{ component.id }}-{{ sg.id }}-{{ fr.id }}" value="{{ component.name }}"> </div><span class="form-group bmd-form-group">ensures the {{ sg.name }} during the process of {{ fr.name }}</span>
+              </li>
+            {% endfor %}
+            {% else %}
+              <li>
+                <div class="form-group"><label for="comp-{{ component.id }}-{{ sg.id }}-{{ fr.id }}" class="bmd-label-floating">Optional Component Change:</label><input type="text" class="form-control" id="comp-{{ component.id }}-{{ sg.id }}-{{ fr.id }}" name="comp-{{ component.id }}-{{ sg.id }}-{{ fr.id }}" value="{{ component.name }}"> </div><span class="form-group bmd-form-group">ensures the {{ sg.name }} during the process of {{ fr.description }}</span>
+              </li>
+            {% endif %}
+          {% endfor %}
+          {% else %}
+            {% for asset in mecha.extra_assets %}
+              {% if e_fr %}
               {% for fr in mecha.extra_func_req %}
                 <li id="sentence">
-                  <div class="form-group"><label for="comp-{{ component.id }}-{{ asset.id }}-{{ sg.id }}-{{ fr.id }}" class="bmd-label-floating">Optional Component Change:</label><input type="text" class="form-control" id="comp-{{ component.id }}-{{ asset.id }}-{{ sg.id }}-{{ fr.id }}" name="comp-{{ component.id }}-{{ asset.id }}-{{ sg.id }}-{{ fr.id }}" value="{{ component.name }}"> </div><span class="form-group bmd-form-group">ensures the {{ sg.name }} during the process of {{ fr.name }}</span>
+                  <div class="form-group"><label for="comp-{{ component.id }}-{{ asset.id }}-{{ fr.id }}" class="bmd-label-floating">Optional Component Change:</label><input type="text" class="form-control" id="comp-{{ component.id }}-{{ asset.id }}-{{ fr.id }}" name="comp-{{ component.id }}-{{ asset.id }}-{{ fr.id }}" value="{{ component.name }}"> </div><span class="form-group bmd-form-group">ensures the {{ goal }} of {{ asset.name }} during the process of {{ fr.name }}</span>
                 </li>
               {% endfor %}
+              {% else %}
+                <li>
+                <div class="form-group"><label for="comp-{{ component.id }}-{{ asset.id }}-{{ fr.id }}" class="bmd-label-floating">Optional Component Change:</label><input type="text" class="form-control" id="comp-{{ component.id }}-{{ asset.id }}-{{ fr.id }}" name="comp-{{ component.id }}-{{ asset.id }}-{{ fr.id }}" value="{{ component.name }}"> </div><span class="form-group bmd-form-group">ensures the {{ goal }} of {{ asset.name }} during the process of {{ fr.description }}</span>
+              </li>
+              {% endif %}
             {% endfor %}
-          {% endfor %}
+          {% endif %}
+{#            {% else %}#}
+{#              {{ asset }} {{ e_sg }}#}
+{#            {% endif %}#}
+{#          {% endfor %}#}
         </ul>
 {#        </form>#}
 {#        {% if hg.authenticity %}#}

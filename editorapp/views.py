@@ -77,8 +77,8 @@ def create_db_data():
                 vals_dict[use] = vals[ind]
             kw = {'name': name, **vals_dict}
             bbmech = BbMechanisms(**kw)
-            if bbmech.name == 'Asymmetric or Hybrid Encryption':
-                bbmech.extra_asset = 'Authenticity of the Encrypted Material'
+            # if bbmech.name == 'Asymmetric or Hybrid Encryption':
+            #     bbmech.extra_asset = 'Authenticity of the Encrypted Material'
             db.session.add(bbmech)
             db.session.commit()
 
@@ -398,12 +398,21 @@ def export(project, backup=False):
         project_dict['Hard Goals'] = hard_goals_dict
         black_box_mechanisms_dict = {}
         for bb in BbMechanisms.query.all():
+            ea_list = []
+            for e_a in bb.extra_assets:
+                ea_list.append(e_a.name)
+            esg_list = []
+            for e_sg in bb.extra_softgoals:
+                esg_list.append(e_sg.name)
+            efr_list = []
+            for e_fr in bb.extra_func_req:
+                efr_list.append(e_fr.name)
             black_box_mechanisms_dict[bb.name] = {}
             black_box_mechanisms_dict[bb.name]['base'] = {'authenticity': bb.authenticity, 'integrity': bb.integrity,
-                                                          'confidentiality': bb.confidentiality,
-                                                          'extra_asset': bb.extra_asset,
-                                                          'extra_softgoal': bb.extra_softgoal,
-                                                          'extra_functional_requirement': bb.extra_functional_requirement}
+                                                          'confidentiality': bb.confidentiality}
+                                                          # 'extra_asset': ea_list,
+                                                          # 'extra_softgoals': bb.extra_softgoal,
+                                                          # 'extra_functional_requirement': bb.extra_functional_requirement}
             black_box_mechanisms_dict[bb.name]['role'] = [act.name for act in bb.against_actor]
         project_dict['Black Box Mechanisms'] = black_box_mechanisms_dict
         actor_roles = Actors.query.all()
@@ -2462,39 +2471,84 @@ def ebbm(project, hg):
     if access:
         form = ExtraHgForm()
         hg = HardGoal.query.filter_by(id=hg).first()
-        # fr = FunctionalRequirement.query.filter_by(id=hg.freq_id).first()
+        fr = FunctionalRequirement.query.filter_by(id=hg.freq_id).first()
         component = SubService.query.filter_by(id=hg.component_id).first()
         if hg.authenticity:
-            goal = 'auth'
+            goal = 'Authenticity'
         elif hg.confidentiality:
-            goal = 'conf'
+            goal = 'Confidentiality'
         else:
-            goal = 'int'
+            goal = 'Integrity'
         mecha = [bbm for bbm in hg.bbmechanisms][0]
-        mecha_list = [len(mecha.extra_assets), len(mecha.extra_softgoals), len(mecha.extra_func_req)]
-        longer = max(range(len(mecha_list)), key=mecha_list.__getitem__)
+        e_fr = [fr for fr in mecha.extra_func_req]
+        e_sg = [sg for sg in mecha.extra_softgoals]
+        # mecha_list = [len(mecha.extra_assets), len(mecha.extra_softgoals), len(mecha.extra_func_req)]
+        # longer = max(range(len(mecha_list)), key=mecha_list.__getitem__)
         # print(longer)
         if request.method == 'POST':
             for field, value in request.form.items():
                 if field == 'csrf_token':
                     continue
                 else:
-                    _, component_id, asset_id, sg_id, fr_id = field.split('-')
+                    _, component_id, sg_id, fr_id = field.split('-')
                     extra_component = SubService.query.filter_by(id=component_id).first()
+                    if extra_component.name != value:
+                        extra_component.name = value
+                        new_extra_component = SubService(name=value, project_id=hg.project_id)
+                        db.session.add(new_extra_component)
+                    else:
+                        new_extra_component = False
                     extra_asset = ExtraAsset.query.filter_by(id=asset_id).first()
                     extra_sg = ExtraSoftGoal.query.filter_by(id=sg_id).first()
+                    # print(extra_sg.id, extra_sg.authenticity, extra_sg.confidentiality, extra_sg.integrity)
+                    if not e_sg:
+                        extra_sg.name = f'{goal} of {extra_asset.name}'
+                        esg_dict = {goal.lower(): extra_sg.name}
+                        new_extra_sg = SoftGoal(cb_value=f'{goal.lower()}{new_extra_component.id if new_extra_component else extra_component.id}', project_id=project.id, **esg_dict)
+                    else:
+                        if 'integrity' in extra_sg.name.lower():
+                            esg_dict = {'integrity': extra_sg.name}
+                        elif 'confidentiality' in extra_sg.name.lower():
+                            esg_dict = {'confidentiality': extra_sg.name}
+                        elif 'authenticity' in extra_sg.name.lower():
+                            esg_dict = {'authenticity': extra_sg.name}
+                        else:
+                            esg_dict = {goal.lower(): extra_sg.name}
+                        new_extra_sg = SoftGoal(cb_value=f'{goal.lower()}{new_extra_component.id if new_extra_component else extra_component.id}', project_id=project.id, **esg_dict)
+                    db.session.add(new_extra_sg)
                     extra_fr = ExtraFreqReq.query.filter_by(id=fr_id).first()
-                    print(component_id, asset_id, sg_id, fr_id)
+                    if not e_fr:
+                        extra_fr.name = fr.description
+                    # print(component_id, asset_id, sg_id, fr_id)
+                    new_hg = f'{extra_component.name} ensures the {extra_sg.name} during the process of {extra_fr.name}'
+                    print(new_hg)
+                    if 'integrity' in extra_sg.name.lower():
+                        nehg_dict = {'confidentiality': 'yes'}
+                    elif 'confidentiality' in extra_sg.name.lower():
+                        nehg_dict = {'confidentiality': 'yes'}
+                    elif 'authenticity' in extra_sg.name.lower():
+                        nehg_dict = {'authenticity': 'yes'}
+                    else:
+                        nehg_dict = {goal.lower(): 'yes'}
+                    # print(nehg_dict)
+                    new_extra_hg = HardGoal(description=new_hg, extra_hg_used=True, extra_hg=True, original_hg=hg.id, project_id=hg.project_id, unique_id=hg_id_gen(project, fr, new_extra_component if new_extra_component else extra_component, new_extra_sg), **nehg_dict)
+                    db.session.add(new_extra_hg)
+                    hg.extra_hg_used = True
+                    print(new_extra_hg.unique_id)
+                    # db.session.commit()
+                    print(new_extra_hg.id, new_extra_hg.authenticity, new_extra_hg.confidentiality, new_extra_hg.integrity)
         return render_template("ebbm.html",
                                title=hg.description,
                                project=project.name,
                                hg=hg,
                                mecha=mecha,
                                form=form,
-                               # fr=fr,
+                               fr=fr,
                                component=component,
                                goal=goal,
-                               longer=longer)
+                               e_fr=e_fr,
+                               e_sg=e_sg)
+                               # longer=longer)
     else:
         flash('You don\'t have permission to access this page', 'error')
         return redirect(url_for('index'))

@@ -207,6 +207,7 @@ class HardGoal(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
     unique_id = db.Column(db.String(200), unique=True)
     # soft_goals = db.relationship('SoftGoal', backref='hardgoals', lazy='dynamic')
+    correctly_implemented = db.Column(db.Integer, default=1)
     bbmechanisms = db.relationship('BbMechanisms',
                             secondary=hard_mechanism,
                             # primaryjoin=(hard_mechanism.c.hg_id == id),
@@ -388,7 +389,6 @@ class ExtraFreqReq(db.Model):
 
     def __repr__(self):
         return self.name
-
 
 
 class Attacker(db.Model):

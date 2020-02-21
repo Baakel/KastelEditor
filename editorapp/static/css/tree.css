@@ -55,6 +55,18 @@ body { background: #fff; }
     font-weight: normal;
 }
 
+.aqua {
+  background-color: #4C5B7F;
+  color: #fff;
+  font-weight: normal;
+}
+
+.leaf {
+  background-color: #B2D55D;
+  color: #000;
+  font-weight: normal;
+}
+
 .blue {
     background-color: #19444a;
   color: #ffffff;
@@ -76,4 +88,16 @@ body { background: #fff; }
   background-color: #dd8341;
   color: #000;
   font-weight: normal;
+}
+
+.imp-error {
+  background-color: #f11d2f;
+  color: #ffffff;
+  font-weight: bolder;
+}
+
+.not-imp {
+  background-color: #98a7be;
+  font-weight: normal;
+  color: #202220
 }

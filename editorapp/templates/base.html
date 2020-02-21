@@ -6,6 +6,8 @@
         <link href="https://fonts.googleapis.com/css?family=Lato:400,900" rel="stylesheet">
         {% block extracss %}{% endblock %}
         <link rel="shortcut icon" type="image/x-icon" href="/static/img/kastel_logo.png"/>
+        <link rel="stylesheet" type="text/css" href="/static/css/full-screen.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         {% if title %}
         <title>{{ title}} - Kastel Editor</title>
         {% else %}
@@ -13,118 +15,122 @@
         {% endif %}
     </head>
     <body class="bg-dark" style="height: 100%">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            {% if g.page != 'Noproj' %}
-                {% if g.project %}
-                    <div class="dropdown">
-                        <button class="btn btn-secondary btn-raised dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                           {{ g.project.name }}
-                        </button>
-                        <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                            {% for proj in g.user.wprojects %}
-                            <a class="dropdown-item" href="{{ url_for('projects', name=proj.name )}}">{{ proj.name }}</a>
-                            {% endfor %}
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="{{ url_for('projects', name='New Project') }}">New Project</a>
-                            <div class="dropdown-divider"></div>
-                            <form class="dropdown-item" method="POST" action="/preprocess" enctype="multipart/form-data">
-                              <div class="form-group">
-                                <label for="inputFile">Import Project</label>
-                                <input type="file" name="inputFile">
-                              </div>
-                              <button type="submit" class="btn btn-outline-primary">Import</button>
-                            </form>
-                        </div>
-                    </div>
-                {% else %}
-                    <a class="navbar-brand" href="{{ url_for('index') }}">New Project</a>
-                {% endif %}
-            {% else %}
-                <a class="navbar-brand" href="#">Kastel Editor</a>
-            {% endif %}
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse ml-3" id="navbarNav">
-                <ul class="navbar-nav mr-auto">
-                    {% if g.page != 'Noproj' %}
-                        {% if g.project %}
-                            <li class="nav-item active">
-                                <a class="nav-link" href="{{ url_for('projects', name=g.project.name) }}">Overview<span class="sr-only">(current)</span></a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('stakeholders', project=g.project.name) }}">Stakeholders</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('goods', project=g.project.name) }}">Assets</a>
-                            </li>
-                            <li>
-                              <a class="nav-link" href="{{ url_for('soft_goals', project=g.project.name) }}">Soft Goals</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('functional_req', project=g.project.name) }}">Functional Requirements</a>
-                            </li>
-                            <li>
-                              <a class="nav-link" href="{{ url_for('attackers', project=g.project.name) }}">Attackers</a>
-                            </li>
-                            <li>
-                              <a class="nav-link" href="{{ url_for('actors', project=g.project.name) }}">Actors</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('hard_goals', project=g.project.name) }}">Hard Goals</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('bbmech', project=g.project.name) }}">BBM</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ url_for('assumptions', project=g.project.name) }}">Assumptions</a>
-                            </li>
-                            <li>
-                                <a class="nav-link" href="{{ url_for('tree', project=g.project.name) }}">Project Diagram</a>
-                            </li>
-                        {% else %}
-                            <li class="nav-item">
-                                <a class="nav-link disabled" href="#">Stakeholders</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link disabled" href="#">Functional Requirements</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link disabled" href="#">Goods</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link disabled" href="#">Hard Goals</a>
-                            </li>
-                        {% endif %}
-                    {% else %}
-                        {% if g.user %}
-                            {% if g.user.has_role('superuser') %}
-                                <li class="nav-item">
-                                    <a class="nav-link" href="/admin">Admin Panel</a>
-                                </li>
-                            {% endif %}
-                        {% endif %}
-                    {% endif %}
-                </ul>
-                <ul class="navbar-nav float-right">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}"><i class="material-icons">home</i></a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-        <div class="container-fluid" style="min-height: 100%; overflow: hidden;">
-            <div class="row">
+
+        <div class="container-fluid fullscreen">                    <!--min-height: 100%; overflow: hidden;">-->
+          <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+              {% if g.page != 'Noproj' %}
+                  {% if g.project %}
+                      <div class="dropdown">
+                          <button class="btn btn-secondary btn-raised dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                             {{ g.project.name }}
+                          </button>
+                          <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                              {% for proj in g.user.wprojects %}
+                              <a class="dropdown-item" href="{{ url_for('projects', name=proj.name )}}">{{ proj.name }}</a>
+                              {% endfor %}
+                              <div class="dropdown-divider"></div>
+                              <a class="dropdown-item" href="{{ url_for('projects', name='New Project') }}">New Project</a>
+                              <div class="dropdown-divider"></div>
+                              <form class="dropdown-item" method="POST" action="/preprocess" enctype="multipart/form-data">
+                                <div class="form-group">
+                                  <label for="inputFile">Import Project</label>
+                                  <input type="file" name="inputFile">
+                                </div>
+                                <button type="submit" class="btn btn-outline-primary">Import</button>
+                              </form>
+                          </div>
+                      </div>
+                  {% else %}
+                      <a class="navbar-brand" href="{{ url_for('index') }}">New Project</a>
+                  {% endif %}
+              {% else %}
+                  <a class="navbar-brand" href="#">Kastel Editor</a>
+              {% endif %}
+              <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon"></span>
+              </button>
+              <div class="collapse navbar-collapse ml-3" id="navbarNav">
+                  <ul class="navbar-nav mr-auto">
+                      {% if g.page != 'Noproj' %}
+                          {% if g.project %}
+                              <li class="nav-item active">
+                                  <a class="nav-link" href="{{ url_for('projects', name=g.project.name) }}">Overview<span class="sr-only">(current)</span></a>
+                              </li>
+                              <li class="nav-item">
+                                  <a class="nav-link" href="{{ url_for('stakeholders', project=g.project.name) }}">Stakeholders</a>
+                              </li>
+                              <li class="nav-item">
+                                  <a class="nav-link" href="{{ url_for('goods', project=g.project.name) }}">Assets</a>
+                              </li>
+                              <li>
+                                <a class="nav-link" href="{{ url_for('soft_goals', project=g.project.name) }}">Soft Goals</a>
+                              </li>
+                              <li class="nav-item">
+                                  <a class="nav-link" href="{{ url_for('functional_req', project=g.project.name) }}">Functional Requirements</a>
+                              </li>
+                              <li>
+                                <a class="nav-link" href="{{ url_for('attackers', project=g.project.name) }}">Attackers</a>
+                              </li>
+                              <li>
+                                <a class="nav-link" href="{{ url_for('actors', project=g.project.name) }}">Actors</a>
+                              </li>
+                              <li class="nav-item">
+                                  <a class="nav-link" href="{{ url_for('hard_goals', project=g.project.name) }}">Hard Goals</a>
+                              </li>
+                              <li class="nav-item">
+                                  <a class="nav-link" href="{{ url_for('bbmech', project=g.project.name) }}">BBM</a>
+                              </li>
+                              <li class="nav-item">
+                                  <a class="nav-link" href="{{ url_for('assumptions', project=g.project.name) }}">Assumptions</a>
+                              </li>
+                              <li>
+                                  <a class="nav-link" href="{{ url_for('tree', project=g.project.name) }}">Project Diagram</a>
+                              </li>
+                          {% else %}
+                              <li class="nav-item">
+                                  <a class="nav-link disabled" href="#">Stakeholders</a>
+                              </li>
+                              <li class="nav-item">
+                                  <a class="nav-link disabled" href="#">Functional Requirements</a>
+                              </li>
+                              <li class="nav-item">
+                                  <a class="nav-link disabled" href="#">Goods</a>
+                              </li>
+                              <li class="nav-item">
+                                  <a class="nav-link disabled" href="#">Hard Goals</a>
+                              </li>
+                          {% endif %}
+                      {% else %}
+                          {% if g.user %}
+                              {% if g.user.has_role('superuser') %}
+                                  <li class="nav-item">
+                                      <a class="nav-link" href="/admin">Admin Panel</a>
+                                  </li>
+                              {% endif %}
+                          {% endif %}
+                      {% endif %}
+                  </ul>
+                  <ul class="navbar-nav float-right">
+                      <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('help') }}"><i class="material-icons">help</i></a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="{{ url_for('index') }}"><i class="material-icons">home</i></a>
+                      </li>
+                      <li class="nav-item">
+                          <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                      </li>
+                  </ul>
+              </div>
+          </nav>
+            <div class="row fullscreen">
                 <div class="col-1">
                     <a href="{{ url_for('index') }}"><img src="/static/img/kastel_logo.png" class="rounded float-right"/></a>
                 </div>
-                <div class="col-10 bg-light" style="margin-bottom: -9999px; padding-bottom: 9999px;">
-                    {% block content %}{% endblock %}
+                <div class="col-10 bg-light"><!--margin-bottom: -9999px; padding-bottom: 9999px;">-->
+                  <div class="container-fluid" style="overflow: auto;">{% block content %}{% endblock %}</div>
                 </div>
-                <div class="col-1">
+                <div class="col-1 fullscreen">
 
                 </div>
             </div>

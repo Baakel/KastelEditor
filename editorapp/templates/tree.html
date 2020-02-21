@@ -5,14 +5,15 @@
   <link rel="stylesheet" href="/static/css/tree.css" type="text/css">
   {% endblock %}
   {% block content %}
-    <nav class="navbar navbar-fixed-top navbar-dark bg-dark">
+    <nav class="navbar navbar-dark bg-dark sticky-top">
+      <div class="switch"><label class="text-light"><input type="checkbox" id="actorsSwitch" value="actors"><span class="bmd-switch-track"><div class="ripple-container"></div></span>Actors</label></div>
+      <div class="switch"><label class="text-light"><input type="checkbox" id="sgsSwitch" value="sgs" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>Soft Goals</label></div>
+      <div class="switch"><label class="text-light"><input type="checkbox" id="freqSwitch" value="freq"><span class="bmd-switch-track"><div class="ripple-container"></div></span>Functional Requirements</label></div>
+      <div class="switch"><label class="text-light"><input type="checkbox" id="assSwitch" value="assets"><span class="bmd-switch-track"><div class="ripple-container"></div></span>Assets</label></div>
       <div class="switch"><label class="text-light"><input type="checkbox" id="stakeholdersSwitch" value="stakeholders"><span class="bmd-switch-track"><div class="ripple-container"></div></span>Stakeholders</label></div>
       <div class="switch"><label class="text-light"><input type="checkbox" id="attackersSwitch" value="attackers"><span class="bmd-switch-track"><div class="ripple-container"></div></span>Attackers</label></div>
-      <div class="switch"><label class="text-light"><input type="checkbox" id="actorsSwitch" value="actors"><span class="bmd-switch-track"><div class="ripple-container"></div></span>Actors</label></div>
-      <div class="switch"><label class="text-light"><input type="checkbox" id="bbmsSwitch" value="bbms" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>BBM's</label></div>
-      <div class="switch"><label class="text-light"><input type="checkbox" id="sgsSwitch" value="sgs" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>Soft Goals</label></div>
       <div class="switch"><label class="text-light"><input type="checkbox" id="hgsSwitch" value="hgs" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>Hard Goals</label></div>
-
+      <div class="switch"><label class="text-light"><input type="checkbox" id="bbmsSwitch" value="bbms" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>BBM's</label></div>
     </nav>
   <div class="chart align-middle" id="tree-simple"></div>
   {% endblock %}
@@ -30,7 +31,9 @@
     let bbms = document.getElementById("bbmsSwitch");
     let sg = document.getElementById("sgsSwitch");
     let hg = document.getElementById("hgsSwitch");
-    let switches = [stakeholders, attackers, actors, bbms, sg, hg];
+    let ass = document.getElementById("assSwitch");
+    let freq = document.getElementById("freqSwitch");
+    let switches = [stakeholders, attackers, actors, bbms, sg, hg, ass, freq];
 
     function switchesState() {
       let url_params = {};
@@ -115,6 +118,8 @@
               stakeholders.checked = false;
               actors.checked = false;
               bbms.checked = false;
+              freq.checked = false;
+              ass.checked = false;
               window.ochart.destroy();
               let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
                 window.ochart = new Treant(object);
@@ -132,8 +137,41 @@
                 window.ochart = new Treant(object)
               })
             } else {
-              actors.checked = false;
               bbms.checked = false;
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object);
+              })
+            }
+          });
+          break;
+
+        case 6:
+          switches[i].addEventListener("change", function() {
+            if (this.checked) {
+              sg.checked = true;
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object)
+              })
+            } else {
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object);
+              })
+            }
+          });
+          break;
+
+        case 7:
+          switches[i].addEventListener("change", function() {
+            if (this.checked) {
+              sg.checked = true;
+              window.ochart.destroy();
+              let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
+                window.ochart = new Treant(object)
+              })
+            } else {
               window.ochart.destroy();
               let newReq = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
                 window.ochart = new Treant(object);

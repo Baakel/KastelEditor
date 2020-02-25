@@ -5,8 +5,7 @@ Webpage that allows users to streamline the process of creating a new project co
 To download the website simply click on the download link on github or run `git clone https://github.com/Baakel/KastelEditor.git` on your bash terminal.
 
 ### Prerequisites
-To run this server you need a computer running python 3.5 or later and Docker-CE 18.09 or later.
-These can be found here 
+To run this server you need a computer running python 3.5 or later and Docker-CE 18.09 or later. 
 You will also need the following packages installed [Requirements](requirements.txt)
 
 ### Installing
@@ -15,7 +14,7 @@ This will also create the db volume.
 
 ## Usage
 To start the server you need to `cd` into the **KastelEditor** directory and run the `docker-compose up -d`. Your port _**5000**_ needs to be free for this to run.
-To access the server simpply go to http://localhost:5000/
+To access the server simply go to http://localhost:5000/
 To stop the server run the `docker-compose down` command. This will stop all active containers and remove them. The database volume will not be removed this way.
 If you change anything in the codebase you will need to rebuild the **KastelEditor Image**, to do this run `docker-compose build`.
 

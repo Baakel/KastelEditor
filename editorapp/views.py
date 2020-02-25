@@ -637,6 +637,8 @@ def import_project(dele=False):
                 sg_id = SoftGoal.query.filter_by(confidentiality=json_data['Hard Goals'][hard_goal]['sg_id'], project_id=curr_project.id).first()
             else:
                 sg_id = SoftGoal.query.filter_by(integrity=json_data['Hard Goals'][hard_goal]['sg_id'], project_id=curr_project.id).first()
+            if sg_id is None:
+                print(f'hard goal is {hard_goal} and json is {json_data["Hard Goals"][hard_goal]["sg_id"]}')
             json_data['Hard Goals'][hard_goal]['component_id'] = component_id.id
             json_data['Hard Goals'][hard_goal]['freq_id'] = freq_id.id
             json_data['Hard Goals'][hard_goal]['sg_id'] = sg_id.id
@@ -2417,7 +2419,6 @@ def removesub(project, id):
             db.session.delete(details)
             db.session.commit()
         hgs_list = HardGoal.query.filter_by(component_id=ss.id, project_id=project.id).all()
-        print(hgs_list)
         for hg in hgs_list:
             remove_hard_goal(hg)
         SubService.query.filter_by(id=id, project_id=project.id).delete()
@@ -2633,16 +2634,24 @@ def check_permission(project):
 
 
 def remove_hard_goal(hg):
-    if not hg.extra_hg:
+    if hg.extra_hg:
+        for bbm in hg.bbmechanisms:
+            hg.remove_bb(bbm)
+        original_hg = HardGoal.query.filter_by(id=hg.original_hg).first()
+        if original_hg is not None:
+            original_hg.extra_hg_used = None
+    elif hg.extra_hg_used and hg.original_hg is None:
+        hgs_gen = [hardgoal for hardgoal in HardGoal.query.filter_by(original_hg=hg.id).all()]
+        for hardgoal in hgs_gen:
+            db.session.delete(hardgoal)
+            db.session.commit()
+        for bbm in hg.bbmechanisms:
+            hg.remove_bb(bbm)
+    else:
         for bbm in hg.bbmechanisms:
             hg.remove_bb(bbm)
         if hg.original_hg:
             HardGoal.query.filter_by(id=hg.original_hg).delete()
-    else:
-        for bbm in hg.bbmechanisms:
-            hg.remove_bb(bbm)
-        original_hg = HardGoal.query.filter_by(id=hg.original_hg).first()
-        original_hg.extra_hg_used = None
     HardGoal.query.filter_by(id=hg.id).delete()
     db.session.commit()
 
@@ -2870,11 +2879,11 @@ def ebbm(project, hg):
         fr = FunctionalRequirement.query.filter_by(id=hg.freq_id).first()
         component = SubService.query.filter_by(id=hg.component_id).first()
         if hg.authenticity:
-            goal = 'Authenticity'
+            hg_goal = 'Authenticity'
         elif hg.confidentiality:
-            goal = 'Confidentiality'
+            hg_goal = 'Confidentiality'
         else:
-            goal = 'Integrity'
+            hg_goal = 'Integrity'
         mecha = [bbm for bbm in hg.bbmechanisms][0]
         e_fr = [fr for fr in mecha.extra_func_req]
         e_sg = [sg for sg in mecha.extra_softgoals]
@@ -2889,109 +2898,216 @@ def ebbm(project, hg):
                     if not [asset for asset in mecha.extra_assets]:
                         return redirect(url_for('assumptions', project=project.name))
                     _, component_id, sg_id, fr_id = field.split('-')
-                    extra_component = SubService.query.filter_by(id=component_id).first()
-                    if extra_component.name != value:
-                        # extra_component.name = value
-                        alrdy_in_db_component = SubService.query.filter_by(name=value, project_id=hg.project.id).first()
-                        if not alrdy_in_db_component:
-                            new_extra_component = SubService(name=value, project_id=hg.project_id)
-                            db.session.add(new_extra_component)
-                    else:
-                        new_extra_component = False
-                    extra_sg = ExtraSoftGoal.query.filter_by(id=sg_id).first()
-                    if extra_sg is None:
-                        extra_sg = ExtraSoftGoal(name="", bbm_id=mecha.id)
-                    # print(extra_sg.id, extra_sg.authenticity, extra_sg.confidentiality, extra_sg.integrity)
-                    if not e_sg:
-                        # print(f'sg_id is {sg_id}')
-                        extra_asset = ExtraAsset.query.filter_by(id=sg_id).first()
-                        old_asset = Good.query.filter_by(description=extra_asset.name, project_id=project.id).first()
-                        if not old_asset:
-                            new_extra_asset = Good(description=extra_asset.name, project_id=project.id)
-                            db.session.add(new_extra_asset)
-                            db.session.commit()
-                        else:
-                            new_extra_asset = False
-                        extra_sg.name = f'{goal} of {extra_asset.name}'
-                        esg_dict = {goal.lower(): extra_sg.name}
-                        if not old_asset:
-                            if new_extra_asset:
-                                new_extra_asset = Good.query.filter_by(description=extra_asset.name, project_id=project.id).first()
-                        new_extra_sg = SoftGoal(cb_value=f'{goal.lower()}{new_extra_asset.id if new_extra_asset else old_asset.id}', project_id=project.id, **esg_dict)
-                        # else:
-                        #     new_extra_sg = SoftGoal(cb_value=f'{goal.lower()}{old_asset.id}')
-                    else:
-                        if 'integrity' in extra_sg.name.lower():
-                            esg_dict = {'integrity': extra_sg.name}
-                            new_asset_from_sg = f"{extra_sg.name.replace('Integrity of ', '')}"
-                        elif 'confidentiality' in extra_sg.name.lower():
-                            esg_dict = {'confidentiality': extra_sg.name}
-                            new_asset_from_sg = f"{extra_sg.name.replace('Confidentiality of ', '')}"
-                        elif 'authenticity' in extra_sg.name.lower():
-                            esg_dict = {'authenticity': extra_sg.name}
-                            new_asset_from_sg = f"{extra_sg.name.replace('Authenticity of ', '')}"
-                        else:
-                            esg_dict = {goal.lower(): extra_sg.name}
-                            new_asset_from_sg = f"{extra_sg.name}"
-                        old_asset_f_sg = Good.query.filter_by(description=new_asset_from_sg, project_id=project.id).first()
-                        if not old_asset_f_sg:
-                            new_a_f_sg = Good(description=new_asset_from_sg, project_id=project.id)
-                            db.session.add(new_a_f_sg)
-                            db.session.commit()
-                        new_extra_sg = SoftGoal(cb_value=f'{goal.lower()}{old_asset_f_sg.id if old_asset_f_sg else new_a_f_sg.id}', project_id=project.id, **esg_dict)
-                    alrdy_in_db_sg = SoftGoal.query.filter_by(**esg_dict).first()
-                    if alrdy_in_db_sg:
-                        new_extra_sg = alrdy_in_db_sg
-                    else:
-                        db.session.add(new_extra_sg)
-                    extra_fr = ExtraFreqReq.query.filter_by(id=fr_id).first()
-                    if extra_fr is None:
-                        extra_fr = ExtraFreqReq(name="", bbm_id=mecha.id)
-                    if not e_fr:
-                        extra_fr.name = fr.description
-                        if new_extra_component:
-                            fr.add_serv(new_extra_component)
-                        else:
-                            fr.add_serv(component)
-                    else:
-                        old_fr = FunctionalRequirement.query.filter_by(description=extra_fr.name, project_id=project.id).first()
-                        if not old_fr:
-                            new_extra_fr = FunctionalRequirement(description=extra_fr.name, project_id=project.id)
-                            db.session.add(new_extra_fr)
-                        else:
-                            new_extra_fr = old_fr
-                        if new_extra_component:
-                            new_extra_fr.add_serv(new_extra_component)
-                        else:
-                            new_extra_fr.add_serv(component)
-                        db.session.commit()
-                        # new_extra_fr.add_serv(new_extra_component)
-                    # print(component_id, asset_id, sg_id, fr_id)
 
-                    new_hg = f'{new_extra_component.name if new_extra_component else extra_component.name} ensures the {extra_sg.name} during the process of {extra_fr.name}'
-                    print(new_hg)
-                    if 'integrity' in extra_sg.name.lower():
-                        nehg_dict = {'integrity': 'yes'}
-                    elif 'confidentiality' in extra_sg.name.lower():
-                        nehg_dict = {'confidentiality': 'yes'}
-                    elif 'authenticity' in extra_sg.name.lower():
-                        nehg_dict = {'authenticity': 'yes'}
+                    extra_component = SubService.query.filter_by(name=value, project_id=project.id).first()
+                    if extra_component is None:
+                        extra_component = SubService(name=value, project_id=project.id)
+                        db.session.add(extra_component)
+                        db.session.commit()
+                        flash(f'Added COMPONENT: {extra_component.name} to the Database', 'succ')
+
+                    if not e_sg:
+                        extra_asset = ExtraAsset.query.filter_by(id=sg_id).first()
+                        asset_in_db = Good.query.filter_by(description=extra_asset.name, project_id=project.id).first()
+                        if asset_in_db is None:
+                            extra_asset = Good(description=extra_asset.name, project_id=project.id)
+                            db.session.add(extra_asset)
+                            db.session.commit()
+                            flash(f'Added ASSET: {extra_asset.description} to the Database', 'succ')
+                        else:
+                            extra_asset = asset_in_db
                     else:
-                        nehg_dict = {}
-                    # print(nehg_dict)
-                    new_extra_hg = HardGoal(description=new_hg, component_id=new_extra_component.id if new_extra_component else extra_component.id, freq_id=new_extra_fr.id if e_fr else fr.id,
-                    sg_id=new_extra_sg.id, extra_hg_used=True, extra_hg=True, original_hg=hg.id, project_id=hg.project_id, unique_id=hg_id_gen(project, fr, new_extra_component if new_extra_component else extra_component, new_extra_sg), **nehg_dict)
-                    db.session.add(new_extra_hg)
-                    hg.extra_hg_used = True
-                    # print(new_extra_hg.unique_id)
-                    # # db.session.commit()
-                    # print(new_extra_hg.id, new_extra_hg.authenticity, new_extra_hg.confidentiality, new_extra_hg.integrity)
+                        extra_asset_index = ExtraSoftGoal.query.filter_by(id=sg_id).first().name
+                        if 'authenticity' in extra_asset_index.lower():
+                            ass_goal = 'authenticity'
+                        elif 'confidentiality' in extra_asset_index.lower():
+                            ass_goal = 'confidentiality'
+                        else:
+                            ass_goal = 'integrity'
+                        end_index = re.search(f'{ass_goal.lower()} of ', extra_asset_index.lower()).end()
+                        extra_asset_name = extra_asset_index[end_index:]
+                        extra_asset = Good.query.filter_by(description=extra_asset_name, project_id=project.id).first()
+                        if extra_asset is None:
+                            extra_asset = Good(description=extra_asset_name, project_id=project.id)
+                            db.session.add(extra_asset)
+                            db.session.commit()
+                            flash(f'Added ASSET: {extra_asset.description} to the Database', 'succ')
+
+                    if e_sg:
+                        extra_sg = ExtraSoftGoal.query.filter_by(id=sg_id).first()
+                        if extra_sg is not None:
+                            if 'Authenticity' in extra_sg.name:
+                                goal = {'authenticity': extra_sg.name}
+                            elif 'Confidentiality' in extra_sg.name:
+                                goal = {'confidentiality': extra_sg.name}
+                            else:
+                                goal = {'integrity': extra_sg.name}
+                            existing_sg = SoftGoal.query.filter_by(project_id=project.id, **goal).first()
+                            if existing_sg is None:
+                                goal_desc = str(next(iter(goal)))
+                                extra_sg = SoftGoal(cb_value=f'{goal_desc}{extra_asset.id}', project_id=project.id, **goal)
+                                db.session.add(extra_sg)
+                                db.session.commit()
+                                flash(f'Added SOFT GOAL: {extra_sg.cb_value} to the Database', 'succ')
+                            else:
+                                extra_sg = existing_sg
+                    else:
+                        if hg_goal == 'Authenticity':
+                            sg_goal = {'authenticity': f'{hg_goal} of {extra_asset.description}'}
+                        elif hg_goal == 'Confidentiality':
+                            sg_goal = {'confidentiality': f'{hg_goal} of {extra_asset.description}'}
+                        else:
+                            sg_goal = {'integrity': f'{hg_goal} of {extra_asset.description}'}
+                        goal_desc = str(next(iter(sg_goal)))
+                        extra_sg = SoftGoal(cb_value=f'{goal_desc}{extra_asset.id}', project_id=project.id, **sg_goal)
+                        db.session.add(extra_sg)
+                        db.session.commit()
+                        flash(f'Added SOFT GOAL: {extra_sg.cb_value} to the Database', 'succ')
+
+                    if e_fr:
+                        extra_fr = ExtraFreqReq.query.filter_by(id=fr_id).first()
+                        if extra_fr is not None:
+                            existing_fr = FunctionalRequirement.query.filter_by(description=extra_fr.name, project_id=project.id).first()
+                            if existing_fr is None:
+                                extra_fr = FunctionalRequirement(description=extra_fr.name, project_id=project.id)
+                                db.session.add(extra_fr)
+                                db.session.commit()
+                                flash(f'Added FUNCTIONAL REQUIREMENT: {extra_fr.description} to the Database', 'succ')
+                            else:
+                                extra_fr = existing_fr
+
+                            extra_fr.add_serv(extra_component)
+                            db.session.commit()
+                    else:
+                        extra_fr = FunctionalRequirement.query.filter_by(id=fr_id).first()
+                        extra_fr.add_serv(extra_component)
+                        db.session.commit()
+
+                    if extra_sg.authenticity:
+                        sg_desc = extra_sg.authenticity
+                        nhg_goal = {'authenticity': 'yes'}
+                    elif extra_sg.confidentiality:
+                        sg_desc = extra_sg.confidentiality
+                        nhg_goal = {'confidentiality': 'yes'}
+                    else:
+                        sg_desc = extra_sg.integrity
+                        nhg_goal = {'integrity': 'yes'}
+                    new_extra_hg_description = f'{extra_component.name} ensures the {sg_desc} during the process of {extra_fr.description}'
+                    existing_hg = HardGoal.query.filter_by(description=new_extra_hg_description, project_id=project.id).first()
+                    if existing_hg is None:
+                        extra_hg = HardGoal(component_id=extra_component.id, freq_id=extra_fr.id, sg_id=extra_sg.id, description=new_extra_hg_description, extra_hg_used=1, extra_hg=1, original_hg=hg.id, project_id=project.id, unique_id=hg_id_gen(project, extra_fr, extra_component, extra_sg), **nhg_goal)
+                        db.session.add(extra_hg)
+                        db.session.commit()
+                        flash(f'Added HARD GOAL: {extra_hg.description} to the Database', 'succ')
+
+
+
+                    # extra_component = SubService.query.filter_by(id=component_id).first()
+                    # if extra_component.name != value:
+                    #     # extra_component.name = value
+                    #     alrdy_in_db_component = SubService.query.filter_by(name=value, project_id=hg.project.id).first()
+                    #     if not alrdy_in_db_component:
+                    #         new_extra_component = SubService(name=value, project_id=hg.project_id)
+                    #         db.session.add(new_extra_component)
+                    # else:
+                    #     new_extra_component = False
+                    # extra_sg = ExtraSoftGoal.query.filter_by(id=sg_id).first()
+                    # if extra_sg is None:
+                    #     extra_sg = ExtraSoftGoal(name="", bbm_id=mecha.id)
+                    # # print(extra_sg.id, extra_sg.authenticity, extra_sg.confidentiality, extra_sg.integrity)
+                    # if not e_sg:
+                    #     # print(f'sg_id is {sg_id}')
+                    #     extra_asset = ExtraAsset.query.filter_by(id=sg_id).first()
+                    #     old_asset = Good.query.filter_by(description=extra_asset.name, project_id=project.id).first()
+                    #     if not old_asset:
+                    #         new_extra_asset = Good(description=extra_asset.name, project_id=project.id)
+                    #         db.session.add(new_extra_asset)
+                    #         db.session.commit()
+                    #     else:
+                    #         new_extra_asset = False
+                    #     extra_sg.name = f'{goal} of {extra_asset.name}'
+                    #     esg_dict = {goal.lower(): extra_sg.name}
+                    #     if not old_asset:
+                    #         if new_extra_asset:
+                    #             new_extra_asset = Good.query.filter_by(description=extra_asset.name, project_id=project.id).first()
+                    #     new_extra_sg = SoftGoal(cb_value=f'{goal.lower()}{new_extra_asset.id if new_extra_asset else old_asset.id}', project_id=project.id, **esg_dict)
+                    #     # else:
+                    #     #     new_extra_sg = SoftGoal(cb_value=f'{goal.lower()}{old_asset.id}')
+                    # else:
+                    #     if 'integrity' in extra_sg.name.lower():
+                    #         esg_dict = {'integrity': extra_sg.name}
+                    #         new_asset_from_sg = f"{extra_sg.name.replace('Integrity of ', '')}"
+                    #     elif 'confidentiality' in extra_sg.name.lower():
+                    #         esg_dict = {'confidentiality': extra_sg.name}
+                    #         new_asset_from_sg = f"{extra_sg.name.replace('Confidentiality of ', '')}"
+                    #     elif 'authenticity' in extra_sg.name.lower():
+                    #         esg_dict = {'authenticity': extra_sg.name}
+                    #         new_asset_from_sg = f"{extra_sg.name.replace('Authenticity of ', '')}"
+                    #     else:
+                    #         esg_dict = {goal.lower(): extra_sg.name}
+                    #         new_asset_from_sg = f"{extra_sg.name}"
+                    #     old_asset_f_sg = Good.query.filter_by(description=new_asset_from_sg, project_id=project.id).first()
+                    #     if not old_asset_f_sg:
+                    #         new_a_f_sg = Good(description=new_asset_from_sg, project_id=project.id)
+                    #         db.session.add(new_a_f_sg)
+                    #         db.session.commit()
+                    #     new_extra_sg = SoftGoal(cb_value=f'{goal.lower()}{old_asset_f_sg.id if old_asset_f_sg else new_a_f_sg.id}', project_id=project.id, **esg_dict)
+                    # alrdy_in_db_sg = SoftGoal.query.filter_by(**esg_dict).first()
+                    # if alrdy_in_db_sg:
+                    #     new_extra_sg = alrdy_in_db_sg #
+                    # else:
+                    #     db.session.add(new_extra_sg)
+                    # extra_fr = ExtraFreqReq.query.filter_by(id=fr_id).first()
+                    # if extra_fr is None:
+                    #     extra_fr = ExtraFreqReq(name="", bbm_id=mecha.id)
+                    # if not e_fr:
+                    #     extra_fr.name = fr.description
+                    #     if new_extra_component:
+                    #         fr.add_serv(new_extra_component)
+                    #     else:
+                    #         fr.add_serv(component)
+                    # else:
+                    #     old_fr = FunctionalRequirement.query.filter_by(description=extra_fr.name, project_id=project.id).first()
+                    #     if not old_fr:
+                    #         new_extra_fr = FunctionalRequirement(description=extra_fr.name, project_id=project.id)
+                    #         db.session.add(new_extra_fr)
+                    #     else:
+                    #         new_extra_fr = old_fr
+                    #     if new_extra_component:
+                    #         new_extra_fr.add_serv(new_extra_component)
+                    #     else:
+                    #         new_extra_fr.add_serv(component)
+                    #     db.session.commit()
+                    #     # new_extra_fr.add_serv(new_extra_component)
+                    # # print(component_id, asset_id, sg_id, fr_id)
                     #
-                    # print(f'''
-                    #       extra sg {extra_sg}''')
-                    db.session.commit()
+                    # new_hg = f'{new_extra_component.name if new_extra_component else extra_component.name} ensures the {extra_sg.name} during the process of {extra_fr.name}'
+                    # print(new_hg)
+                    # if 'integrity' in extra_sg.name.lower():
+                    #     nehg_dict = {'integrity': 'yes'}
+                    # elif 'confidentiality' in extra_sg.name.lower():
+                    #     nehg_dict = {'confidentiality': 'yes'}
+                    # elif 'authenticity' in extra_sg.name.lower():
+                    #     nehg_dict = {'authenticity': 'yes'}
+                    # else:
+                    #     nehg_dict = {}
+                    # # print(nehg_dict)
+                    # new_extra_hg = HardGoal(description=new_hg, component_id=new_extra_component.id if new_extra_component else extra_component.id, freq_id=new_extra_fr.id if e_fr else fr.id,
+                    # sg_id=new_extra_sg.id, extra_hg_used=True, extra_hg=True, original_hg=hg.id, project_id=hg.project_id, unique_id=hg_id_gen(project, fr, new_extra_component if new_extra_component else extra_component, new_extra_sg), **nehg_dict)
+                    # db.session.add(new_extra_hg)
+                    # hg.extra_hg_used = True
+                    # # print(new_extra_hg.unique_id)
+                    # # # db.session.commit()
+                    # # print(new_extra_hg.id, new_extra_hg.authenticity, new_extra_hg.confidentiality, new_extra_hg.integrity)
+                    # #
+                    # # print(f'''
+                    # #       extra sg {extra_sg}''')
+                    # db.session.commit()
+            hg.extra_hg_used = 1
+            db.session.commit()
             flash('The Changes were added to the Database.', 'succ')
             return redirect(url_for('assumptions', project=project.name))
+            # return redirect(url_for('ebbm', project=project.name, hg=hg.id))
         return render_template("ebbm.html",
                                title=hg.description,
                                project=project.name,
@@ -3000,7 +3116,7 @@ def ebbm(project, hg):
                                form=form,
                                fr=fr,
                                component=component,
-                               goal=goal,
+                               goal=hg_goal,
                                e_fr=e_fr,
                                e_sg=e_sg)
                                # longer=longer)
@@ -3069,6 +3185,45 @@ class MyModelViewBbMech(sqla.ModelView):
                 return redirect(url_for('security.login', next=request.url))
 
 
+class MyModelViewHg(sqla.ModelView):
+
+    # form_ajax_refs = {
+    #     'assumptions': {
+    #         'fields': ['name', 'id'],
+    #         'page_size': 10
+    #     }
+    # }
+
+    # edit_modal = True
+    # column_list = ['name', 'assumptionz']
+    # column_display_all_relations = True
+
+    can_delete = False
+    can_edit = False
+    can_create = False
+    column_filters = ['project.name', 'correctly_implemented']
+    column_searchable_list = ['project.name', 'id', 'unique_id', 'description']
+    column_list = ['project.name', 'id', 'description', 'correctly_implemented', 'unique_id']
+    column_editable_list = ['correctly_implemented']
+
+    def is_accessible(self):
+        if not current_user.is_active or not current_user.is_authenticated:
+            return False
+
+        if current_user.has_role('superuser'):
+            return True
+
+        return False
+
+    def _handle_view(self, name, **kwargs):
+        if not self.is_accessible():
+            if current_user.is_authenticated():
+                flash('You don\'t have permission to access this page.', 'error')
+                return redirect(url_for('index'))
+            else:
+                return redirect(url_for('security.login', next=request.url))
+
+
 admin = flask_admin.Admin(
     app,
     'Kastel Editor',
@@ -3082,6 +3237,7 @@ admin.add_view(MyModelView(Projects, db.session))
 admin.add_view(MyModelView(Actors, db.session, 'Actor Roles'))
 admin.add_view(MyModelViewBbMech(BbMechanisms, db.session))
 admin.add_view(MyModelView(Assumptions, db.session))
+admin.add_view(MyModelViewHg(HardGoal, db.session, 'HG Implementation'))
 
 
 @security.context_processor

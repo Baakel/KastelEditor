@@ -776,12 +776,14 @@ def import_project(dele=False):
         for hard_goal in json_data['Hard Mechanism Relationship']['status']:
             hg = HardGoal.query.filter_by(description=hard_goal, project_id=curr_project.id).first()
             status = json_data['Hard Mechanism Relationship']['status'][hard_goal]
-            if status == 1:
-                status_string = 'OK'
+            if status == 0:
+                status_string = 'Correctly Implemented and Correctly Integrated'
+            elif status == 1:
+                status_string = 'Correctly Implemented but Incorrectly Integrated'
             elif status == 2:
-                status_string = 'Issue'
-            elif status == 0 or status == None:
-                status_string = 'Unused'
+                status_string = 'Incorrectly Implemented but Correctly Integrated'
+            elif status == 3:
+                status_string = "Incorrectly Implemented and Incorrectly Integrated"
             else:
                 status_string = 'Invalid'
             hg.correctly_implemented = status
@@ -949,22 +951,43 @@ def testdata():
     def component_dict(parent, project):
         for comp in project.sub_services:
             status = 1
+            found_2 = False
+            found_4 = False
+            found_1 = False
             for hg in comp.hard_goals:
                 if hg.correctly_implemented is None or hg.correctly_implemented == 0:
                     status = 0
+                elif hg.correctly_implemented == 1:
+                    status = 1
+                    found_1 = True
                 elif hg.correctly_implemented == 2:
                     status = 2
+                    found_2 = True
+                elif hg.correctly_implemented == 3:
+                    status = 3
                     break
+                else:
+                    status = 4
+                    found_4 = True
+            else:
+                if found_2:
+                    status = 2
+                elif found_1:
+                    status = 1
+                elif found_4:
+                    status =4
             comp_dict = {'text': {'name': comp.name, 'desc': 'Component'},
                          'children': [],
                          'HTMLclass': 'blue',
+                         'connectors': {'style': {'stroke-width': 1}},
                          'collapsable': True}
-            if status == 2:
-                comp_dict['text']['desc'] = 'Component (Imp Error)'
-                comp_dict['HTMLclass'] = 'imp-error'
-            elif status == 0:
-                comp_dict['text']['desc'] = 'Component (Not Implemented)'
-                comp_dict['HTMLclass'] = 'not-imp'
+            # if status == 2:
+            #     comp_dict['text']['desc'] = 'Component (Imp Error)'
+            #     comp_dict['HTMLclass'] = 'imp-error'
+            # elif status == 0:
+            #     comp_dict['text']['desc'] = 'Component (Not Implemented)'
+            #     comp_dict['HTMLclass'] = 'not-imp'
+            get_status_format(comp_dict, status, "Component")
             parent['children'].append(comp_dict)
         return parent
 
@@ -988,12 +1011,14 @@ def testdata():
                         status = 0
                     elif hg.correctly_implemented == 2:
                         status = 2
-                if status == 2 and parent['HTMLclass'] == 'imp-error':
-                    ass_dict['HTMLclass'] = 'imp-error'
-                    ass_dict['text']['desc'] = 'Asset (Imp Error)'
-                elif status == 0 and parent['HTMLclass'] == 'not-imp':
-                    ass_dict['HTMLclass'] = 'not-imp'
-                    ass_dict['text']['desc'] = 'Asset (Not Implemented)'
+                if status == 2 and 'imp-error' in parent['HTMLclass']:
+                    get_status_format(ass_dict, status, "Asset")
+                    # ass_dict['HTMLclass'] = 'imp-error'
+                    # ass_dict['text']['desc'] = 'Asset (Imp Error)'
+                elif status == 0 and 'not-imp' in parent['HTMLclass']:
+                    get_status_format(ass_dict, status, "Asset")
+                    # ass_dict['HTMLclass'] = 'not-imp'
+                    # ass_dict['text']['desc'] = 'Asset (Not Implemented)'
                 parent['children'].append(ass_dict)
 
     def sgs_dictionary(parent, project):
@@ -1012,11 +1037,21 @@ def testdata():
 
             if parent['text']['name'] in components:
                 status = 1
+                # found = False
                 for hg in sg.hard_goals:
                     if hg.correctly_implemented is None or hg.correctly_implemented == 0 and SubService.query.filter_by(id=hg.component_id).first().name == parent['text']['name']:
                         status = 0
+                    elif hg.correctly_implemented == 1 and SubService.query.filter_by(
+                            id=hg.component_id).first().name == parent['text']['name']:
+                        status = 1
                     elif hg.correctly_implemented == 2 and SubService.query.filter_by(id=hg.component_id).first().name == parent['text']['name']:
                         status = 2
+                    elif hg.correctly_implemented == 3 and SubService.query.filter_by(
+                        id=hg.component_id).first().name == parent['text']['name']:
+                        status = 3
+                    elif (hg.correctly_implemented != 2 and hg.correctly_implemented != 0 and hg.correctly_implemented != 1 and hg.correctly_implemented != 3) and SubService.query.filter_by(
+                        id=hg.component_id).first().name == parent['text']['name']:
+                        status = 4
                 sg_dict = {'text': {'name': description, 'desc': 'Soft Goal'},
                            'children': [],
                            'HTMLclass': 'yellow',
@@ -1024,14 +1059,7 @@ def testdata():
                            'connectors': {'style': {'stroke-width': 1}},
                            'parent': parent['text']['name'],
                            'id': sg.id}
-                if status == 2:
-                    sg_dict['text']['desc'] = 'Soft Goal (Imp Error)'
-                    sg_dict['HTMLclass'] = 'imp-error'
-                    sg_dict['connectors']['style']['stroke-width'] = 3
-                elif status == 0:
-                    sg_dict['text']['desc'] = 'Soft Goal (Not Implemented)'
-                    sg_dict['HTMLclass'] = 'not-imp'
-                    sg_dict['connectors']['style']['stroke-width'] = 3
+                get_status_format(sg_dict, status, "Soft Goal")
                 parent['children'].append(sg_dict)
         return parent
 
@@ -1045,6 +1073,12 @@ def testdata():
                     status = 0
                 elif hg.correctly_implemented == 2:
                     status = 2
+                elif hg.correctly_implemented == 3:
+                    status = 3
+                elif hg.correctly_implemented == 1:
+                    status = 1
+                else:
+                    status = 4
                 freq_dict = {'text': {'name': freq.description, 'desc': 'Functional Requirement'},
                              'children': [],
                              'HTMLclass': 'aqua',
@@ -1052,15 +1086,16 @@ def testdata():
                              'connectors': {'style': {'stroke-width': 1}},
                              'parent': parent['id'],
                              'grandpa': parent['parent']}
-                if status == 0:
-                    freq_dict['text']['desc'] = 'Functional Requirement (Not Implemented)'
-                    freq_dict['HTMLclass'] = 'not-imp'
-                    freq_dict['connectors']['style']['stroke-width'] = 3
-                elif status == 2:
-                    freq_dict['text']['desc'] = 'Functional Requirement (Imp Error)'
-                    freq_dict['HTMLclass'] = 'imp-error'
-                    freq_dict['connectors']['style']['stroke'] = '#ff1a1a'
-                    freq_dict['connectors']['style']['stroke-width'] = 3
+                get_status_format(freq_dict, status, "Functional Requirement")
+                # if status == 0:
+                #     # freq_dict['text']['desc'] = 'Functional Requirement (Not Implemented)'
+                #     # freq_dict['HTMLclass'] = 'not-imp'
+                #     # freq_dict['connectors']['style']['stroke-width'] = 3
+                # elif status == 2:
+                #     # freq_dict['text']['desc'] = 'Functional Requirement (Imp Error)'
+                #     # freq_dict['HTMLclass'] = 'imp-error'
+                #     freq_dict['connectors']['style']['stroke'] = '#ff1a1a'
+                #     # freq_dict['connectors']['style']['stroke-width'] = 3
                 parent['children'].append(freq_dict)
         return parent
 
@@ -1085,15 +1120,16 @@ def testdata():
                            'HTMLclass': 'green',
                            'collapsable': True,
                            'connectors': {'style': {'stroke-width': 1}}}
-                if hg.correctly_implemented is None or hg.correctly_implemented == 0:
-                    hg_dict['text']['desc'] = 'Hard Goal (Not Implemented)'
-                    hg_dict['HTMLclass'] = 'not-imp'
-                    hg_dict['connectors']['style']['stroke-width'] = 3
-                elif hg.correctly_implemented == 2:
-                    hg_dict['text']['desc'] = 'Hard Goal (Implementation Error)'
-                    hg_dict['HTMLclass'] = 'imp-error'
-                    hg_dict['connectors']['style']['stroke-width'] = 3
-                    hg_dict['connectors']['style']['stroke'] = '#ff1a1a'
+                # if hg.correctly_implemented is None or hg.correctly_implemented == 0:
+                #     hg_dict['text']['desc'] = 'Hard Goal (Not Implemented)'
+                #     hg_dict['HTMLclass'] = 'not-imp'
+                #     hg_dict['connectors']['style']['stroke-width'] = 3
+                # elif hg.correctly_implemented == 2:
+                #     hg_dict['text']['desc'] = 'Hard Goal (Implementation Error)'
+                #     hg_dict['HTMLclass'] = 'imp-error'
+                #     hg_dict['connectors']['style']['stroke-width'] = 3
+                #     hg_dict['connectors']['style']['stroke'] = '#ff1a1a'
+                get_status_format(hg_dict, hg.correctly_implemented, "Hard Goal")
                 parent['children'].append(hg_dict)
         return parent
 
@@ -1122,12 +1158,21 @@ def testdata():
                                 'children': [],
                                 'HTMLclass': 'dark',
                                 'connectors': {'style': {'stroke-width': 1}}}
-                    if hg.correctly_implemented is None or hg.correctly_implemented == 0:
-                        bbm_dict['text']['desc'] = 'Black Box Mechanism (Not Implemented)'
-                        bbm_dict['HTMLclass'] = 'not-imp'
+                    # if hg.correctly_implemented is None or hg.correctly_implemented == 0:
+                    #     bbm_dict['text']['desc'] = 'Black Box Mechanism (Not Implemented)'
+                    #     bbm_dict['HTMLclass'] = 'not-imp'
+                    # elif hg.correctly_implemented == 2:
+                    #     bbm_dict['text']['desc'] = 'Black Box Mechanism (Imp Error)'
+                    #     bbm_dict['HTMLclass'] = 'imp-error'
+                    get_status_format(bbm_dict, hg.correctly_implemented, "Black Box Mechanism")
+                    if hg.correctly_implemented == 0:
+                        bbm_dict['HTMLclass'] = "green status-0"
+                    elif hg.correctly_implemented == 1:
+                        bbm_dict['HTMLclass'] = "green"
                     elif hg.correctly_implemented == 2:
-                        bbm_dict['text']['desc'] = 'Black Box Mechanism (Imp Error)'
-                        bbm_dict['HTMLclass'] = 'imp-error'
+                        bbm_dict['HTMLclass'] = "imp-error"
+                    elif hg.correctly_implemented == 3:
+                        bbm_dict['HTMLclass'] = "imp-error status-3"
                     parent['children'].append(bbm_dict)
         return parent
 
@@ -1145,345 +1190,29 @@ def testdata():
                               'id': None}
                 parent['children'].append(actor_dict)
 
-    # component_gen = [comp for comp in project.sub_services]
-    # for comp in component_gen:
-    #     comp_dict = {'text': {'name': comp.name, 'desc': 'Component'},
-    #                  'children': [],
-    #                  'HTMLclass': 'blue',
-    #                  'collapsable': True}
-    #
-    #     if sgs and stakeholders:
-    #         hg_auth_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.authenticity]
-    #         sg_auth_gen = [sg for sg in project.soft_goals if sg.authenticity and sg.id in hg_auth_sgid_gen]
-    #         for sg in sg_auth_gen:
-    #             sg_dict = {'text': {'name': sg.authenticity, 'desc': 'Soft Goal'},
-    #                        'children': [],
-    #                        'HTMLclass': 'yellow',
-    #                        'collapsable': True}
-    #             for asset in project.goods:
-    #                 if asset.description in sg.authenticity:
-    #                     for stakeholder in asset.stakeholders:
-    #                         stk_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to: '},
-    #                                     'children': [],
-    #                                     'HTMLclass': 'magenta',
-    #                                     'collapsable': False}
-    #                         sg_dict['children'].append(stk_dict)
-    #             comp_dict['children'].append(sg_dict)
-    #
-    #         hg_conf_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.confidentiality]
-    #         sg_conf_gen = [sg for sg in project.soft_goals if sg.confidentiality and sg.id in hg_conf_sgid_gen]
-    #         for sg in sg_conf_gen:
-    #             sg_dict = {'text': {'name': sg.confidentiality, 'desc': 'Soft Goal'},
-    #                        'children': [],
-    #                        'HTMLclass': 'yellow',
-    #                        'collapsable': True}
-    #             for asset in project.goods:
-    #                 if asset.description in sg.confidentiality:
-    #                     for stakeholder in asset.stakeholders:
-    #                         stk_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to: '},
-    #                                     'children': [],
-    #                                     'HTMLclass': 'magenta',
-    #                                     'collapsable': False}
-    #                         sg_dict['children'].append(stk_dict)
-    #             comp_dict['children'].append(sg_dict)
-    #
-    #         hg_int_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.integrity]
-    #         sg_int_gen = [sg for sg in project.soft_goals if sg.integrity and sg.id in hg_int_sgid_gen]
-    #         for sg in sg_int_gen:
-    #             sg_dict = {'text': {'name': sg.integrity, 'desc': 'Soft Goal'},
-    #                        'children': [],
-    #                        'HTMLclass': 'yellow',
-    #                        'collapsable': True}
-    #             for asset in project.goods:
-    #                 if asset.description in sg.integrity:
-    #                     for stakeholder in asset.stakeholders:
-    #                         stk_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to: '},
-    #                                     'children': [],
-    #                                     'HTMLclass': 'magenta',
-    #                                     'collapsable': False}
-    #                         sg_dict['children'].append(stk_dict)
-    #             comp_dict['children'].append(sg_dict)
-    #     elif sgs:
-    #         hg_auth_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.authenticity]
-    #         sg_auth_gen = [sg for sg in project.soft_goals if sg.authenticity and sg.id in hg_auth_sgid_gen]
-    #         for sg in sg_auth_gen:
-    #             sg_dict = {'text': {'name': sg.authenticity, 'desc': 'Soft Goal'},
-    #                        'children': [],
-    #                        'HTMLclass': 'yellow',
-    #                        'collapsable': True}
-    #             comp_dict['children'].append(sg_dict)
-    #
-    #         hg_conf_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.confidentiality]
-    #         sg_conf_gen = [sg for sg in project.soft_goals if sg.confidentiality and sg.id in hg_conf_sgid_gen]
-    #         for sg in sg_conf_gen:
-    #             sg_dict = {'text': {'name': sg.confidentiality, 'desc': 'Soft Goal'},
-    #                        'children': [],
-    #                        'HTMLclass': 'yellow',
-    #                        'collapsable': True}
-    #             comp_dict['children'].append(sg_dict)
-    #
-    #         hg_int_sgid_gen = [hg.sg_id for hg in project.hard_goals if hg.description and hg.integrity]
-    #         sg_int_gen = [sg for sg in project.soft_goals if sg.integrity and sg.id in hg_int_sgid_gen]
-    #         for sg in sg_int_gen:
-    #             sg_dict = {'text': {'name': sg.integrity, 'desc': 'Soft Goal'},
-    #                        'children': [],
-    #                        'HTMLclass': 'yellow',
-    #                        'collapsable': True}
-    #             comp_dict['children'].append(sg_dict)
-    #
-    #     if attackers:
-    #         for attacker in project.attackers:
-    #             sgs_auth_list = [sg.authenticity for sg in attacker.soft_goals if sg.authenticity is not None]
-    #             sgs_conf_list = [sg.confidentiality for sg in attacker.soft_goals if sg.confidentiality is not None]
-    #             sgs_int_list = [sg.integrity for sg in attacker.soft_goals if sg.integrity is not None]
-    #             for entry in comp_dict['children']:
-    #                 if entry['text']['name'] in sgs_auth_list or entry['text']['name'] in sgs_conf_list or entry['text']['name'] in sgs_int_list:
-    #                     atk_dict = {'text': {'name': attacker.name, 'desc': 'At Risk From: '},
-    #                                 'children': [],
-    #                                 'HTMLclass': 'red',
-    #                                 'collapsable': False}
-    #                     entry['children'].append(atk_dict)
-    #
-    #     if hgs:
-    #         hgs_dict(comp_dict, project)
-    #         # for hg in project.hard_goals:
-    #         #     for entry in comp_dict['children']:
-    #         #         sg_used = SoftGoal.query.filter_by(id=hg.sg_id).first()
-    #         #         if entry['text']['name'] == sg_used.authenticity or entry['text']['name'] == sg_used.confidentiality or entry['text']['name'] == sg_used.integrity:
-    #         #             if hg.correctly_implemented is not None:
-    #         #                 hg_dict = {'text': {'name': hg.description, 'desc': 'Hard Goal (Implementation Error)'},
-    #         #                            'children': [],
-    #         #                            'HTMLclass': 'not-imp',
-    #         #                            'collapsable': True,
-    #         #                            'connectors': {'type': 'curve',
-    #         #                                           'style':
-    #         #                                               {'stroke': '#ff1a1a',
-    #         #                                                'stroke-width': 3}
-    #         #                                           }
-    #         #                            }
-    #         #                 entry['HTMLclass'] = 'imp-error'
-    #         #                 entry['text']['desc'] = 'Soft Goal (Imp. Error)'
-    #         #                 entry['connectors'] = {'style': {'stroke-width': 3}}
-    #         #                 entry['children'].append(hg_dict)
-    #         #             else:
-    #         #                 hg_dict = {'text': {'name': hg.description, 'desc': 'Hard Goal'},
-    #         #                            'children': [],
-    #         #                            'HTMLclass': 'green',
-    #         #                            'collapsable': True,
-    #         #                            'connectors': {'type': 'curve'}}
-    #         #                 entry['children'].append(hg_dict)
-    #
-    #     if bbms:
-    #         for hg in project.hard_goals:
-    #             for softg_dict in comp_dict['children']:
-    #                 for entry in softg_dict['children']:
-    #                     if hg.description == entry['text']['name']:
-    #                         for bbm in hg.bbmechanisms:
-    #                             bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
-    #                                         'children': [],
-    #                                         'HTMLclass': 'dark'}
-    #                             entry['children'].append(bbm_dict)
-    #
-    #
-    #     if actors:
-    #         for actor in project.actors:
-    #             roles_id = [detail.role_id for detail in actor.details if SubService.query.filter_by(id=detail.service_id).first().name == comp_dict['text']['name']]
-    #             roles = [Actors.query.filter_by(id=role).first().name for role in roles_id]
-    #             if roles:
-    #                 actor_dict = {'text': {'name': actor.name, 'desc': f'Attacker Access Level: {roles}'},
-    #                               'children': [],
-    #                               'HTMLclass': 'orange',
-    #                               'collapsable': False,
-    #                               'connectors': {'type': 'straight'}}
-    #                 comp_dict['children'].append(actor_dict)
-    #     dictionary['nodeStructure']['children'].append(comp_dict)
-
-    # if sgs and stakeholders and hgs and bbms:
-    #     for softg in auth_gen:
-    #         curr_dict = { 'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
-    #                       'children': [],
-    #                       'HTMLclass': 'yellow',
-    #                       'collapsable': True}
-    #         for asset in project.goods:
-    #             if asset.description in softg.authenticity:
-    #                 for stakeholder in asset.stakeholders:
-    #                     children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
-    #                                      'children': [],
-    #                                      'HTMLclass': 'red'}
-    #                     curr_dict['children'].append(children_dict)
-    #         # auth_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.authenticity in hg.description)
-    #         for hardg in auth_hg_gen:
-    #             if hardg.priority:
-    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-    #                            'children': [],
-    #                            'HTMLclass': 'blue'}
-    #             else:
-    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-    #                            'children': [],
-    #                            'HTMLclass': 'grey'}
-    #             for bbm in hardg.bbmechanisms:
-    #                 bbm_dict = { 'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
-    #                              'children': [],
-    #                              'HTMLclass': 'dark',
-    #                              'collapsable': True}
-    #                 for ass in bbm.assumptions:
-    #                     ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
-    #                                 'children': [],
-    #                                 'HTMLclass': 'green'}
-    #                     bbm_dict['children'].append(ass_dict)
-    #
-    #                 hg_dict['children'].append(bbm_dict)
-    #
-    #             curr_dict['children'].append(hg_dict)
-    #
-    #         dictionary['nodeStructure']['children'].append(curr_dict)
-    #
-    #     for softg in conf_gen:
-    #         curr_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
-    #                      'children': [],
-    #                      'HTMLclass': 'yellow',
-    #                      'collapsable': True}
-    #         for asset in project.goods:
-    #             if asset.description in softg.confidentiality:
-    #                 for stakeholder in asset.stakeholders:
-    #                     children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
-    #                                      'children': [],
-    #                                      'HTMLclass': 'red'}
-    #                     curr_dict['children'].append(children_dict)
-    #         # conf_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.confidentiality in hg.description)
-    #         for hardg in conf_hg_gen:
-    #             if hardg.priority:
-    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-    #                            'children': [],
-    #                            'HTMLclass': 'blue'}
-    #             else:
-    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-    #                            'children': [],
-    #                            'HTMLclass': 'grey'}
-    #             for bbm in hardg.bbmechanisms:
-    #                 bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
-    #                             'children': [],
-    #                             'HTMLclass': 'dark',
-    #                             'collapsable': True}
-    #                 for ass in bbm.assumptions:
-    #                     ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
-    #                                 'children': [],
-    #                                 'HTMLclass': 'green'}
-    #                     bbm_dict['children'].append(ass_dict)
-    #
-    #                 hg_dict['children'].append(bbm_dict)
-    #
-    #             curr_dict['children'].append(hg_dict)
-    #
-    #         dictionary['nodeStructure']['children'].append(curr_dict)
-    #
-    #     for softg in int_gen:
-    #         curr_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
-    #                      'children': [],
-    #                      'HTMLclass': 'yellow',
-    #                      'collapsable': True}
-    #         for asset in project.goods:
-    #             if asset.description in softg.integrity:
-    #                 for stakeholder in asset.stakeholders:
-    #                     children_dict = {'text': {'name': stakeholder.nickname, 'desc': 'Important to:'},
-    #                                      'children': [],
-    #                                      'HTMLclass': 'red'}
-    #                     curr_dict['children'].append(children_dict)
-    #         # int_hg_gen = (hg for hg in project.hard_goals if hg.description and softg.integrity in hg.description)
-    #         for hardg in int_hg_gen:
-    #             if hardg.priority:
-    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-    #                            'children': [],
-    #                            'HTMLclass': 'blue'}
-    #             else:
-    #                 hg_dict = {'text': {'name': hardg.description, 'desc': 'Hard Goal'},
-    #                            'children': [],
-    #                            'HTMLclass': 'grey'}
-    #             for bbm in hardg.bbmechanisms:
-    #                 bbm_dict = {'text': {'name': bbm.name, 'desc': 'Black Box Mechanism'},
-    #                             'children': [],
-    #                             'HTMLclass': 'dark',
-    #                             'collapsable': True}
-    #                 for ass in bbm.assumptions:
-    #                     ass_dict = {'text': {'name': ass.name, 'desc': 'Assumptions'},
-    #                                 'children': [],
-    #                                 'HTMLclass': 'green'}
-    #                     bbm_dict['children'].append(ass_dict)
-    #
-    #                 hg_dict['children'].append(bbm_dict)
-    #
-    #             curr_dict['children'].append(hg_dict)
-    #
-    #         dictionary['nodeStructure']['children'].append(curr_dict)
-    # elif sgs and attackers:                                                                   #INSERTING SG's and COMP TODO: fix this part
-    #     for softg in auth_gen:
-    #         sg_dict = {'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
-    #                      'children': [],
-    #                      'HTMLclass': 'yellow',
-    #                      'collapsable': True}
-    #         for hg in auth_hg_gen:
-    #             print(f'{hg.id} {hg.authenticity} desc {hg.description} comp {SubService.query.filter_by(id=hg.component_id).first().name} sgs {softg.authenticity}')
-    #             if hg.sg_id == softg.id:
-    #                 component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
-    #                                            'desc': 'Component'},
-    #                                   'children': [],
-    #                                   'HTMLclass': 'blue',
-    #                                   'collapsable': True}
-    #                 sg_dict['children'].append(component_dict)
-    #         dictionary['nodeStructure']['children'].append(sg_dict)
-    #     for softg in conf_gen:
-    #         sg_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
-    #                    'children': [],
-    #                    'HTMLclass': 'yellow',
-    #                    'collapsable': True}
-    #         for hg in conf_hg_gen:
-    #             if hg.sg_id == softg.id:
-    #                 component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
-    #                                            'desc': 'Component'},
-    #                                   'children': [],
-    #                                   'HTMLclass': 'blue',
-    #                                   'collapsable': True}
-    #                 sg_dict['children'].append(component_dict)
-    #         dictionary['nodeStructure']['children'].append(sg_dict)
-    #
-    #     for softg in int_gen:
-    #         sg_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
-    #                    'children': [],
-    #                    'HTMLclass': 'yellow',
-    #                    'collapsable': True}
-    #         for hg in int_hg_gen:
-    #             if hg.sg_id == softg.id:
-    #                 component_dict = {'text': {'name': SubService.query.filter_by(id=hg.component_id).first().name,
-    #                                            'desc': 'Component'},
-    #                                   'children': [],
-    #                                   'HTMLclass': 'blue',
-    #                                   'collapsable': True}
-    #                 sg_dict['children'].append(component_dict)
-    #         dictionary['nodeStructure']['children'].append(sg_dict)
-    #
-    # elif sgs:                                                                                     #INSERTING ONLY SG's
-    #     for softg in auth_gen:
-    #         sg_dict = {'text': {'name': softg.authenticity, 'desc': 'Soft Goal'},
-    #                      'children': [],
-    #                      'HTMLclass': 'yellow',
-    #                      'collapsable': True}
-    #         dictionary['nodeStructure']['children'].append(sg_dict)
-    #     for softg in conf_gen:
-    #         sg_dict = {'text': {'name': softg.confidentiality, 'desc': 'Soft Goal'},
-    #                    'children': [],
-    #                    'HTMLclass': 'yellow',
-    #                    'collapsable': True}
-    #         dictionary['nodeStructure']['children'].append(sg_dict)
-    #
-    #     for softg in int_gen:
-    #         sg_dict = {'text': {'name': softg.integrity, 'desc': 'Soft Goal'},
-    #                    'children': [],
-    #                    'HTMLclass': 'yellow',
-    #                    'collapsable': True}
-    #         dictionary['nodeStructure']['children'].append(sg_dict)
-    #
-    # else:
-    #     pass
+    def get_status_format(dict, status, desc):
+        if status == 0:
+            dict['HTMLclass'] = 'green status-0'
+            dict['connectors']['style']['stroke-width'] = 1
+            # dict['connectors']['style']['stroke'] = '#000'
+        elif status == 1:
+            dict['text']['desc'] = f"{desc} (Correctly Implemented, NOT Correctly Integrated)"
+            dict['HTMLclass'] = 'imp-error status-1'
+            dict['connectors']['style']['stroke-width'] = 3
+            # dict['connectors']['style']['stroke'] = "#000"
+        elif status == 2:
+            dict['text']['desc'] = f"{desc} (NOT Correctly Implemented, Correctly Integrated)"
+            dict['HTMLclass'] = 'orange status-2'
+            dict['connectors']['style']['stroke-width'] = 3
+            # dict['connectors']['style']['stroke'] = "#ff1a1a"
+        elif status == 3:
+            dict['text']['desc'] = f"{desc} (NOT Correctly Implemented, NOT Correctly Integrated)"
+            dict['HTMLclass'] = "imp-error status-3"
+            dict['connectors']['style']['stroke-width'] = 3
+        else:
+            dict['text']['desc'] = f"{desc} (STATUS ERROR)"
+            dict['HTMLclass'] = 'not-imp'
+        return dict
 
     root_dict = component_dict(dictionary['nodeStructure'], project)
     for comp in root_dict['children']:

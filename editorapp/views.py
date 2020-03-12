@@ -1166,13 +1166,13 @@ def testdata():
                     #     bbm_dict['HTMLclass'] = 'imp-error'
                     get_status_format(bbm_dict, hg.correctly_implemented, "Black Box Mechanism")
                     if hg.correctly_implemented == 0:
-                        bbm_dict['HTMLclass'] = "green status-0"
+                        bbm_dict['HTMLclass'] = "green"
                     elif hg.correctly_implemented == 1:
                         bbm_dict['HTMLclass'] = "green"
                     elif hg.correctly_implemented == 2:
                         bbm_dict['HTMLclass'] = "imp-error"
                     elif hg.correctly_implemented == 3:
-                        bbm_dict['HTMLclass'] = "imp-error status-3"
+                        bbm_dict['HTMLclass'] = "imp-error"
                     parent['children'].append(bbm_dict)
         return parent
 

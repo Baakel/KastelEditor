@@ -15,7 +15,9 @@
       <div class="switch"><label class="text-light"><input type="checkbox" id="hgsSwitch" value="hgs" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>Hard Goals</label></div>
       <div class="switch"><label class="text-light"><input type="checkbox" id="bbmsSwitch" value="bbms" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>BBM's</label></div>
     </nav>
-  <div class="chart align-middle" id="tree-simple"></div>
+{#  <input type="checkbox" id="zoomCheck">#}
+{#  <label for="zoomCheck">ZOOM OUT</label>#}
+  <div class="chart align-middle zoomer container-fluid" id="tree-simple"></div>
   {% endblock %}
   {% block scripts %}
   <script src="/static/js/Treant/vendor/raphael.js"></script>

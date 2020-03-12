@@ -27,7 +27,7 @@
   <div class="container">
       <table class="table">
           <tr>
-              <td><div class="form-group mb-4">{{ form.attacker.label(class_="form-control-label") }}{{ form.attacker(class_="form-control", placeholder="Add an Attacker") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
+              <td><div class="form-group mb-4">{{ form.attacker.label(class_="form-control-label") }}{{ form.attacker(class_="form-control", placeholder="Add an Attacker", autofocus=true) }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
               <td><div class="form-group">{{ form['softgoals_list'].label(class_="form-control-label") }}{{ form['softgoals_list'](class_='form-control', id='selectfield') }}</div></td>
           </tr>
       </table>

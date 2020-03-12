@@ -24,7 +24,7 @@
         <div class="container">
             <table class="table">
                 <tr>
-                  <td><div class="form-group">{{ form.freq.label(class_="form-control-label") }}{{ form.freq(class_="form-control", placeholder="describe your requirements") }}</div></td>
+                  <td><div class="form-group">{{ form.freq.label(class_="form-control-label") }}{{ form.freq(class_="form-control", placeholder="describe your requirements", autofocus=true) }}</div></td>
 {#                    <td><div class="form-group mb-4">{{ form.subserv.label(class_='form-control-label') }}{{ form.subserv(class_='form-control', size=140, placeholder="Component") }}</div><button type="submit" name="servbtn" value="pressed2" class="btn btn-raised btn-info mb-5">Add</button></td>#}
                   <td><div class="form-group">{{ form['subservice_multiple_select'].label(class_="form-control-label") }}{{ form['subservice_multiple_select'](class_='form-control', id='selectfield') }}</div></td>
                 </tr>

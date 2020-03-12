@@ -103,25 +103,47 @@ body { background: #fff; }
 }
 
 .status-0 {
+  background-color: #c9cacb;
+  color: #212529;
   border-width: medium;
   border-color: #3e8914;
 }
 
 .status-1 {
+  background-color: #c9cacb;
+  color: #212529;
   border-width: medium;
   border-color: #e3170a;
 }
 
 .status-2 {
+  background-color: #c9cacb;
+  color: #212529;
   border-width: medium;
   border-color: #ff7733;
 }
 
 .status-3 {
+  background-color: #c9cacb;
+  color: #212529;
   border-width: thick;
   border-color: #e3170a;
 }
 
-.status-x {
+/*.status-x {*/
 
+/*}*/
+
+input[type=checkbox] {
+  display: none;
+}
+
+div.zoomer {
+  transition: transform 0.25s ease;
+  cursor: zoom-in;
+}
+
+input[type=checkbox]:checked ~ div.zoomer > div.node, input[type=checkbox]:checked ~ div.zoomer > svg {
+  transform: scale(0.5);
+  cursor: zoom-out;
 }

@@ -16,6 +16,7 @@ migrate = Migrate(app, db)
 login = LoginManager(app)
 login.login_view = 'index'
 github = GitHub(app)
+
 # db = SQLAlchemy()
 # migrate = Migrate()
 # login = LoginManager()

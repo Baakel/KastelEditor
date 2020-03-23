@@ -1,9 +1,9 @@
-from random import sample
+# from random import sample
 from flask import render_template, url_for, flash, redirect, request, session, g, abort, jsonify, Response
 from editorapp import app, db, github
 from flask_login import login_required
 from wtforms import SelectField
-from wtforms.validators import DataRequired
+# from wtforms.validators import DataRequired
 from .forms import StakeHoldersForm, ProjectForm, GoodsForm, FunctionalRequirementsForm, EditorForm, AccessForm, \
     HardGoalsForm, BbmForm, FlaskForm, ActorsForm, AttackersForm, ExtraHgForm
 from .models import Stakeholder, Users, Projects, Good, FunctionalRequirement,\
@@ -12,13 +12,13 @@ from .models import Stakeholder, Users, Projects, Good, FunctionalRequirement,\
 from flask_security import Security, SQLAlchemyUserDatastore, current_user
 # from flask_security.utils import hash_password, verify_password, get_hmac
 import flask_admin
-from flask_admin.contrib.sqla.form import InlineModelConverter
+# from flask_admin.contrib.sqla.form import InlineModelConverter
 from flask_admin.contrib import sqla
 from flask_admin import helpers as admin_helpers
 import requests
 import json, re
 from datetime import datetime
-import sys
+# import sys
 
 
 @app.before_first_request
@@ -954,28 +954,28 @@ def testdata():
             found_2 = False
             found_4 = False
             found_1 = False
+            aok = False
             for hg in comp.hard_goals:
                 if hg.correctly_implemented is None or hg.correctly_implemented == 0:
-                    status = 0
+                    aok = True
                 elif hg.correctly_implemented == 1:
-                    status = 1
                     found_1 = True
                 elif hg.correctly_implemented == 2:
-                    status = 2
                     found_2 = True
                 elif hg.correctly_implemented == 3:
                     status = 3
                     break
                 else:
-                    status = 4
                     found_4 = True
             else:
-                if found_2:
-                    status = 2
-                elif found_1:
+                if found_1:
                     status = 1
+                elif found_2:
+                    status = 2
                 elif found_4:
-                    status =4
+                    status = 4
+                else:
+                    status = 0
             comp_dict = {'text': {'name': comp.name, 'desc': 'Component'},
                          'children': [],
                          'HTMLclass': 'blue',
@@ -1005,20 +1005,17 @@ def testdata():
                             'HTMLclass': 'leaf',
                             'collapsable': False,
                             'connectors': {'style': {'stroke-width': 1}}}
-                status = 1
-                for hg in sg.hard_goals:
-                    if hg.correctly_implemented is None or hg.correctly_implemented == 0:
-                        status = 0
-                    elif hg.correctly_implemented == 2:
-                        status = 2
-                if status == 2 and 'imp-error' in parent['HTMLclass']:
-                    get_status_format(ass_dict, status, "Asset")
-                    # ass_dict['HTMLclass'] = 'imp-error'
-                    # ass_dict['text']['desc'] = 'Asset (Imp Error)'
-                elif status == 0 and 'not-imp' in parent['HTMLclass']:
-                    get_status_format(ass_dict, status, "Asset")
-                    # ass_dict['HTMLclass'] = 'not-imp'
-                    # ass_dict['text']['desc'] = 'Asset (Not Implemented)'
+                # status = 1
+                # for hg in sg.hard_goals:
+                #     if hg.correctly_implemented is None or hg.correctly_implemented == 0:
+                #         status = 0
+                #     elif hg.correctly_implemented == 2:
+                #         status = 2
+                # if status == 2 and 'imp-error' in parent['HTMLclass']:
+                #     get_status_format(ass_dict, status, "Asset")
+                # elif status == 0 and 'not-imp' in parent['HTMLclass']:
+                #     get_status_format(ass_dict, status, "Asset")
+                get_status_format(ass_dict, parent['sg_status'], "Asset")
                 parent['children'].append(ass_dict)
 
     def sgs_dictionary(parent, project):
@@ -1036,29 +1033,43 @@ def testdata():
             components = [SubService.query.filter_by(id=comp).first().name for comp in hgs_list]
 
             if parent['text']['name'] in components:
-                status = 1
-                # found = False
+                found_2 = False
+                found_1 = False
+                found_4 = False
+                aok = False
                 for hg in sg.hard_goals:
                     if hg.correctly_implemented is None or hg.correctly_implemented == 0 and SubService.query.filter_by(id=hg.component_id).first().name == parent['text']['name']:
-                        status = 0
+                        aok = True
                     elif hg.correctly_implemented == 1 and SubService.query.filter_by(
                             id=hg.component_id).first().name == parent['text']['name']:
-                        status = 1
+                        found_1 = True
                     elif hg.correctly_implemented == 2 and SubService.query.filter_by(id=hg.component_id).first().name == parent['text']['name']:
-                        status = 2
+                        found_2 = True
                     elif hg.correctly_implemented == 3 and SubService.query.filter_by(
                         id=hg.component_id).first().name == parent['text']['name']:
                         status = 3
+                        break
                     elif (hg.correctly_implemented != 2 and hg.correctly_implemented != 0 and hg.correctly_implemented != 1 and hg.correctly_implemented != 3) and SubService.query.filter_by(
                         id=hg.component_id).first().name == parent['text']['name']:
+                        found_4 = True
+                else:
+                    if found_1:
+                        status = 1
+                    elif found_2:
+                        status = 2
+                    elif found_4:
                         status = 4
+                    else:
+                        status = 0
                 sg_dict = {'text': {'name': description, 'desc': 'Soft Goal'},
                            'children': [],
                            'HTMLclass': 'yellow',
                            'collapsable': True,
                            'connectors': {'style': {'stroke-width': 1}},
                            'parent': parent['text']['name'],
-                           'id': sg.id}
+                           'id': sg.id,
+                           'sg_status': status}
+
                 get_status_format(sg_dict, status, "Soft Goal")
                 parent['children'].append(sg_dict)
         return parent
@@ -1167,12 +1178,18 @@ def testdata():
                     get_status_format(bbm_dict, hg.correctly_implemented, "Black Box Mechanism")
                     if hg.correctly_implemented == 0:
                         bbm_dict['HTMLclass'] = "green"
+                        bbm_dict['text']['desc'] = "Black Box Mechanism (Correctly Implemented)"
                     elif hg.correctly_implemented == 1:
                         bbm_dict['HTMLclass'] = "green"
+                        bbm_dict['text']['desc'] = "Black Box Mechanism (Correctly Implemented)"
                     elif hg.correctly_implemented == 2:
                         bbm_dict['HTMLclass'] = "imp-error"
+                        bbm_dict['text']['desc'] = "Black Box Mechanism (BBM NOT correctly Implemented)"
                     elif hg.correctly_implemented == 3:
                         bbm_dict['HTMLclass'] = "imp-error"
+                        bbm_dict['text']['desc'] = "Black Box Mechanism (BBM NOT correctly Implemented)"
+                    else:
+                        bbm_dict['text']['desc'] = "Black Box Mechanism (Not Analyzed)"
                     parent['children'].append(bbm_dict)
         return parent
 
@@ -1192,23 +1209,28 @@ def testdata():
 
     def get_status_format(dict, status, desc):
         if status == 0:
-            dict['HTMLclass'] = 'green status-0'
+            dict['HTMLclass'] = 'status-0'
             dict['connectors']['style']['stroke-width'] = 1
+            dict['text']['desc'] = f"{desc} (BBM Correctly Integrated)"
             # dict['connectors']['style']['stroke'] = '#000'
         elif status == 1:
-            dict['text']['desc'] = f"{desc} (Correctly Implemented, NOT Correctly Integrated)"
+            dict['text']['desc'] = f"{desc} (BBM NOT Correctly Integrated)"
             dict['HTMLclass'] = 'imp-error status-1'
             dict['connectors']['style']['stroke-width'] = 3
             # dict['connectors']['style']['stroke'] = "#000"
         elif status == 2:
-            dict['text']['desc'] = f"{desc} (NOT Correctly Implemented, Correctly Integrated)"
+            dict['text']['desc'] = f"{desc} (BBM Correctly Integrated)"
             dict['HTMLclass'] = 'orange status-2'
             dict['connectors']['style']['stroke-width'] = 3
             # dict['connectors']['style']['stroke'] = "#ff1a1a"
         elif status == 3:
-            dict['text']['desc'] = f"{desc} (NOT Correctly Implemented, NOT Correctly Integrated)"
+            dict['text']['desc'] = f"{desc} (BBM NOT Correctly Integrated)"
             dict['HTMLclass'] = "imp-error status-3"
             dict['connectors']['style']['stroke-width'] = 3
+        elif status == 4:
+            dict['text']['desc'] = f"{desc} (BBM integration not analyzed)"
+            dict['HTMLclass'] = "not-analyzed"
+            dict['connectors']['style']['stroke-width'] = 1
         else:
             dict['text']['desc'] = f"{desc} (STATUS ERROR)"
             dict['HTMLclass'] = 'not-imp'

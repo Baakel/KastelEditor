@@ -18,7 +18,7 @@
                 {{ form.hidden_tag() }}
                 <div class="container-fluid ml-5 mt-5">
                     <div class="row">
-                        <div class="col"><div class="form-group">{{ form.project.label(class_="form-control-label") }}{{ form.project(class_="form-control", placeholder="Project Name") }}</div></div>
+                        <div class="col"><div class="form-group">{{ form.project.label(class_="form-control-label") }}{{ form.project(class_="form-control", placeholder="Project Name", autofocus=true) }}</div></div>
                         <div class="col"><button type="submit" class="btn btn-raised btn-primary">Create</button></div>
                     </div>
                     <div class="row">

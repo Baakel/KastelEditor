@@ -15,11 +15,21 @@
       <div class="switch"><label class="text-light"><input type="checkbox" id="hgsSwitch" value="hgs" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>Hard Goals</label></div>
       <div class="switch"><label class="text-light"><input type="checkbox" id="bbmsSwitch" value="bbms" checked><span class="bmd-switch-track"><div class="ripple-container"></div></span>BBM's</label></div>
     </nav>
-{#  <input type="checkbox" id="zoomCheck">#}
-{#  <label for="zoomCheck">ZOOM OUT</label>#}
+  <input type="checkbox" id="zoomCheck">
+    <label for="zoomCheck"><i id="mag" class="material-icons">zoom_out</i></label>
   <div class="chart align-middle zoomer container-fluid" id="tree-simple"></div>
   {% endblock %}
   {% block scripts %}
+{#  <script>#}
+{#    import Panzoom from "../static/js/panzoom/src/panzoom";#}
+{##}
+{#    const elem = document.getElementById('zoomer');#}
+{#    const panzoom = Panzoom(elem, {#}
+{#        maxScale: 5#}
+{#    });#}
+{#    panzoom.pan(10, 10);#}
+{#    panzoom.zoom(2, {animate: true});#}
+{#  </script>#}
   <script src="/static/js/Treant/vendor/raphael.js"></script>
   <script src="/static/js/Treant/Treant.js"></script>
   <script src="/static/js/Treant/vendor/jquery.min.js"></script>
@@ -35,6 +45,7 @@
     let hg = document.getElementById("hgsSwitch");
     let ass = document.getElementById("assSwitch");
     let freq = document.getElementById("freqSwitch");
+    const mag = document.getElementById("zoomCheck");
     let switches = [stakeholders, attackers, actors, bbms, sg, hg, ass, freq];
 
     function switchesState() {
@@ -51,6 +62,15 @@
     let getChart = $.get('{{ url_for("testdata") }}', switchesState(), function(object) {
       window.object = object;
       window.ochart = new Treant(object);
+    });
+
+    mag.addEventListener("change", function() {
+        const magIcon = document.getElementById("mag");
+        if (this.checked) {
+            magIcon.innerHTML = "zoom_in"
+        } else {
+            magIcon.innerHTML = "zoom_out"
+        }
     });
 
     for (i = 0; i < switches.length ; i++) {
@@ -199,4 +219,5 @@
       }
     }
   </script>
+
   {% endblock %}

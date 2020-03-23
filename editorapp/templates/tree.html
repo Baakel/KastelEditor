@@ -17,7 +17,9 @@
     </nav>
   <input type="checkbox" id="zoomCheck">
     <label for="zoomCheck"><i id="mag" class="material-icons">zoom_out</i></label>
-  <div class="chart align-middle zoomer container-fluid" id="tree-simple"></div>
+    <div class="wrap">
+      <div class="chart align-middle zoomer" id="tree-simple"></div>
+    </div>
   {% endblock %}
   {% block scripts %}
 {#  <script>#}
@@ -64,14 +66,14 @@
       window.ochart = new Treant(object);
     });
 
-    mag.addEventListener("change", function() {
-        const magIcon = document.getElementById("mag");
-        if (this.checked) {
-            magIcon.innerHTML = "zoom_in"
-        } else {
-            magIcon.innerHTML = "zoom_out"
-        }
-    });
+    {#mag.addEventListener("change", function() {#}
+    {#    const magIcon = document.getElementById("mag");#}
+    {#    if (this.checked) {#}
+    {#        magIcon.innerHTML = "zoom_in"#}
+    {#    } else {#}
+    {#        magIcon.innerHTML = "zoom_out"#}
+    {#    }#}
+    {# });#}
 
     for (i = 0; i < switches.length ; i++) {
       switch(i) {

@@ -1,4 +1,40 @@
+:root {
+  --scroll-width: calc(100vw - 100%)
+}
 .fullscreen {
-  height: 100%;
-  min-height: 100%;
+  height: max-content;
+  /*width: calc(100vw - (100vw - 100%));*/
+  margin: 0;
+  padding: 0;
+
+  box-sizing: border-box;
+  /*width: 100vw;*/
+  display: grid;
+  grid-template-rows: 8% 92%;
+  grid-template-columns: 10% 80% 10%;
+  grid-template-areas: "nbar nbar nbar"
+                       "lcol mcol rcol";
+}
+
+.lcol {
+  background-color: #343a40;
+  grid-area: lcol;
+}
+
+.mcol {
+  background-color: #f8f9fa;
+  grid-area: mcol;
+}
+
+.rcol {
+  background-color: #343a40;
+  grid-area: rcol;
+}
+
+.nbar {
+  grid-area: nbar;
+}
+
+.wrap {
+  overflow: auto;
 }

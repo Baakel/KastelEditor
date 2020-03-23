@@ -1,8 +1,6 @@
-:root {
-  --scroll-width: calc(100vw - 100%)
-}
+
 .fullscreen {
-  height: max-content;
+  height: 100%;
   /*width: calc(100vw - (100vw - 100%));*/
   margin: 0;
   padding: 0;

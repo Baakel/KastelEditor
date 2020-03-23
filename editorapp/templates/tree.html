@@ -66,14 +66,14 @@
       window.ochart = new Treant(object);
     });
 
-    {#mag.addEventListener("change", function() {#}
-    {#    const magIcon = document.getElementById("mag");#}
-    {#    if (this.checked) {#}
-    {#        magIcon.innerHTML = "zoom_in"#}
-    {#    } else {#}
-    {#        magIcon.innerHTML = "zoom_out"#}
-    {#    }#}
-    {# });#}
+    mag.addEventListener("change", function() {
+        const magIcon = document.getElementById("mag");
+        if (this.checked) {
+            magIcon.innerHTML = "zoom_in"
+        } else {
+            magIcon.innerHTML = "zoom_out"
+        }
+     });
 
     for (i = 0; i < switches.length ; i++) {
       switch(i) {

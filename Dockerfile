@@ -8,7 +8,7 @@ COPY requirements.txt requirements.txt
 RUN python -m venv venv
 RUN venv/bin/pip install -r requirements.txt
 RUN venv/bin/pip install gunicorn
-RUN venv/bin/pip install -Iv pymysql==0.8.1
+RUN venv/bin/pip install pymysql
 
 COPY editorapp editorapp
 COPY db_repository db_repository

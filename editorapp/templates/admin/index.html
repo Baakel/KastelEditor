@@ -9,7 +9,7 @@
             <p class="lead">
                 Admin Panel
             </p>
-            {% if current_user.is_authenticated %}
+            {% if current_user.is_authenticated and current_user.has_role("superuser") %}
             <p>
                 Welcome to the admin panel. Use with care, all changes are permanent and immediate. Deleting projects
                 should be done through the normal manner in the project view and not through here as it would leave
@@ -20,6 +20,10 @@
                To delete a user, please make sure that the user has no current projects and is not an editor in any
                 projects.
             </b></p>
+            {% else %}
+              <p>
+                <h1 class="text-danger">You don't have acces to this area</h1>
+              </p>
             {% endif %}
             {% if not current_user.is_authenticated %}
             <p>

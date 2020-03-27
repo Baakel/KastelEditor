@@ -15,6 +15,8 @@ import flask_admin
 # from flask_admin.contrib.sqla.form import InlineModelConverter
 from flask_admin.contrib import sqla
 from flask_admin import helpers as admin_helpers
+from .schema import schema
+from flask_graphql import GraphQLView
 import requests
 import json, re
 from datetime import datetime
@@ -182,8 +184,8 @@ def internal_error(error):
 def before_request():
     g.user = None
     g.project = None
-    if 'user_id' in session:
-        g.user = Users.query.get(session['user_id'])
+    if '_user_id' in session:
+        g.user = Users.query.get(session['_user_id'])
     arguments = request.view_args
     if arguments is not None:
         if 'name' in arguments:
@@ -1559,7 +1561,7 @@ def authorized(oauth_token):
         db.session.add(r)
         db.session.commit()
 
-    session['user_id'] = user.id
+    session['_user_id'] = user.id
     return redirect(next_url)
 
 
@@ -1572,7 +1574,7 @@ def token_getter():
 
 @app.route('/logout')
 def logout():
-    session.pop('user_id', None)
+    session.pop('_user_id', None)
     return redirect(url_for('index'))
 
 
@@ -2884,6 +2886,7 @@ class MyModelView(sqla.ModelView):
 
     def is_accessible(self):
         if not current_user.is_active or not current_user.is_authenticated:
+            print(f'user {current_user} session is {session}')
             return False
 
         if current_user.has_role('superuser'):
@@ -2893,7 +2896,7 @@ class MyModelView(sqla.ModelView):
 
     def _handle_view(self, name, **kwargs):
         if not self.is_accessible():
-            if current_user.is_authenticated():
+            if current_user.is_authenticated:
                 flash('You don\'t have permission to access this page.', 'error')
                 return redirect(url_for('index'))
             else:
@@ -2929,7 +2932,7 @@ class MyModelViewBbMech(sqla.ModelView):
 
     def _handle_view(self, name, **kwargs):
         if not self.is_accessible():
-            if current_user.is_authenticated():
+            if current_user.is_authenticated:
                 flash('You don\'t have permission to access this page.', 'error')
                 return redirect(url_for('index'))
             else:
@@ -2968,7 +2971,7 @@ class MyModelViewHg(sqla.ModelView):
 
     def _handle_view(self, name, **kwargs):
         if not self.is_accessible():
-            if current_user.is_authenticated():
+            if current_user.is_authenticated:
                 flash('You don\'t have permission to access this page.', 'error')
                 return redirect(url_for('index'))
             else:
@@ -3003,3 +3006,7 @@ def security_context_processor():
 
 def hg_id_gen(proj, fr, comp, sg):
     return f"HGP{proj.id}F{fr.id}C{comp.id}SG{sg.id}T{datetime.now().strftime('%d%m%y%H%M%S%f')}"
+
+app.add_url_rule(
+        "/graphql", view_func=GraphQLView.as_view("graphql", schema=schema, graphiql=True)
+)

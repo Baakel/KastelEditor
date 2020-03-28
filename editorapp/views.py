@@ -2985,7 +2985,7 @@ admin = flask_admin.Admin(
     template_mode='bootstrap3'
 )
 
-admin.add_view(MyModelView(Role, db.session))
+admin.add_view(MyModelView(Role, db.session)) 
 admin.add_view(MyModelView(Users, db.session))
 admin.add_view(MyModelView(Projects, db.session))
 admin.add_view(MyModelView(Actors, db.session, 'Actor Roles'))
@@ -3007,6 +3007,6 @@ def security_context_processor():
 def hg_id_gen(proj, fr, comp, sg):
     return f"HGP{proj.id}F{fr.id}C{comp.id}SG{sg.id}T{datetime.now().strftime('%d%m%y%H%M%S%f')}"
 
-app.add_url_rule(
-        "/graphql", view_func=GraphQLView.as_view("graphql", schema=schema, graphiql=True)
-)
+# app.add_url_rule(
+#         "/graphql", view_func=GraphQLView.as_view("graphql", schema=schema, graphiql=True)
+# )

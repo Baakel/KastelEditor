@@ -9,6 +9,7 @@ RUN python -m venv venv
 RUN venv/bin/pip install -r requirements.txt
 RUN venv/bin/pip install gunicorn
 RUN venv/bin/pip install pymysql
+#RUN apk add --update nodejs npm
 
 COPY editorapp editorapp
 COPY db_repository db_repository

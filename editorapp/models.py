@@ -3,9 +3,9 @@ from flask_login import LoginManager
 from flask_security import RoleMixin, UserMixin
 
 # lm = LoginManager(app)
-@login.user_loader
-def load_user(id):
-    return Users.query.get(int(id))
+# @login.user_loader
+# def load_user(id):
+#     return Users.query.get(int(id))
 
 wprojects = db.Table('wprojects',
                      db.Column('user_id', db.Integer, db.ForeignKey('users.id')),

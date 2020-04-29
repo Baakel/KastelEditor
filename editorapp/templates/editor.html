@@ -18,27 +18,29 @@
         {% endif %}
       </div>
     </div>
+      <div class="container">
         <form action="" method="post" name="addstakeholder">
             {{ form.hidden_tag() }}
-        <div class="container">
-            <table class="table">
-                <tr>
-                    <td colspan="2"><div class="form-group mb-4">{{ form.stakeholder.label(class_="form-control-label") }}{{ form.stakeholder(class_="form-control", placeholder="Add a stakeholder", autofocus=true) }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
-                </tr>
-            </table>
-            <table class="table table-hover">
-                <tr class="thead-inverse text-center mt-5">
-                    <th colspan="2">Current Stakeholders</th>
-                </tr>
-                {% for stakeholder in project.stake_holders %}
-                <tr>
-                    <td id="{{ stakeholder.nickname }}">{{ stakeholder.nickname }}</td>
-                    <td class="text-right"><a class="text-primary" onclick="editVal(document.getElementById('{{ stakeholder.nickname }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removesh', project=project.name, desc=stakeholder.nickname) }}"><i class="material-icons">delete</i></a></td>
-                </tr>
-                {% endfor %}
-            </table>
-        </div>
+          <table class="table">
+              <tr>
+                  <td colspan="2"><div class="form-group mb-4">{{ form.stakeholder.label(class_="form-control-label") }}{{ form.stakeholder(class_="form-control", placeholder="Add a stakeholder") }}</div><button type="submit" class="btn btn-raised btn-primary mb-5">Add</button></td>
+              </tr>
+          </table>
         </form>
+        <form action="" method="post" name="editstakeholder">
+          <table class="table table-hover">
+              <tr class="thead-inverse text-center mt-5">
+                  <th colspan="2">Current Stakeholders</th>
+              </tr>
+              {% for stakeholder in project.stakeholders() %}
+              <tr>
+                  <td id="{{ stakeholder.nickname }}">{{ stakeholder.nickname }}</td>
+                  <td class="text-right"><a class="text-primary" onclick="editVal(document.getElementById('{{ stakeholder.nickname }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removesh', project=project.name, desc=stakeholder.nickname) }}"><i class="material-icons">delete</i></a></td>
+              </tr>
+              {% endfor %}
+          </table>
+        </form>
+      </div>
 {% endblock %}
 
 {% block scripts %}

@@ -19,9 +19,9 @@
         {% endif %}
       </div>
     </div>
+      <div class="container">
         <form action="" method="post" name="addsgoals">
             {{ form.hidden_tag() }}
-        <div class="container">
             <table class="table">
                 <tr>
                   <td><div class="form-group">{{ form.freq.label(class_="form-control-label") }}{{ form.freq(class_="form-control", placeholder="describe your requirements", autofocus=true) }}</div></td>
@@ -33,13 +33,15 @@
                   <td><div class="form-group">{{ form.subserv.label(id='servinplabel', class_='form-control-label', style='display: none;') }}{{ form.subserv(id='servinp', class_='form-control', style='display: none;', placeholder="Component") }}</div></td>
                 </tr>
             </table>
+        </form>
+        <form action="" method="post" name="editform">
         <div class="row">
             <div class="col">
                 <table class="table table-hover">
                     <tr class="thead-inverse text-center mt-5">
                         <th colspan="2">Current Functional Requirements</th>
                     </tr>
-                    {% for freq in project.functional_req %}
+                    {% for freq in project.functional_requirements() %}
                             <tr>
                                 <td id="{{ freq.description }}">{{ freq.description }}</td>
                                 <td class="text-right"><a class="text-primary" onclick="editVal(document.getElementById('{{ freq.description }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removefr', project=project.name, desc=freq.description) }}"><i class="material-icons">delete</i></a></td>
@@ -52,34 +54,36 @@
                     <tr class="thead-inverse text-center mt-5">
                         <th colspan="2">Current Components</th>
                     </tr>
-                    {% for serv in project.sub_services %}
+                    {% for serv in project.sub_services() %}
                         <tr>
                             <td id="{{ serv.name }}">{{ serv.name }}</td>
-                            <td class="text-right"><a class="text-primary" onclick="editSub(document.getElementById('{{ serv.name }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removesub', project=project.name, id=serv.id) }}"><i class="material-icons">delete</i></a></td>
+                            <td class="text-right"><a class="text-primary" onclick="editSub(document.getElementById('{{ serv.name }}'))" href="#"><i class="material-icons">edit</i></a>&nbsp;&nbsp;&nbsp;<a class="text-danger" href="{{ url_for('removesub', project=project.name, desc=serv.name) }}"><i class="material-icons">delete</i></a></td>
                         </tr>
                     {% endfor %}
                 </table>
             </div>
         </div>
+        </form>
+        <form action="" method="post" name="updatematrix">
         <div class="row">
             <table class="table table-hover">
                 <thead class="thead-inverse">
                     <tr>
                         <th class="text-light">Functional Requirement / Component</th>
-                        {% for serv in project.sub_services %}
+                        {% for serv in project.sub_services() %}
                             <th class="bg-info text-light">{{ serv.name }}</th>
                         {% endfor %}
                     </tr>
                 </thead>
                 <tbody>
-                    {% for freq in project.functional_req %}
+                    {% for freq in project.functional_requirements() %}
                         <tr>
                             <td>{{ freq.description }}</td>
-                            {% for serv in project.sub_services %}
-                                {% if serv in freq.services %}
-                                    <td><input title="{{ serv.name }}" name="chbpx" value="{{ freq.id }}-{{ serv.id }}" type="checkbox" checked></td>
+                            {% for serv in project.sub_services() %}
+                                {% if serv.name in freq.services %}
+                                    <td><input title="{{ serv.name }}" name="chbpx" value="{{ freq.description }}¡{{ serv.name }}" type="checkbox" checked></td>
                                 {% else %}
-                                    <td><input title="{{ serv.name }}" name="chbpx" value="{{ freq.id }}-{{ serv.id }}" type="checkbox"></td>
+                                    <td><input title="{{ serv.name }}" name="chbpx" value="{{ freq.description }}¡{{ serv.name }}" type="checkbox"></td>
                                 {% endif %}
                             {% endfor %}
                         </tr>
@@ -90,8 +94,8 @@
                 </tbody>
             </table>
         </div>
-        </div>
         </form>
+      </div>
 {#        <form>#}
 {#        {{ form2.hidden_tag() }}#}
 {#        <table>#}
@@ -122,11 +126,11 @@
     sub_button.addEventListener('click', function() {
       checkboxes = document.getElementsByName('chbpx');
       fr = 0;
-      {% for fr in project.functional_req %}
+      {% for fr in project.functional_requirements() %}
         fr++;
       {% endfor %}
       serv = 0;
-      {% for serv in project.sub_services %}
+      {% for serv in project.sub_services() %}
         serv++;
       {% endfor %}
       i = -1;

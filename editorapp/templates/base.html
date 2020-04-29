@@ -24,7 +24,7 @@
                          {{ g.project.name }}
                       </button>
                       <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                          {% for proj in g.user.wprojects %}
+                          {% for proj in g.user.wprojects() %}
                           <a class="dropdown-item" href="{{ url_for('projects', name=proj.name )}}">{{ proj.name }}</a>
                           {% endfor %}
                           <div class="dropdown-divider"></div>

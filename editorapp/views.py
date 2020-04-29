@@ -1,6 +1,15 @@
+# from .graph_models import Stakeholder as gStakeholder
+# from .graph_models import Project as gProject
 # from random import sample
-from flask import render_template, url_for, flash, redirect, request, session, g, abort, jsonify, Response
-from editorapp import app, db, github
+from .gmodels import Project as gProject
+from .gmodels import Stakeholder as gStakeholder
+from .gmodels import User as gUser
+from .gmodels import Asset as gAsset
+from .gmodels import SoftGoal as gSoftGoal
+from .gmodels import FunctionalRequirement as gFuncReq
+from .gmodels import SubService as gSubServ
+from flask import render_template, url_for, flash, redirect, request, session, g, abort, jsonify, Response, make_response
+from editorapp import app, db, github, driver  #, gdb, graph, matcher
 from flask_login import login_required
 from wtforms import SelectField
 # from wtforms.validators import DataRequired
@@ -21,6 +30,11 @@ import requests
 import json, re
 from datetime import datetime
 # import sys
+
+
+# @app.teardown_appcontext
+# def close_gdb(error):
+#     driver.close()
 
 
 @app.before_first_request
@@ -156,6 +170,8 @@ def create_db_data():
             db.session.add(a)
         db.session.commit()
 
+    # with driver.session() as session:
+    #     session.run("CREATE CONSTRAINT ON (p:Project) ASSERT p.name is UNIQUE")
 
 
 @app.errorhandler(401)
@@ -185,21 +201,25 @@ def before_request():
     g.user = None
     g.project = None
     if '_user_id' in session:
-        g.user = Users.query.get(session['_user_id'])
+        # g.user = Users.query.get(session['_user_id'])
+        g.user = gUser.get_user(session['_user_id'])
     arguments = request.view_args
     if arguments is not None:
         if 'name' in arguments:
             if arguments['name'] is not 'New Project':
                 g.page = arguments['name']
                 session['current_project'] = arguments['name']
-                g.project = Projects.query.filter_by(name=arguments['name']).first()
+                # g.project = Projects.query.filter_by(name=arguments['name']).first()
+                g.project = gProject(arguments['name'])
+                print(g.page, g.project)
             else:
                 g.page = 'Newproj'
                 session['current_project'] = 'New Project'
         elif 'project' in arguments:
             g.page = arguments['project']
             session['current_project'] = arguments['project']
-            g.project = Projects.query.filter_by(name=arguments['project']).first()
+            # g.project = Projects.query.filter_by(name=arguments['project']).first()
+            g.project = gProject(arguments['project'])
         else:
             g.page = 'Noproj'
             session['current_project'] = None
@@ -220,6 +240,46 @@ def test(id):
         print('no args')
         print(request.args)
     return redirect(url_for('index'))
+
+
+@app.route('/graph', methods=['GET', 'POST', 'DELETE'])
+def graphTest():
+    if request.method == 'POST':
+        name = request.form.get('stakeholder')
+        stakeholder = gStakeholder(name, 'test')
+        result = stakeholder.check_stakeholder()
+        if result:
+            print(result)
+        else:
+            stakeholder.create_stakeholder()
+
+    # p = gProject('Prueba 4')
+    # print(p.create_project())
+    # p2 = gProject('Prueba 3')
+    # print(p2.create_project())
+    # with driver.session() as session:
+    #     res = session.run("MERGE (p:Project {name: $name}) RETURN p", name='Prueba').summary()
+    #     print(res)
+        # result = session.run("MATCH (a:Stakeholder) WHERE a.name = $name RETURN a", name='Law').data()
+        # print(result[0]['a']._labels)
+        # result = session.run("MATCH (a:Stakeholder) WHERE a.name = $name RETURN a", name='Law').graph()
+        # for node in result.nodes:
+        #     print(node)
+        #     print(node['name'])
+    # print(gdb, graph)
+    # cpp = gProject()
+    # cpp.name = "CCP"
+    # law = gStakeholder()
+    # law.name = 'Law'
+    # graph.push(law)
+    # cpp.important_to.add(law)
+    # graph.push(cpp)
+    # for row in matcher.match("Stakeholder").where("_.name = 'Law'"):
+    #     print(row)
+    # print([matcher.match("Project").where("_.name = 'CCP'").__iter__()])
+    response = make_response(render_template('graphProj.html', title='Graphiql'))
+    response.headers['testhead'] = 'head is good'
+    return response
 
 
 @app.route('/help')
@@ -1280,7 +1340,6 @@ def index():
                 access = True
             else:
                 access = False
-
         projects_list = Projects.query.all()
     else:
         projects_list = []
@@ -1293,33 +1352,40 @@ def index():
 @app.route('/stakeholders/<project>', methods=['GET', 'POST'])
 @login_required
 def stakeholders(project):
-    project = Projects.query.filter_by(name=project).first()
+    project = gProject(project)
     edited_sh = [k for k in request.form if k.startswith('edited')]
-    if g.user in project.editors:
+    if g.user.id in project.editors():
         if edited_sh:
             original_nickname = edited_sh[0].split('-')
-            sh_list = [sh.nickname for sh in Stakeholder.query.filter_by(project_id=project.id).all()]
+            sh_list = [value['name'] for value in gStakeholder.get_all(project.name)]
             if request.form.get(edited_sh[0]) not in sh_list:
-                sh = Stakeholder.query.filter_by(nickname=original_nickname[1], project_id=project.id).first()
-                sh.nickname = request.form.get(edited_sh[0])
-                db.session.commit()
+                sh = gStakeholder(original_nickname[1], project.name)
+                sh.edit(request.form.get(edited_sh[0]))
                 flash('Stakeholder \'{}\' changed to \'{}\''.format(original_nickname[1], request.form.get(edited_sh[0])), 'succ')
             else:
-                flash('Stakeholder \'{}\' already exists'.format(original_nickname[1]), 'error')
+                flash('Stakeholder \'{}\' already exists'.format(request.form.get(edited_sh[0])), 'error')
         form = StakeHoldersForm()
         if form.validate_on_submit():
-            stkhld = Stakeholder.query.filter_by(nickname=form.stakeholder.data, project_id=project.id).first()
-            if stkhld is None:
-                stakeholder = Stakeholder(nickname=form.stakeholder.data, project_id=project.id)
-                db.session.add(stakeholder)
-                db.session.commit()
-                flash('Stakeholder Added to the Database', 'succ')
-                return redirect(url_for('stakeholders', project=project.name))
+            # stkhld = Stakeholder.query.filter_by(nickname=form.stakeholder.data, project_id=project.id).first()
+            gstakeholder = gStakeholder(form.stakeholder.data, project.name)
+            res = gstakeholder.check_stakeholder()
+            if res:
+                flash('Stakeholder already in database', 'error')
             else:
-                flash('Stakeholder already exists', 'error')
+                gstakeholder.create_stakeholder()
+                flash('Stakeholder added to the database', 'succ')
+                return redirect(url_for('stakeholders', project=project.name))
+            # if stkhld is None:
+            #     stakeholder = Stakeholder(nickname=form.stakeholder.data, project_id=project.id)
+            #     db.session.add(stakeholder)
+            #     db.session.commit()
+            #     flash('Stakeholder Added to the Database', 'succ')
+            #     return redirect(url_for('stakeholders', project=project.name))
+            # else:
+            #     flash('Stakeholder already exists', 'error')
         # else:
         #     flash('You can\'t edit a Stakeholder and add a new one at the same time')
-        stakeholders = Stakeholder.query.filter_by(project_id=project.id).all()
+        stakeholders = project.stakeholders()
         return render_template('editor.html',
                                title=project.name,
                                form=form,
@@ -1330,18 +1396,29 @@ def stakeholders(project):
         return redirect(url_for('index'))
 
 
+@app.route('/stakeholders/list/<project>')
+@login_required
+def stakeholder_list(project):
+    stakeholders = gProject(project).stakeholders()
+    print(stakeholders)
+    return None
+
+
 @app.route('/removesh/<project>/<desc>', methods=['GET', 'POST'])
 @login_required
 def removesh(project, desc):
-    project = Projects.query.filter_by(name=project).first()
-    if g.user in project.editors:
-        sh = Stakeholder.query.filter_by(nickname=desc, project_id=project.id).first()
-        name = sh.nickname
-        for sth in sh.goods:
-            sth.remove_stakeholder(sh)
-        db.session.commit()
-        Stakeholder.query.filter_by(nickname=desc, project_id=project.id).delete()
-        db.session.commit()
+    # project = Projects.query.filter_by(name=project).first()
+    project = gProject(project)
+    if g.user.id in project.editors():
+        # sh = Stakeholder.query.filter_by(nickname=desc, project_id=project.id).first()
+        sh = gStakeholder(desc, project.name)
+        sh.delete()
+        name = sh.name
+        # for sth in sh.goods:
+        #     sth.remove_stakeholder(sh)
+        # db.session.commit()
+        # Stakeholder.query.filter_by(nickname=desc, project_id=project.id).delete()
+        # db.session.commit()
         flash('Stakeholder "{}" removed'.format(name), 'error')
         return redirect(url_for('stakeholders', project=project.name))
     else:
@@ -1362,22 +1439,30 @@ def projects(name):
     for usr in usrs:
         users.append(usr.nickname)
     if project is not None:
-        for edtr in project.editors:
+        for edtr in project.editors():
             current_editors.append(edtr.nickname)
     if form.validate_on_submit():
-        projn = Projects.make_unique_name(form.project.data)
-        projname = Projects(name=projn, creator=g.user.id)
-        db.session.add(projname)
-        db.session.commit()
-        db.session.add(g.user.contribute(projname))
-        db.session.commit()
+        projn = form.project.data
+        # projname = Projects(name=projn, creator=g.user.id)
+        # db.session.add(projname)
+        # db.session.commit()
+        # db.session.add(g.user.contribute(projname))
+        # db.session.commit()
+        gproj = gProject(projn)
+        if not gproj.get_project():
+            gproj.create_project(g.user.id)
+        else:
+            flash('Project name already exists', 'error')
+            return redirect(url_for('projects', name='New Project'))
         if form.law.data is True:
-            projid = Projects.query.filter_by(name=projname.name).first()
-            law = Stakeholder(nickname='Law', project_id=projid.id)
-            db.session.add(law)
-            db.session.commit()
+            # projid = Projects.query.filter_by(name=projname.name).first()
+            # law = Stakeholder(nickname='Law', project_id=projid.id)
+            # db.session.add(law)
+            # db.session.commit()
+            law = gStakeholder('Law', gproj.name)
+            law.create_stakeholder()
         flash('Project created.', 'succ')
-        return redirect(url_for('stakeholders', project=projname.name))
+        return redirect(url_for('stakeholders', project=gproj.name))
     if form2.validate_on_submit():
         editor = Users.query.filter_by(nickname=form2.editor.data).first()
         if editor is None:
@@ -1532,36 +1617,28 @@ def authorized(oauth_token):
         flash('Authorization failed.')
         return redirect(next_url)
 
-    emailurl = "https://api.github.com/user?access_token=" + oauth_token
-    r = requests.get(emailurl)
-    nickname = r.json()['login']
-    u_id = r.json()['id']
-    if r.json()['email'] is None:
-        emailurl = "https://api.github.com/user/emails?access_token=" + oauth_token
-        r = requests.get(emailurl)
-        v = 0
-        for i in r.json():
-            if r.json()[v]['primary'] is True:
-                contact = r.json()[v]['email']
-            else:
-                v += 1
+    g.user = gUser(oauth_token)
+    github_user = github.get('/user')
+    nickname = github_user['login']
+    u_id = github_user['id']
+    if github_user['email'] is None:
+        github_email = github.get('/user/emails')
+        for i, _ in enumerate(github_email):
+            if github_email[i]['primary'] is True:
+                contact = github_email[i]['email']
     else:
-        contact = r.json()['email']
-    user = Users.query.filter_by(nickname=nickname).first()
-    if user is None:
-        user = Users(id=u_id, nickname=nickname, contact=contact)
-        alrdy_users = Users.query.first()
-        if not alrdy_users:
-            role = Role.query.filter_by(name='superuser').first()
-        else:
-            role= Role.query.filter_by(name='user').first()
-        db.session.add(user)
-        db.session.commit()
-        r = user.user_register(role)
-        db.session.add(r)
-        db.session.commit()
+        contact = github_user['email']
+    guser = gUser.query(nickname)
+    any_users = gUser.get_all()
+    if not any_users:
+        role = 'superuser'
+    else:
+        role = 'user'
+    if not guser:
+        new_user = gUser(nickname=nickname, contact=contact, id=u_id, role=role, token=oauth_token)
+        new_user.create()
 
-    session['_user_id'] = user.id
+    session['_user_id'] = new_user.id if not guser else guser[0]['u']['id']
     return redirect(next_url)
 
 
@@ -1569,7 +1646,7 @@ def authorized(oauth_token):
 def token_getter():
     user = g.user
     if user is not None:
-        return user.github_access_token
+        return user.token
 
 
 @app.route('/logout')
@@ -1581,57 +1658,61 @@ def logout():
 @app.route('/assets/<project>', methods=['GET', 'POST'])
 @login_required
 def goods(project):
-    project = Projects.query.filter_by(name=project).first()
-    if g.user in project.editors:
+    project = gProject(project)
+    if g.user.id in project.editors():
         edited_asset = [a for a in request.form if a.startswith('edited')]
         if edited_asset:
             original_asset_name = edited_asset[0].split('-')[1]
             new_asset_name = request.form.get(edited_asset[0])
-            original_asset = Good.query.filter_by(description=original_asset_name, project_id=project.id).first()
-            original_asset.description = new_asset_name
+            original_asset = gAsset(original_asset_name, project.name)
+            new_asset = gAsset(new_asset_name, project.name).check_asset()
+            if new_asset:
+                flash('Asset with that name already exists', 'error')
+            else:
+                original_asset.edit(new_asset_name)
 
-            project_soft_goals = [sg for sg in project.soft_goals]
-            auth_sg = [i for i in project_soft_goals if (i.authenticity and original_asset_name in i.authenticity)]
-            for auth in auth_sg:
-                string_to_replace = auth.authenticity
-                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
-                auth.authenticity = new_string
-            conf_sg = [i for i in project_soft_goals if (i.confidentiality and original_asset_name in i.confidentiality)]
-            for conf in conf_sg:
-                string_to_replace = conf.confidentiality
-                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
-                conf.confidentiality = new_string
-            int_sg = [i for i in project_soft_goals if (i.integrity and original_asset_name in i.integrity)]
-            for integ in int_sg:
-                string_to_replace = integ.integrity
-                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
-                integ.integrity = new_string
+            # project_soft_goals = [sg for sg in project.soft_goals]
+            # auth_sg = [i for i in project_soft_goals if (i.authenticity and original_asset_name in i.authenticity)]
+            # for auth in auth_sg:
+            #     string_to_replace = auth.authenticity
+            #     new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+            #     auth.authenticity = new_string
+            # conf_sg = [i for i in project_soft_goals if (i.confidentiality and original_asset_name in i.confidentiality)]
+            # for conf in conf_sg:
+            #     string_to_replace = conf.confidentiality
+            #     new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+            #     conf.confidentiality = new_string
+            # int_sg = [i for i in project_soft_goals if (i.integrity and original_asset_name in i.integrity)]
+            # for integ in int_sg:
+            #     string_to_replace = integ.integrity
+            #     new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+            #     integ.integrity = new_string
+            #
+            # project_hard_goals = [hg for hg in project.hard_goals]
+            # auth_hg = [i for i in project_hard_goals if (i.authenticity is not None and original_asset_name in i.authenticity)]
+            # for auth in  auth_hg:
+            #     string_to_replace = auth.authenticity
+            #     new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+            #     auth.authenticity = new_string
+            # conf_hg = [i for i in project_hard_goals if (i.confidentiality is not None and original_asset_name in i.confidentiality)]
+            # for conf in conf_hg:
+            #     string_to_replace = conf.confidentiality
+            #     new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+            #     conf.confidentiality = new_string
+            # integrity_hg = [i for i in project_hard_goals if (i.integrity is not None and original_asset_name in i.integrity)]
+            # for integ in integrity_hg:
+            #     string_to_replace = integ.integrity
+            #     new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+            #     integ.integrity = new_string
+            # hg_description = [i for i in project_hard_goals if (i.description is not None and original_asset_name in i.description)]
+            # for descr in hg_description:
+            #     string_to_replace = descr.description
+            #     new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
+            #     descr.description = new_string
+            #
+            # db.session.commit()
 
-            project_hard_goals = [hg for hg in project.hard_goals]
-            auth_hg = [i for i in project_hard_goals if (i.authenticity is not None and original_asset_name in i.authenticity)]
-            for auth in  auth_hg:
-                string_to_replace = auth.authenticity
-                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
-                auth.authenticity = new_string
-            conf_hg = [i for i in project_hard_goals if (i.confidentiality is not None and original_asset_name in i.confidentiality)]
-            for conf in conf_hg:
-                string_to_replace = conf.confidentiality
-                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
-                conf.confidentiality = new_string
-            integrity_hg = [i for i in project_hard_goals if (i.integrity is not None and original_asset_name in i.integrity)]
-            for integ in integrity_hg:
-                string_to_replace = integ.integrity
-                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
-                integ.integrity = new_string
-            hg_description = [i for i in project_hard_goals if (i.description is not None and original_asset_name in i.description)]
-            for descr in hg_description:
-                string_to_replace = descr.description
-                new_string = string_to_replace.replace('{}'.format(original_asset_name), '{}'.format(new_asset_name))
-                descr.description = new_string
-
-            db.session.commit()
-
-        choices = [(sh.id, sh.nickname) for sh in Stakeholder.query.filter_by(project_id=project.id)]
+        choices = [(sh['id'], sh['nickname']) for sh in project.stakeholders()]
         choices.insert(0, ('x', 'No Stakeholder'))
         # choices.insert(1, (0, 'Add a new Component'))
         setattr(GoodsForm, 'stakeholders_list',
@@ -1639,17 +1720,13 @@ def goods(project):
         form = GoodsForm()
         if request.method == 'POST' and request.form.get('add'):
             if form.goods.data is not '':
-                gd = Good.query.filter_by(description=form.goods.data, project_id=project.id).first()
-                if gd is None:
-                    good = Good(description=form.goods.data, project_id=project.id)
-                    db.session.add(good)
-                    db.session.commit()
+                gd = gAsset(form.goods.data, project.name)
+                if gd.check_asset() is None:
+                    gd.create_asset()
                     flash('Asset Added to the Database', 'succ')
                     if form.stakeholders_list.data is not 'x':
-                        stakeholder = Stakeholder.query.filter_by(project_id=project.id, id=form.stakeholders_list.data).first()
-                        gud = Good.query.filter_by(project_id=project.id, description=form.goods.data).first()
-                        gud.add_stakeholder(stakeholder)
-                        db.session.commit()
+                        stakeholder = gStakeholder.get_stakeholder(int(form.stakeholders_list.data))
+                        gd.link_stakeholder(stakeholder.name)
                     return redirect(url_for('goods', project=project.name))
                 else:
                     flash('Asset already exists', 'error')
@@ -1659,32 +1736,27 @@ def goods(project):
         elif request.method == 'POST' and request.form.get('update'):
             chbx_list = request.form.getlist('chbpx')
             # print('check box list {}'.format(chbx_list))
-            goods = Good.query.filter_by(project_id=project.id).all()
             current_stakeholders_list = []
-            for gd in goods:
-                for sh in gd.stakeholders:
-                    if sh in gd.stakeholders:
-                        curr_sh = '{}-{}'.format(gd.id, sh.id)
+            for gd in project.assets():
+                for sh in project.stakeholders():
+                    if sh['nickname'] in gd['stakeholders']:
+                        curr_sh = '{}-{}'.format(gd['id'], sh['id'])
                         current_stakeholders_list.append(curr_sh)
-            # print('current stakeholders list {}'.format(current_stakeholders_list))
             for item in chbx_list:
                 if item in current_stakeholders_list:
                     current_stakeholders_list.remove(item)
                 good_id, stakeholder_id = item.split('-')
-                gud = Good.query.filter_by(id=good_id).first()
-                sth = Stakeholder.query.filter_by(id=stakeholder_id).first()
-                gud.add_stakeholder(sth)
-                db.session.commit()
+                gud = gAsset.get_asset(int(good_id))
+                sth = gStakeholder.get_stakeholder(int(stakeholder_id))
+                gud.link_stakeholder(sth.name)
             for remaining in current_stakeholders_list:
                 rem_good_id, rem_stakeholder_id = remaining.split('-')
-                rem_gud = Good.query.filter_by(id=rem_good_id).first()
-                rem_sth = Stakeholder.query.filter_by(id=rem_stakeholder_id).first()
-                rem_gud.remove_stakeholder(rem_sth)
-                db.session.commit()
-            # print('final stakeholder list {}'.format(current_stakeholders_list))
+                rem_gud = gAsset.get_asset(int(rem_good_id))
+                rem_sth = gStakeholder.get_stakeholder(int(rem_stakeholder_id))
+                rem_gud.unlink_stakeholder(rem_sth.name)
             flash('Assets and Stakeholders Matrix Updated', 'succ')
             return redirect(url_for('goods', project=project.name))
-        goods = Good.query.filter_by(project_id=project.id).all()
+        goods = project.assets()
         return render_template('goods.html',
                                title=project.name,
                                form=form,
@@ -1698,14 +1770,10 @@ def goods(project):
 @app.route('/removeg/<project>/<desc>', methods=['GET', 'POST'])
 @login_required
 def removeg(project, desc):
-    project = Projects.query.filter_by(name=project).first()
-    if g.user in project.editors:
-        asset = Good.query.filter_by(description=desc, project_id=project.id).first()
-        for sh in asset.stakeholders:
-            asset.remove_stakeholder(sh)
-            db.session.commit()
-        Good.query.filter_by(description=desc, project_id=project.id).delete()
-        db.session.commit()
+    project = gProject(project)
+    if g.user.id in project.editors():
+        asset = gAsset(desc, project.name)
+        asset.delete()
         flash('Asset "{}" removed'.format(desc), 'error')
         return redirect(url_for('goods', project=project.name))
     else:
@@ -1716,64 +1784,41 @@ def removeg(project, desc):
 @app.route('/soft_goals/<project>', methods=['GET', 'POST'])
 @login_required
 def soft_goals(project):
-    project = Projects.query.filter_by(name=project).first()
-    if g.user in project.editors:
+    project = gProject(project)
+    if g.user.id in project.editors():
         if request.method == 'POST':
-            for good in project.goods:
-                for softgoal in request.form.getlist('authenticity{}'.format(good.id)):
-                    auth_desc = '{} of {}'.format(softgoal, good.description)
-                    cb_value = 'authenticity{}'.format(good.id)
-                    SG = SoftGoal.query.filter_by(authenticity=auth_desc, project_id=project.id).first()
-                    if SG is None:
-                        auth = SoftGoal(authenticity=auth_desc, project_id=project.id, cb_value=cb_value)
-                        db.session.add(auth)
-                        db.session.commit()
-                        flash('Protection Goals Updated', 'succ')
+            for good in project.assets():
+                for softgoal in request.form.getlist('Authenticity¡{}'.format(good['description'])):
+                    auth_desc = '{} of {}'.format(softgoal, good['description'])
+                    sg = gSoftGoal(auth_desc, project.name, 'Authenticity')
+                    asset = gAsset.get_asset(int(good['id']))
+                    sg.create_sg(asset.description)
 
-                for softgoal in request.form.getlist('confidentiality{}'.format(good.id)):
-                    conf_desc = '{} of {}'.format(softgoal, good.description)
-                    cb_value = 'confidentiality{}'.format(good.id)
-                    SG = SoftGoal.query.filter_by(confidentiality=conf_desc, project_id=project.id).first()
-                    if SG is None:
-                        conf = SoftGoal(confidentiality=conf_desc, project_id=project.id, cb_value=cb_value)
-                        db.session.add(conf)
-                        db.session.commit()
-                        flash('Protection Goals Updated', 'succ')
+                for softgoal in request.form.getlist('Confidentiality¡{}'.format(good['description'])):
+                    conf_desc = '{} of {}'.format(softgoal, good['description'])
+                    sg = gSoftGoal(conf_desc, project.name, 'Confidentiality')
+                    asset = gAsset.get_asset(int(good['id']))
+                    sg.create_sg(asset.description)
 
-                for softgoal in request.form.getlist('integrity{}'.format(good.id)):
-                    int_desc = '{} of {}'.format(softgoal, good.description)
-                    cb_value = 'integrity{}'.format(good.id)
-                    SG = SoftGoal.query.filter_by(integrity=int_desc, project_id=project.id).first()
-                    if SG is None:
-                        integ = SoftGoal(integrity=int_desc, project_id=project.id, cb_value=cb_value)
-                        db.session.add(integ)
-                        db.session.commit()
-                        flash('Protection Goals Updated', 'succ')
+                for softgoal in request.form.getlist('Integrity¡{}'.format(good['description'])):
+                    int_desc = '{} of {}'.format(softgoal, good['description'])
+                    sg = gSoftGoal(int_desc, project.name, 'Integrity')
+                    asset = gAsset.get_asset(int(good['id']))
+                    sg.create_sg(asset.description)
+            else:
+                flash('Protection Goals Updated', 'succ')
 
             current_req = []
             for i in request.form:
-                current_req.append(i)
-            softgoals = SoftGoal.query.filter_by(project_id=project.id).all()
-            db_values = []
-            for sgoal in softgoals:
-                db_values.append(sgoal)
-            for val in db_values:
-                if str(val) not in current_req:
-                    sg = SoftGoal.query.filter_by(cb_value=str(val), project_id=project.id).first()
-                    attackers = [s for s in sg.attackers]
-                    for attacker in attackers:
-                        attacker.remove_sg(sg)
-                    hgs = [hg for hg in sg.hard_goals]
-                    for hard_goal in hgs:
-                        print(f'DELETING {hard_goal}')
-                        remove_hard_goal(hard_goal)
-                    SoftGoal.query.filter_by(cb_value=str(val), project_id=project.id).delete()
-                    db.session.commit()
-                    flash('Item(s) removed from the database', 'error')
+                request_sg = i.replace('¡', ' of ')
+                current_req.append(request_sg)
+            softgoals = [(sg['description'], sg['type']) for sg in project.softgoals()]
+            for soft_goal, type in softgoals:
+                if soft_goal not in current_req:
+                    gSoftGoal(soft_goal, project.name, type).delete()
 
             return redirect(url_for('soft_goals', project=project.name))
-        soft_g = [sg for sg in project.soft_goals]
-        print(soft_g)
+        soft_g = [sg for sg in project.softgoals()]
         return render_template('soft_goals.html',
                                title=project.name,
                                project=project,
@@ -2013,44 +2058,53 @@ def removeact(project, name):
 @app.route('/functional_req/<project>', methods=['GET', 'POST'])
 @login_required
 def functional_req(project):
-    project = Projects.query.filter_by(name=project).first()
-    if g.user in project.editors:
+    project = gProject(project)
+    if g.user.id in project.editors():
         edited_fr = [a for a in request.form if a.startswith('editedfr')]
         edited_sub = [a for a in request.form if a.startswith('editedsub')]
         if edited_fr:
             original_fr_name = edited_fr[0].split('-')[1]
             new_fr_name = request.form.get(edited_fr[0])
-            original_fr = FunctionalRequirement.query.filter_by(description=original_fr_name, project_id=project.id).first()
-            original_fr.description = new_fr_name
+            original_fr = gFuncReq(original_fr_name, project.name)
+            new_fr = gFuncReq(new_fr_name, project.name).check()
+            if new_fr:
+                flash('Functional Requirement with that name already exists.', 'error')
+            else:
+                original_fr.edit(new_fr_name)
 
-            project_hard_goals = [hg for hg in project.hard_goals]
-            hg_description = [i for i in project_hard_goals if
-                              (i.description is not None and original_fr_name in i.description)]
-            for hg_desc in hg_description:
-                string_to_replace = hg_desc.description
-                new_string = string_to_replace.replace('{}'.format(original_fr_name), '{}'.format(new_fr_name))
-                hg_desc.description = new_string
-
-            db.session.commit()
+            # project_hard_goals = [hg for hg in project.hard_goals]
+            # hg_description = [i for i in project_hard_goals if
+            #                   (i.description is not None and original_fr_name in i.description)]
+            # for hg_desc in hg_description:
+            #     string_to_replace = hg_desc.description
+            #     new_string = string_to_replace.replace('{}'.format(original_fr_name), '{}'.format(new_fr_name))
+            #     hg_desc.description = new_string
+            #
+            # db.session.commit()
 
         if edited_sub:
             original_sub_name = edited_sub[0].split('-')[1]
             new_sub_name = request.form.get(edited_sub[0])
-            original_sub = SubService.query.filter_by(name=original_sub_name, project_id=project.id).first()
-            original_sub.name = new_sub_name
+            # original_sub = SubService.query.filter_by(name=original_sub_name, project_id=project.id).first()
+            original_sub = gSubServ(original_sub_name, project.name)
+            new_sub = gSubServ(new_sub_name, project.name).check()
+            if new_sub:
+                flash('Component with that name already exists', 'error')
+            else:
+                original_sub.edit(new_sub_name)
 
-            project_hard_goals = [hg for hg in project.hard_goals]
-            hg_description = [i for i in project_hard_goals if
-                              (i.description is not None and original_sub_name in i.description)]
-            for hg_desc in hg_description:
-                string_to_replace = hg_desc.description
-                new_string = string_to_replace.replace('{}'.format(original_sub_name), '{}'.format(new_sub_name))
-                hg_desc.description = new_string
+            # project_hard_goals = [hg for hg in project.hard_goals]
+            # hg_description = [i for i in project_hard_goals if
+            #                   (i.description is not None and original_sub_name in i.description)]
+            # for hg_desc in hg_description:
+            #     string_to_replace = hg_desc.description
+            #     new_string = string_to_replace.replace('{}'.format(original_sub_name), '{}'.format(new_sub_name))
+            #     hg_desc.description = new_string
+            #
+            # db.session.commit()
 
-            db.session.commit()
 
-
-        choices = [(sub.id, sub.name) for sub in SubService.query.filter_by(project_id=project.id)]
+        choices = [(sub['name'], sub['name']) for sub in gSubServ.get_all(project.name)]
         choices.insert(0, ('x', 'No Component'))
         choices.insert(1, (0,'Add a new Component'))
         setattr(FunctionalRequirementsForm, 'subservice_multiple_select',
@@ -2060,71 +2114,49 @@ def functional_req(project):
         if request.method == 'POST' and request.form.get('freqbtn'):
             if form.freq.data is not '':
                 if form.subservice_multiple_select.data is not 'x' and form.subservice_multiple_select.data is not '0':
-                    sub = SubService.query.filter_by(id=form.subservice_multiple_select.data).first()
-                    fr = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
-                    if fr is None:
-                        freq = FunctionalRequirement(description=form.freq.data, project_id=project.id)
-                        db.session.add(freq)
-                        db.session.commit()
+                    sub = gSubServ(form.subservice_multiple_select.data, project.name)
+                    fr = gFuncReq(form.freq.data, project.name)
+                    if fr.check() is None:
+                        fr.create()
                         flash('Functional Requirement Added to the Database', 'succ')
-
-                        fr2 = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
-                        fr2.add_serv(sub)
-                        db.session.commit()
+                        fr.link(sub.name)
                     else:
                         flash('Functional Requirement already exists', 'error')
                 else:
-                    fr = FunctionalRequirement.query.filter_by(description=form.freq.data,
-                                                               project_id=project.id).first()
-                    if fr is None:
-                        freq = FunctionalRequirement(description=form.freq.data, project_id=project.id)
-                        db.session.add(freq)
-                        db.session.commit()
+                    fr = gFuncReq(form.freq.data, project.name)
+                    if fr.check() is None:
+                        fr.create()
                         flash('Functional Requirement Added to the Database', 'succ')
                     else:
                         flash('Functional Requirement already exists', 'error')
             else:
-                flash('Functional Requirement field can\'t be empty', 'error')
+                if form.subserv.data is '':
+                    flash('Functional Requirement field can\'t be empty', 'error')
             if form.subserv.data is not '' and form.subservice_multiple_select.data == '0':
-                sub = SubService.query.filter_by(name=form.subserv.data, project_id=project.id).first()
-                if sub is None:
-                    sb = SubService(name=form.subserv.data, project_id=project.id)
-                    db.session.add(sb)
-                    db.session.commit()
+                sub = gSubServ(form.subserv.data, project.name)
+                if sub.check() is None:
+                    sub.create()
                     flash('Component Added to the Database', 'succ')
 
-                    added_sub = SubService.query.filter_by(name=form.subserv.data, project_id=project.id).first()
-                    fr = FunctionalRequirement.query.filter_by(description=form.freq.data, project_id=project.id).first()
-                    if fr is not None:
-                        fr.add_serv(added_sub)
-                    db.session.commit()
+                    fr = gFuncReq(form.freq.data, project.name)
+                    if fr.check() is not None:
+                        fr.link(sub.name)
                 else:
                     flash('Component Already Exists', 'error')
 
             return redirect(url_for('functional_req', project=project.name))
         elif request.method == 'POST' and request.form.get('updatech'):
-            chbx_list = request.form.getlist('chbpx')
-            freqs = FunctionalRequirement.query.filter_by(project_id=project.id).all()
-            current_services_list = []
-            for fr in freqs:
-                for serv in fr.services:
-                    if serv in fr.services:
-                        curr_serv = '{}-{}'.format(fr.id, serv.id)
-                        current_services_list.append(curr_serv)
-            for item in chbx_list:
-                if item in current_services_list:
-                    current_services_list.remove(item)
-                freq_id, serv_id = item.split('-')
-                frq = FunctionalRequirement.query.filter_by(id=freq_id).first()
-                serv = SubService.query.filter_by(id=serv_id).first()
-                frq.add_serv(serv)
-                db.session.commit()
-            for remaining in current_services_list:
-                rem_freq_id, rem_serv_id = remaining.split('-')
-                rem_frq = FunctionalRequirement.query.filter_by(id=rem_freq_id).first()
-                rem_serv = SubService.query.filter_by(id=rem_serv_id).first()
-                rem_frq.remove_serv(rem_serv)
-                db.session.commit()
+            chbx_list = [(entry.split('¡')[0], entry.split('¡')[1]) for entry in request.form.getlist('chbpx')]
+            freqs = gFuncReq.get_all(project.name)
+            current_services_list = [(fr['description'], serv) for fr in freqs for serv in fr['services']]
+            links = set(chbx_list).difference(current_services_list)
+            deletes = set(current_services_list).difference(chbx_list)
+            for fr, comp in links:
+                freq = gFuncReq(fr, project.name)
+                freq.link(comp)
+            for fr, comp in deletes:
+                freq = gFuncReq(fr, project.name)
+                freq.unlink(comp)
             flash('Functional Requirements and Sub-services Table Updated', 'succ')
             return redirect(url_for('functional_req', project=project.name))
         return render_template('funcreq.html',
@@ -2139,18 +2171,14 @@ def functional_req(project):
 @app.route('/removefr/<project>/<desc>', methods=['GET', 'POST'])
 @login_required
 def removefr(project, desc):
-    project = Projects.query.filter_by(name=project).first()
-    if g.user in project.editors:
-        fr = FunctionalRequirement.query.filter_by(description=desc, project_id=project.id).first()
-        for serv in fr.services:
-            fr.remove_serv(serv)
-        db.session.commit()
-        hgs_list = HardGoal.query.filter_by(freq_id=fr.id, project_id=project.id).all()
-        print(hgs_list)
-        for hg in hgs_list:
-            remove_hard_goal(hg)
-        FunctionalRequirement.query.filter_by(description=desc, project_id=project.id).delete()
-        db.session.commit()
+    project = gProject(project)
+    if g.user.id in project.editors():
+        fr = gFuncReq(desc, project.name)
+        fr.delete()
+        # hgs_list = HardGoal.query.filter_by(freq_id=fr.id, project_id=project.id).all()
+        # print(hgs_list)
+        # for hg in hgs_list:
+        #     remove_hard_goal(hg)
         flash('Functional Requirement "{}" removed'.format(desc), 'error')
         return redirect(url_for('functional_req', project=project.name))
     else:
@@ -2158,25 +2186,23 @@ def removefr(project, desc):
         return redirect(url_for('index'))
 
 
-@app.route('/removesub/<project>/<id>', methods=['GET', 'POST'])
+@app.route('/removesub/<project>/<desc>', methods=['GET', 'POST'])
 @login_required
-def removesub(project, id):
-    project = Projects.query.filter_by(name=project).first()
-    if g.user in project.editors:
-        ss = SubService.query.filter_by(id=id, project_id=project.id).first()
-        name = ss.name
-        for serv in ss.functionalreqs:
-            serv.remove_serv(ss)
-        db.session.commit()
-        for details in ss.actor_details:
-            db.session.delete(details)
-            db.session.commit()
-        hgs_list = HardGoal.query.filter_by(component_id=ss.id, project_id=project.id).all()
-        for hg in hgs_list:
-            remove_hard_goal(hg)
-        SubService.query.filter_by(id=id, project_id=project.id).delete()
-        db.session.commit()
-        flash('Component "{}" removed'.format(name), 'error')
+def removesub(project, desc):
+    project = gProject(project)
+    if g.user.id in project.editors():
+        ss = gSubServ(desc, project.name)
+        # for serv in ss.functionalreqs:
+        #     serv.remove_serv(ss)
+        # db.session.commit()
+        # for details in ss.actor_details:
+        #     db.session.delete(details)
+        #     db.session.commit()
+        # hgs_list = HardGoal.query.filter_by(component_id=ss.id, project_id=project.id).all()
+        # for hg in hgs_list:
+        #     remove_hard_goal(hg)
+        ss.delete()
+        flash('Component "{}" removed'.format(ss.name), 'error')
         return redirect(url_for('functional_req', project=project.name))
     else:
         flash('You don\'t have permission to access this project.', 'error')
@@ -2610,6 +2636,7 @@ def assumptions(project):
             project.final_assumptions = False
             db.session.commit()
             return redirect(url_for('assumptions', project=project.name))
+
 
         return render_template('assumptions.html',
                                title=project.name,

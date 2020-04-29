@@ -21,7 +21,7 @@
               </tr>
               </thead>
               <tbody>
-              {% for project in g.user.wprojects %}
+              {% for project in g.user.wprojects() %}
               <tr>
                 <td colspan="2"><b><a href="{{ url_for('projects', name=project.name) }}">{{ project.name }}</a></b></td>
 {#                <td class="text-right"><a href="{{ url_for('projects', name=project.name) }}">Edit</a></td>#}

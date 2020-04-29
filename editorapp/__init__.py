@@ -8,6 +8,8 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_github import GitHub
 from config import Config
+from neo4j import GraphDatabase
+# from py2neo import Database, NodeMatcher
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -16,6 +18,11 @@ migrate = Migrate(app, db)
 login = LoginManager(app)
 login.login_view = 'index'
 github = GitHub(app)
+gdb_uri = "bolt://localhost:7687"
+driver = GraphDatabase.driver(gdb_uri, auth=("neo4j", "password"), encrypted=False)
+# gdb = Database()
+# graph = gdb.default_graph
+# matcher = NodeMatcher(graph)
 
 # db = SQLAlchemy()
 # migrate = Migrate()

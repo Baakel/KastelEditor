@@ -1,0 +1,170 @@
+:root {
+  --s0b: #55a75e;
+  --s1b: #e84f4f;
+  --s2b: #ff7733;
+  --s3b: #e84f4f;
+  --s4b: #fdfdfd;
+
+  --bbm3t: #ffffff;
+  --bbm3b: #f11d2f;
+  --muted: #bbbbbb;
+}
+
+.chart {
+  height: 100%;
+  width: 100%;
+}
+path {
+  fill: none;
+  stroke-width: 2;
+}
+text {
+  pointer-events: none;
+}
+rect {
+  stroke: black;
+  stroke-width: 0.2px;
+}
+
+.name {
+  stroke-width: 0.5px;
+}
+
+circle {
+  stroke: #2e3133;
+  stroke-width: 0.5px;
+  fill: #b3b3b3;
+}
+
+.desc-0 {
+  fill: var(--s0b);
+}
+
+.desc-1 {
+  fill: var(--s1b);
+}
+
+.desc-2 {
+  fill: var(--s2b);
+}
+
+.desc-3 {
+  fill: var(--s3b);
+}
+
+.desc-4 {
+  fill: var(--s4b);
+}
+
+.name-0 {
+  fill: var(--s0b);
+}
+
+.name-1 {
+  fill: var(--s1b);
+}
+
+.name-2 {
+  fill: var(--s2b);
+}
+
+.name-3 {
+  fill: var(--s3b);
+}
+
+.name-4 {
+  fill: var(--s4b);
+}
+
+.path-0 {
+  stroke: var(--s0b);
+}
+
+.path-1 {
+  stroke: var(--s1b);
+}
+
+.path-2 {
+  stroke: var(--s2b);
+}
+
+.path-3 {
+  stroke: var(--s3b);
+}
+
+.path-4 {
+  stroke: #959595;
+  stroke-width: 1;
+}
+
+.desc-bbm-0 {
+  fill: var(--s0b);
+}
+
+.desc-bbm-1 {
+  fill: var(--s0b);
+}
+
+.desc-bbm-2 {
+  fill: var(--bbm3b);
+}
+
+.desc-bbm-3 {
+  fill: var(--bbm3b);
+}
+
+.desc-bbm-4 {
+  fill: var(--s4b);
+}
+
+.name-bbm-0 {
+  fill: var(--s0b);
+}
+
+.name-bbm-1 {
+  fill: var(--s0b);
+}
+
+.name-bbm-2 {
+  fill: var(--bbm3b);
+}
+
+.name-bbm-3 {
+  fill: var(--bbm3b);
+}
+
+.name-bbm-4 {
+  fill: var(--s4b);
+}
+
+.d-bbm-2 {
+  fill: var(--bbm3t);
+}
+
+.d-bbm-3 {
+  fill: var(--bbm3t);
+}
+
+.n-bbm-2 {
+  fill: var(--bbm3t);
+}
+
+.n-bbm-3 {
+  fill: var(--bbm3t);
+}
+
+.cbxs {
+  margin-top: 50px;
+  position: relative;
+  display: grid;
+  justify-items: left;
+  align-items: center;
+}
+
+.status {
+  margin-top: 100px;
+  position: relative;
+  display: grid;
+  justify-items: left;
+  align-items: center;
+}

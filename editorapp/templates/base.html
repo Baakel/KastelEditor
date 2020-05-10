@@ -83,7 +83,7 @@
                               <a class="nav-link" href="{{ url_for('assumptions', project=g.project.name) }}">Assumptions</a>
                           </li>
                           <li>
-                              <a class="nav-link" href="{{ url_for('tree', project=g.project.name) }}">Project Diagram</a>
+                              <a class="nav-link" href="{{ url_for('diagram', project=g.project.name) }}">Project Diagram</a>
                           </li>
                       {% else %}
                           <li class="nav-item">
@@ -122,9 +122,9 @@
               </ul>
           </div>
       </nav>
-      <div class="lcol text-center"><a href="{{ url_for('index') }}"><img src="/static/img/kastel_logo.png" alt=""></a></div>
+      <div class="lcol text-center"><a href="{{ url_for('index') }}"><img src="/static/img/kastel_logo.png" alt=""></a>{% block lcol %}{% endblock %}</div>
       <div class="mcol">{% block content %}{% endblock %}</div>
-      <div class="rcol"></div>
+      <div class="rcol">{% block rcol %}{% endblock %}</div>
     </div>
         <script src="/static/js/jquery-3.3.1.min.js"></script>
 {#        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>#}

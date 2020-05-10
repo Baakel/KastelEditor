@@ -20,6 +20,7 @@ html, body {
 .lcol {
   background-color: #343a40;
   grid-area: lcol;
+  overflow: auto;
 }
 
 .mcol {
@@ -31,10 +32,12 @@ html, body {
 .rcol {
   background-color: #343a40;
   grid-area: rcol;
+  overflow: auto;
 }
 
 .nbar {
   grid-area: nbar;
+  overflow: auto;
 }
 
 .wrap {

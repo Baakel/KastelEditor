@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block extracss %}
+ <link rel="stylesheet" href="{{url_for('static', filename='css/diagram.css')}}" type="text/css">
+{% endblock %}
+
+{% block lcol %}
+  <div class="cbxs container">
+{#    <ul>#}
+{#      <li><label class="cbx-label"><input class="cbx" type="checkbox" name="actors" id="actors"><span class="slider round"></span></label></li>#}
+{#      <li><label class="cbx-label"><input class="cbx" type="checkbox" name="sgs" id="sgs"><span class="round slider"></span></label></li>#}
+{#      <li><label class="cbx-label" for="fr"><input class="cbx" type="checkbox" name="fr" id="fr"><span class="slider round"></span></label></li>#}
+{#      <li><label class="cbx-label" for="assets"><input class="cbx" type="checkbox" name="assets" id="assets"><span class="slider round"></span></label></li>#}
+{#      <li><label class="cbx-label" for="stk"><input class="cbx" type="checkbox" name="stk" id="stk"><span class="slider round"></span></label></li>#}
+{#      <li><label class="cbx-label" for="atk"><input class="cbx" type="checkbox" name="atk" id="atk"><span class="slider round"></span></label></li>#}
+{#      <li><label class="cbx-label" for="hgs"><input class="cbx" type="checkbox" name="hgs" id="hgs"><span class="slider round"></span></label></li>#}
+{#      <li><label class="cbx-label" for="bbms"><input class="cbx" type="checkbox" name="bbms" id="bbms"><span class="slider round"></span></label></li>#}
+{#    </ul>#}
+    <div class="switch"><label class="text-light"><input type="checkbox" name="actors" id="actors">Actors</label></div>
+    <div class="switch"><label class="text-light"><input type="checkbox" name="sgs" id="sgs" checked>Soft Goals</label></div>
+    <div class="switch"><label class="text-light"><input type="checkbox" name="fr" id="fr">Functional Requirements</label></div>
+    <div class="switch"><label class="text-light"><input type="checkbox" name="assets" id="assets">Assets</label></div>
+    <div class="switch"><label class="text-light"><input type="checkbox" name="stk" id="stk">Stakeholders</label></div>
+    <div class="switch"><label class="text-light"><input type="checkbox" name="atk" id="atk">Attackers</label></div>
+    <div class="switch"><label class="text-light"><input type="checkbox" name="hgs" id="hgs" checked>Hard Goals</label></div>
+    <div class="switch"><label class="text-light"><input type="checkbox" name="bbms" id="bbms" checked>BBMs</label></div>
+  </div>
+{% endblock %}
+
+{% block content %}
+  <div id="canvas" class="container-fluid chart">
+    <svg></svg>
+  </div>
+{% endblock %}
+
+{% block rcol %}
+  <div class="container status">
+    <table class="table table-hover table-striped bg-white">
+      <thead class="thead-inverse">
+      <tr>
+        <th colspan="2">Status Codes</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr>
+        <td>0</td>
+        <td>BBM correctly implemented and correctly integrated</td>
+      </tr>
+      <tr>
+        <td>1</td>
+        <td>BBM correctly implemented but NOT correctly integrated</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>BBM NOT correctly implemented but correctly integrated</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>BBM NOT correctly implemented and NOT correctly integrated</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>BBM not analyzed</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+{#  <script src="https://d3js.org/d3.v5.min.js"></script>#}
+  <script src="https://d3js.org/d3.v5.js"></script>
+  <script src="{{ url_for('static', filename='js/diagram.js') }}"></script>
+{% endblock %}

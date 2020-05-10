@@ -904,6 +904,277 @@ def tree(project):
         return redirect(url_for('index'))
 
 
+@app.route('/diagram/<project>', methods=['GET', 'POST'])
+@login_required
+def diagram(project):
+    proj = Projects.query.filter_by(name=project).first()
+    if proj is None:
+        flash(f'Project {project} does\'t exist.', 'error')
+        return redirect(url_for('index'))
+    if g.user in proj.editors or proj.public:
+        return render_template('diagram.html',
+                               project=proj,
+                               title=proj.name)
+    else:
+        flash("You don't have permission to see that.", 'error')
+        return redirect(url_for('index'))
+
+@app.route('/api')
+def api():
+    project_name = request.args.get('project')
+    functional_requirement_param = request.args.get('fr')
+    actors_param = request.args.get('actors')
+    sg_param = request.args.get("sgs")
+    assets_param = request.args.get("assets")
+    stk_param = request.args.get("stk")
+    atk_param = request.args.get("atk")
+    hgs_param = request.args.get("hgs")
+    bbms_param = request.args.get("bbms")
+    project = Projects.query.filter_by(name=project_name).first()
+    data = {
+        'name': project.name,
+        'children': [],
+        'desc': 'Project'
+    }
+
+    def get_status(list):
+        if 3 in list:
+            status = {'code': 3,
+                      'message': 'BBM NOT correctly implemented'}
+        elif 2 in list:
+            status = {'code': 2,
+                      'message': "BBM NOT correctly implemented"}
+        elif 1 in list:
+            status = {'code': 1,
+                      'message': "BBM correctly implemented"}
+        elif 0 in list:
+            status = {'code': 0,
+                      'message': "BBM correctly implemented"}
+        else:
+            status = {'code': 4,
+                      'message': "BBM not analyzed"}
+        return status
+
+    def add_actors(parent):
+
+        for actor in project.actors:
+            roles = [role for role in actor.details if role.service_id == parent['id']]
+            for role in roles:
+                level = Actors.query.filter_by(id=role.role_id).first()
+                data = {
+                    'name': actor.name,
+                    'children': [],
+                    'comp': parent['id'],
+                    'sg_id': False,
+                    'desc': f'Actor access level: {level.name}'
+                }
+                parent['children'].append(data)
+        return parent
+
+    def add_components(parent):
+        for comp in project.sub_services:
+            hgs_status = set([hg.correctly_implemented for hg in HardGoal.query.filter_by(component_id=comp.id).all()])
+            status = get_status(hgs_status)
+            data = {
+                'name': comp.name,
+                'children': [],
+                'id': comp.id,
+                'desc': 'Component',
+                'status': status['code']
+            }
+            parent['children'].append(data)
+        return parent
+
+    def add_softgoals(parent):
+        sgs_allowed = [(hg.sg_id, hg.component_id) for hg in project.hard_goals]
+        for softgoal in project.soft_goals:
+            hgs_status = set([hg.correctly_implemented for hg in HardGoal.query.filter_by(sg_id=softgoal.id,
+                                                                                          component_id=parent[
+                                                                                              'id']).all()])
+            status = get_status(hgs_status)
+            if softgoal.authenticity:
+                data = {
+                    'name': softgoal.authenticity,
+                    'children': [],
+                    'goal': 'auth',
+                    'sg_id': softgoal.id,
+                    'hg_id': False,
+                    'comp': parent['id'],
+                    'desc': 'Soft Goal',
+                    'status': status['code']
+                }
+            elif softgoal.confidentiality:
+                data = {
+                    'name': softgoal.confidentiality,
+                    'children': [],
+                    'goal': 'conf',
+                    'hg_id': False,
+                    'sg_id': softgoal.id,
+                    'comp': parent['id'],
+                    'desc': 'Soft Goal',
+                    'status': status['code']
+                }
+            else:
+                data = {
+                    'name': softgoal.integrity,
+                    'children': [],
+                    'goal': 'integ',
+                    'hg_id': False,
+                    'sg_id': softgoal.id,
+                    'comp': parent['id'],
+                    'desc': 'Soft Goal',
+                    'status': status['code']
+                }
+            if (softgoal.id, parent['id']) in sgs_allowed:
+                parent['children'].append(data)
+        return parent
+
+    def add_stakeholders(parent):
+        if parent['sg_id']:
+            sg = SoftGoal.query.filter_by(id=parent['sg_id']).first()
+
+            match = re.match(r"([a-z]+)([0-9]+)", sg.cb_value, re.I)
+            asset = Good.query.filter_by(id=match[2]).first()
+            for stakeholder in asset.stakeholders:
+                data = {
+                    'name': stakeholder.nickname,
+                    'children': [],
+                    'sg_id': None,
+                    'hg_id': False,
+                    'desc': 'Stakeholder'
+                }
+                parent['children'].append(data)
+
+    def add_assets(parent):
+        if not parent['sg_id']:
+            return parent
+
+        sg = SoftGoal.query.filter_by(id=parent['sg_id']).first()
+        match = re.match(r"([a-z]+)([0-9]+)", sg.cb_value, re.I)
+        asset = Good.query.filter_by(id=match[2]).first()
+        data = {
+            'name': asset.description,
+            'children': [],
+            'sg_id': None,
+            'hg_id': False,
+            'desc': 'Asset'
+        }
+        parent['children'].append(data)
+
+    def add_attackers(parent):
+        if not parent['sg_id']:
+            return parent
+        for attacker in project.attackers:
+            ids = [sg.id for sg in attacker.soft_goals]
+            if parent['sg_id'] in ids:
+                data = {
+                    'name': attacker.name,
+                    'children': [],
+                    'sg_id': False,
+                    'hg_id': False,
+                    'desc': 'Attacker'
+                }
+                parent['children'].append(data)
+
+    def add_functional_requirements(parent):
+        if not parent['sg_id']:
+            return parent
+
+        hgs = HardGoal.query.filter_by(sg_id=parent['sg_id'], component_id=parent['comp']).all()
+        for fr in project.functional_req:
+            for hg in hgs:
+                if fr.id == hg.freq_id:
+                    data = {
+                        'name': fr.description,
+                        'children': [],
+                        'sg_id': None,
+                        'hg_id': hg.id,
+                        'desc': 'Functional Requirement',
+                        'status': hg.correctly_implemented
+                    }
+                    parent['children'].append(data)
+        return parent
+
+    def add_hardgoals(parent):
+        # for hardgoal in project.hard_goals:
+        #     if hardgoal.sg_id == parent['sg_id'] and hardgoal.component_id == parent['comp']:
+        #         data = {
+        #             'name': hardgoal.description,
+        #             'children': [
+        #                 {'name': hardgoal.bbmechanisms[0].name,
+        #                  'children': []}
+        #             ]
+        #         }
+        #         parent['children'].append(data)
+        if parent['hg_id']:
+            hardgoal = HardGoal.query.filter_by(id=parent['hg_id']).first()
+            data = {
+                'name': hardgoal.description,
+                'children': [
+                    {
+                        'name': hardgoal.bbmechanisms[0].name,
+                        'children': [],
+                        'desc': 'BBM',
+                        'status': hardgoal.correctly_implemented
+                    }
+                ],
+                'desc': 'Hard Goal',
+                'status': hardgoal.correctly_implemented
+            }
+            parent['children'].append(data)
+        elif parent['sg_id']:
+            hardgoals = HardGoal.query.filter_by(sg_id=parent['sg_id']).all()
+            for hg in hardgoals:
+                if parent['comp'] == hg.component_id:
+                    data = {
+                        'name': hg.description,
+                        'children': [
+                            {
+                                'name': hg.bbmechanisms[0].name,
+                                'children': [],
+                                'desc': 'BBM',
+                                'status': hg.correctly_implemented
+                            }
+                        ],
+                        'desc': 'Hard Goal',
+                        'status': hg.correctly_implemented
+                    }
+                    parent['children'].append(data)
+        return parent
+
+    project_dict = add_components(data)
+    for comp in project_dict['children']:
+        if sg_param:
+            comp_dict = add_softgoals(comp)
+            for sg in comp_dict['children']:
+                if functional_requirement_param:
+                    sg_dict = add_functional_requirements(sg)
+                    for fr in sg_dict['children']:
+                        if fr['hg_id']:
+                            if hgs_param:
+                                sgs_dict = add_hardgoals(fr)
+                                if not bbms_param:
+                                    for hgs_dict in sgs_dict['children']:
+                                        hgs_dict['children'] = []
+                else:
+                    if hgs_param:
+                        sgs_dict = add_hardgoals(sg)
+                        if not bbms_param:
+                            for hgs_dict in sgs_dict['children']:
+                                hgs_dict['children'] = []
+                if assets_param:
+                    add_assets(sg)
+                if stk_param:
+                    add_stakeholders(sg)
+                if atk_param:
+                    add_attackers(sg)
+                # sg_dict = add_hardgoals(sg)
+        if actors_param:
+            add_actors(comp)
+
+    # print(data)
+    return jsonify(data)
+
 @app.route('/testdata')
 def testdata():
     proj = request.args.get('project')

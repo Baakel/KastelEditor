@@ -87,6 +87,8 @@ function renderTree(data, g) {
     const root = d3.hierarchy(data);
 
     // Experimental
+    root.x0 = innerWidth/2;
+    root.y0 = 0;
     root.descendants().forEach((d, i) => {
         d.id = i;
         d._children = d.children;
@@ -118,7 +120,31 @@ function renderTree(data, g) {
     paths.exit().remove();
 
     // g.append("g").attr("class", "points");
-    const points = g.selectAll("circle").data(root.descendants());
+    const points = g.selectAll("circle").data(root.descendants(), d => d.id);
+
+    // const pointsEnter = points.enter().append("g")
+    //     .attr("transform", d => `translate(${data.y0}, ${data.x0})`)
+    //     .attr("fill-opacity", 0)
+    //     .attr("stroke-opacity", 0)
+    //     .on("click", d => {
+    //         d.children = d.children ? null : d._children;
+    //         renderTree(d, g)
+    //     })
+    //
+    // pointsEnter.append("circle")
+    //     .attr("r", 2.5)
+    //     .attr("fill", d => d._children ? "#555" : "#999")
+    //     .attr("stroke-width", 10)
+    //
+    // const pointsUpdate = points.merge(pointsEnter)
+    //     .attr("transform", d => `translate(${d.y}, ${d.x})`)
+    //     .attr("fill-opacity", 1)
+    //     .attr("fill-opacity", 1);
+    //
+    // const pointsExit = points.exit().remove()
+    //     .attr("transform", d => `translate(${data.y}, ${data.x})`)
+    //     .attr("fill-opacity", 0)
+    //     .attr("stroke-opacity", 0)
 
     points.enter().append("circle")
         .merge(points)
@@ -130,7 +156,7 @@ function renderTree(data, g) {
     points.exit().remove();
 
     // g.append("g").attr("class", "names");
-    const names = g.selectAll("text.names").data(root.descendants());
+    const names = g.selectAll("text.names").data(root.descendants(), d => d.id);
     const nameBBoxes = []
 
     names.enter().append("text")
@@ -232,6 +258,13 @@ function renderTree(data, g) {
     const descRaiser = g.selectAll("text.description").data(root.descendants());
     nameRaiser.raise()
     descRaiser.raise()
+
+    root.eachBefore(d => {
+        d.x0 = d.x;
+        d.y0 = d.y;
+    })
+
+    // renderTree(data, g)
 }
 
 const funcReq = document.getElementById("fr")

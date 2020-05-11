@@ -34,6 +34,7 @@ circle {
   stroke: #2e3133;
   stroke-width: 0.5px;
   fill: #b3b3b3;
+  pointer-events: all;
 }
 
 .desc-0 {

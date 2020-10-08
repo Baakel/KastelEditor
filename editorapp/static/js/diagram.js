@@ -11,6 +11,7 @@ url_string.searchParams.append('project', project_name)
 url_string.searchParams.append('sgs', true)
 url_string.searchParams.append('hgs', true)
 url_string.searchParams.append('bbms', true)
+// url_string.searchParams.append('assu', true)
 
 const zoomG = svg
     .attr("width", width)
@@ -268,6 +269,7 @@ function renderTree(data, g) {
 }
 
 const funcReq = document.getElementById("fr")
+const assumptions = document.getElementById("assu")
 const actors = document.getElementById("actors")
 const softGoals = document.getElementById("sgs")
 const assets = document.getElementById("assets")
@@ -322,11 +324,13 @@ softGoals.addEventListener("change", (event) => {
         bbms.checked = false
         stakeholders.checked = false
         attackers.checked = false
+        assumptions.checked = false
         url_string.searchParams.delete('fr')
         url_string.searchParams.delete('assets')
         url_string.searchParams.delete('atk')
         url_string.searchParams.delete('hgs')
         url_string.searchParams.delete('bbms')
+        url_string.searchParams.delete('assu')
         url_string.searchParams.delete('stk')
         url_string.searchParams.delete('sgs')
         d3.json(url_string).then(data => {
@@ -404,7 +408,9 @@ hardGoals.addEventListener("change", (event) => {
         })
     } else {
         bbms.checked = false
+        assumptions.checked = false
         url_string.searchParams.delete("bbms")
+        url_string.searchParams.delete("assu")
         url_string.searchParams.delete("hgs")
         d3.json(url_string).then(data => {
             renderTree(data, g)
@@ -427,7 +433,34 @@ bbms.addEventListener("change", (event) => {
             renderTree(data, g)
         })
     } else {
+        assumptions.checked = false
         url_string.searchParams.delete("bbms")
+        url_string.searchParams.delete("assu")
+        d3.json(url_string).then(data => {
+            renderTree(data, g)
+        })
+    }
+})
+assumptions.addEventListener("change", (event) => {
+    if(event.target.checked) {
+        softGoals.checked = true
+        hardGoals.checked = true
+        bbms.checked = true
+        if(!url_string.searchParams.has("sgs")){
+            url_string.searchParams.append("sgs", true)
+        }
+        if(!url_string.searchParams.has("hgs")){
+            url_string.searchParams.append("hgs", true)
+        }
+        if(!url_string.searchParams.has("bbms")){
+            url_string.searchParams.append("bbms", true)
+        }
+        url_string.searchParams.append("assu", true)
+        d3.json(url_string).then(data => {
+            renderTree(data, g)
+        })
+    } else {
+        url_string.searchParams.delete("assu")
         d3.json(url_string).then(data => {
             renderTree(data, g)
         })

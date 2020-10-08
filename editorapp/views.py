@@ -930,6 +930,7 @@ def api():
     atk_param = request.args.get("atk")
     hgs_param = request.args.get("hgs")
     bbms_param = request.args.get("bbms")
+    assu_param = request.args.get("assu")
     project = Projects.query.filter_by(name=project_name).first()
     data = {
         'name': project.name,
@@ -1108,12 +1109,19 @@ def api():
         #         parent['children'].append(data)
         if parent['hg_id']:
             hardgoal = HardGoal.query.filter_by(id=parent['hg_id']).first()
+            print(hardgoal.bbmechanisms[0].assumptions)
             data = {
                 'name': hardgoal.description,
                 'children': [
                     {
                         'name': hardgoal.bbmechanisms[0].name,
-                        'children': [],
+                        'children': [{'name': assumption.name, 'children': [], 'desc': 'Assumptions',
+                                      'fund': assumption.fundamental}
+for
+                                     assumption
+                                     in
+                                     hardgoal.bbmechanisms[
+                            0].assumptions],
                         'desc': 'BBM',
                         'status': hardgoal.correctly_implemented
                     }
@@ -1131,7 +1139,12 @@ def api():
                         'children': [
                             {
                                 'name': hg.bbmechanisms[0].name,
-                                'children': [],
+                                'children': [{'name': assumption.name, 'children': [], 'desc': 'Assumptions',
+                                              'fund': assumption.fundamental} for
+                                     assumption
+                                     in
+                                     hg.bbmechanisms[
+                            0].assumptions],
                                 'desc': 'BBM',
                                 'status': hg.correctly_implemented
                             }
@@ -1156,12 +1169,20 @@ def api():
                                 if not bbms_param:
                                     for hgs_dict in sgs_dict['children']:
                                         hgs_dict['children'] = []
+                                if not assu_param:
+                                    for hgs_dict in sgs_dict['children']:
+                                        for bbm_dict in hgs_dict['children']:
+                                            bbm_dict['children'] = []
                 else:
                     if hgs_param:
                         sgs_dict = add_hardgoals(sg)
                         if not bbms_param:
                             for hgs_dict in sgs_dict['children']:
                                 hgs_dict['children'] = []
+                        if not assu_param:
+                            for hgs_dict in sgs_dict['children']:
+                                for bbm_dict in hgs_dict['children']:
+                                    bbm_dict['children'] = []
                 if assets_param:
                     add_assets(sg)
                 if stk_param:

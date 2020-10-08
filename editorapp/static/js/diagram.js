@@ -230,7 +230,16 @@ function renderTree(data, g) {
         .attr("height", (d,i) => bBoxes[i].height)
         .attr("fill", "#bbbbbb")
         .attr("name", "desc")
-        .attr("class", d => d.data.desc === 'BBM' ? `desc desc-bbm-${d.data.status}` : `desc desc-${d.data.status}`)
+        .attr("class", d => {
+            // d.data.desc === 'BBM' ? `desc desc-bbm-${d.data.status}` : `desc desc-${d.data.status}`
+            if(d.data.desc === 'BBM') {
+                return `desc desc-bbm-${d.data.status}`
+            } else if(d.data.desc === 'Assumption') {
+                return `desc assu-${d.data.fund}`
+            } else {
+                return `desc desc-${d.data.status}`
+            }
+        })
         // .lower();
 
     descBoxes.exit().remove()
@@ -247,7 +256,15 @@ function renderTree(data, g) {
         .attr("fill", "#bbbbbb")
         .attr("name", "name")
         .attr("id", (d,i) => `box-${i}`)
-        .attr("class", d => d.data.desc === 'BBM' ? `names name-bbm-${d.data.status}` : `names name-${d.data.status}`)
+        .attr("class", d => {
+            if(d.data.desc === 'BBM') {
+                return `names name-bbm-${d.data.status}`
+            } else if(d.data.desc === 'Assumption') {
+                return `names assu-${d.data.fund}`
+            } else {
+              return `names name-${d.data.status}`
+            }
+        })
         .on('mouseover', hoverZoom)
         .on('mouseout', hoverOut)
         // .lower();
@@ -277,6 +294,7 @@ const stakeholders = document.getElementById("stk")
 const attackers = document.getElementById("atk")
 const hardGoals = document.getElementById("hgs")
 const bbms = document.getElementById("bbms")
+const fundamental = document.getElementById("funda")
 
 funcReq.addEventListener("change", (event) => {
     if (event.target.checked) {
@@ -325,6 +343,7 @@ softGoals.addEventListener("change", (event) => {
         stakeholders.checked = false
         attackers.checked = false
         assumptions.checked = false
+        fundamental.checked = false
         url_string.searchParams.delete('fr')
         url_string.searchParams.delete('assets')
         url_string.searchParams.delete('atk')
@@ -333,6 +352,7 @@ softGoals.addEventListener("change", (event) => {
         url_string.searchParams.delete('assu')
         url_string.searchParams.delete('stk')
         url_string.searchParams.delete('sgs')
+        url_string.searchParams.delete('funda')
         d3.json(url_string).then(data => {
             renderTree(data, g)
         })
@@ -409,9 +429,11 @@ hardGoals.addEventListener("change", (event) => {
     } else {
         bbms.checked = false
         assumptions.checked = false
+        fundamental.checked = false
         url_string.searchParams.delete("bbms")
         url_string.searchParams.delete("assu")
         url_string.searchParams.delete("hgs")
+        url_string.searchParams.delete("funda")
         d3.json(url_string).then(data => {
             renderTree(data, g)
         })
@@ -434,8 +456,10 @@ bbms.addEventListener("change", (event) => {
         })
     } else {
         assumptions.checked = false
+        fundamental.checked = false
         url_string.searchParams.delete("bbms")
         url_string.searchParams.delete("assu")
+        url_string.searchParams.delete("funda")
         d3.json(url_string).then(data => {
             renderTree(data, g)
         })
@@ -461,6 +485,32 @@ assumptions.addEventListener("change", (event) => {
         })
     } else {
         url_string.searchParams.delete("assu")
+        d3.json(url_string).then(data => {
+            renderTree(data, g)
+        })
+    }
+})
+
+fundamental.addEventListener("change", (event) => {
+    if(event.target.checked) {
+        softGoals.checked = true
+        hardGoals.checked = true
+        bbms.checked = true
+        if(!url_string.searchParams.has("sgs")){
+            url_string.searchParams.append("sgs", true)
+        }
+        if(!url_string.searchParams.has("hgs")){
+            url_string.searchParams.append("hgs", true)
+        }
+        if(!url_string.searchParams.has("bbms")){
+            url_string.searchParams.append("bbms", true)
+        }
+        url_string.searchParams.append("funda", true)
+        d3.json(url_string).then(data => {
+            renderTree(data, g)
+        })
+    } else {
+        url_string.searchParams.delete("funda")
         d3.json(url_string).then(data => {
             renderTree(data, g)
         })

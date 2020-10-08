@@ -6,8 +6,7 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 
 class Config(object):
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql+pymysql://baakel:So9837xZ@localhost/kastel'
-    #'mysql+pymysql://thra:I44!s9rcuk@localhost/Kastel'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'mysql+pymysql://thra:I44!s9rcuk@localhost/Kastel'
     # #'sqlite:///' + os.path.join(basedir, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 

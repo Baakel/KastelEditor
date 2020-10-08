@@ -154,6 +154,10 @@ circle {
   fill: var(--bbm3t);
 }
 
+.assu-true {
+  fill: #7a7e7e;
+}
+
 .cbxs {
   margin-top: 50px;
   position: relative;

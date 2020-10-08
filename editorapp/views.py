@@ -442,7 +442,7 @@ def export(project, backup=False):
         project_dict['Actor Roles'] = actor_roles_list
         assumptions = []
         for ass in Assumptions.query.all():
-            assumptions.append(ass.name)
+            assumptions.append((ass.name, ass.fundamental))
         project_dict['Assumptions'] = assumptions
         black_box_assumptions_dict = {}
         for bb in BbMechanisms.query.all():
@@ -758,9 +758,9 @@ def import_project(dele=False):
                         db.session.add(new_extra_sg)
                 db.session.commit()
         for assumption in json_data['Assumptions']:
-            ass = Assumptions.query.filter_by(name=assumption).first()
+            ass = Assumptions.query.filter_by(name=assumption[0]).first()
             if ass is None:
-                ass = Assumptions(name=assumption)
+                ass = Assumptions(name=assumption[0], fundamental=assumption[1])
                 db.session.add(ass)
                 db.session.commit()
         for bbm in json_data['Black Box And Assumptions Relationship']:
@@ -931,6 +931,7 @@ def api():
     hgs_param = request.args.get("hgs")
     bbms_param = request.args.get("bbms")
     assu_param = request.args.get("assu")
+    fund_param = request.args.get("funda")
     project = Projects.query.filter_by(name=project_name).first()
     data = {
         'name': project.name,
@@ -1109,19 +1110,13 @@ def api():
         #         parent['children'].append(data)
         if parent['hg_id']:
             hardgoal = HardGoal.query.filter_by(id=parent['hg_id']).first()
-            print(hardgoal.bbmechanisms[0].assumptions)
+            # print(hardgoal.bbmechanisms[0].assumptions)
             data = {
                 'name': hardgoal.description,
                 'children': [
                     {
                         'name': hardgoal.bbmechanisms[0].name,
-                        'children': [{'name': assumption.name, 'children': [], 'desc': 'Assumptions',
-                                      'fund': assumption.fundamental}
-for
-                                     assumption
-                                     in
-                                     hardgoal.bbmechanisms[
-                            0].assumptions],
+                        'children': [],
                         'desc': 'BBM',
                         'status': hardgoal.correctly_implemented
                     }
@@ -1139,18 +1134,36 @@ for
                         'children': [
                             {
                                 'name': hg.bbmechanisms[0].name,
-                                'children': [{'name': assumption.name, 'children': [], 'desc': 'Assumptions',
-                                              'fund': assumption.fundamental} for
-                                     assumption
-                                     in
-                                     hg.bbmechanisms[
-                            0].assumptions],
+                                'children': [],
                                 'desc': 'BBM',
                                 'status': hg.correctly_implemented
                             }
                         ],
                         'desc': 'Hard Goal',
                         'status': hg.correctly_implemented
+                    }
+                    parent['children'].append(data)
+        return parent
+
+    def add_assumptions(parent):
+        bbm = BbMechanisms.query.filter_by(name=parent['name']).first()
+        for assumption in bbm.assumptions:
+            if assu_param:
+                if not assumption.fundamental:
+                    data = {
+                        'name': assumption.name,
+                        'children': [],
+                        'desc': 'Assumption',
+                        'fund': assumption.fundamental
+                    }
+                    parent['children'].append(data)
+            if fund_param:
+                if assumption.fundamental:
+                    data = {
+                        'name': assumption.name,
+                        'children': [],
+                        'desc': 'Assumption',
+                        'fund': assumption.fundamental
                     }
                     parent['children'].append(data)
         return parent
@@ -1169,7 +1182,11 @@ for
                                 if not bbms_param:
                                     for hgs_dict in sgs_dict['children']:
                                         hgs_dict['children'] = []
-                                if not assu_param:
+                                else:
+                                    for hgs_dict in sgs_dict['children']:
+                                        for bbm_dict in hgs_dict['children']:
+                                            add_assumptions(bbm_dict)
+                                if not assu_param and not fund_param:
                                     for hgs_dict in sgs_dict['children']:
                                         for bbm_dict in hgs_dict['children']:
                                             bbm_dict['children'] = []
@@ -1179,7 +1196,11 @@ for
                         if not bbms_param:
                             for hgs_dict in sgs_dict['children']:
                                 hgs_dict['children'] = []
-                        if not assu_param:
+                        else:
+                            for hgs_dict in sgs_dict['children']:
+                                for bbm_dict in hgs_dict['children']:
+                                    add_assumptions(bbm_dict)
+                        if not assu_param and not fund_param:
                             for hgs_dict in sgs_dict['children']:
                                 for bbm_dict in hgs_dict['children']:
                                     bbm_dict['children'] = []

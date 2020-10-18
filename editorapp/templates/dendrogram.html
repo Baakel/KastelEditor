@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block extracss %}
+{% endblock %}
+
+{% block content %}
+  <div id="svg"></div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="https://d3js.org/d3.v5.js"></script>
+  <script src="https://unpkg.com/d3-sankey@0.12"></script>
+  <script src="{{ url_for('static', filename='js/dendrogram.js') }}"></script>
+{% endblock %}

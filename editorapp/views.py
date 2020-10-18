@@ -919,6 +919,25 @@ def diagram(project):
         flash("You don't have permission to see that.", 'error')
         return redirect(url_for('index'))
 
+
+@app.route('/dendrogram/<proj>/<hardgoal>', methods=['GET', 'POST'])
+@login_required
+def dendrogram(proj, hardgoal):
+    hg = HardGoal.query.filter_by(id=hardgoal).first()
+    project = Projects.query.filter_by(name=proj).first()
+    if hg is None:
+        flash(f'Hardgoal id {hardgoal} doesn\'t exist.', 'error')
+        return redirect(url_for('index'))
+    if g.user in project.editors or project.public:
+        return render_template('dendrogram.html',
+                               project=project,
+                               title=hg.description,
+                               hg=hg)
+    else:
+        flash('You don\'t have access to this page.', 'error')
+        return redirect(url_for('index'))
+
+
 @app.route('/api')
 def api():
     project_name = request.args.get('project')
@@ -1216,6 +1235,29 @@ def api():
 
     # print(data)
     return jsonify(data)
+
+
+@app.route('/dendapi')
+def dendapi():
+    data = {
+"nodes":[
+{"id":"node0"},
+{"id":"node1"},
+{"id":"node2"},
+{"id":"node3"},
+{"id":"node4"}
+],
+"links":[
+{"source":0,"target":2,"value":2},
+{"source":1,"target":2,"value":2},
+{"source":1,"target":3,"value":2},
+{"source":0,"target":4,"value":2},
+{"source":2,"target":3,"value":2},
+{"source":2,"target":4,"value":2},
+{"source":3,"target":4,"value":4}
+]}
+    return jsonify(data)
+
 
 @app.route('/testdata')
 def testdata():

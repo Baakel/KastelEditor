@@ -1,8 +1,10 @@
 const url_string = new URL(`${window.origin}/dendapi`)
+const hg_id = window.location.pathname.split('/')[3]
+url_string.searchParams.append('hg', hg_id)
 
-const width = document.getElementById("svg").clientWidth - 20
-var height = 600
-var margin = {top: 10, right: 10, bottom: 10, left: 10}
+const width = document.getElementById("svg").clientWidth - 100
+var height = 750
+var margin = {top: 50, right: 50, bottom: 50, left: 50}
 
 
 var canvas = d3.select("#svg").append("svg")
@@ -23,90 +25,6 @@ d3.json(url_string).then(data => {  // https://www.d3-graph-gallery.com/sankey.h
 });
 
 function renderSnek(data) {
-    // console.log(graph);
-    // console.log(graph.nodes);
-    // console.log(graph.links);
-    //
-    // var snek = d3.sankey()
-    //     .nodeWidth(36)
-    //     .nodePadding(290)
-    //     .size([width, height]);
-    //     // .iterations(1);
-    // // snek.nodes(graph.nodes);
-    // // snek.links(graph.links);
-    // // console.log(snek.nodes(graph.nodes))
-    // //
-    // // snek
-    // //     .nodes(graph.nodes)
-    // //     .links(graph.links);
-    // //     // .layout(1)
-    //
-    // const {nodes, links} = snek({nodes: graph.nodes, links: graph.links})
-    //
-    // console.log(snek);
-    // console.log(snek.links);
-    // console.log(snek.nodes);
-    //
-    // var link = canvas.append("g")
-    //     .attr("fill", "none")
-    //     .attr("stroke", "#000")
-    //     .attr("stroke-opacity", 0.2)
-    //     .selectAll("path")
-    //     .data(graph.links)
-    //     .join("path")
-    //     .attr("d", d3.sankeyLinkHorizontal())
-    //     .attr("stroke-width", d => d.width);
-    //
-    // // var link = canvas.append("g")
-    // //     .selectAll(".link")
-    // //     .data(graph.links)
-    // //     .enter()
-    // //     .append("path")
-    // //     .attr("class", "link")
-    // //     .attr("d", d3.sankeyLinkHorizontal())
-    // //     .style("stroke-width", d => Math.max(1, d.dy))
-    // //     .sort((a, b) => b.dy - a.dy)
-    //
-    // var node = canvas.append("g")
-    //     .selectAll(".node")
-    //     .data(graph.nodes)
-    //     .enter().append("g")
-    //     .attr("class", "node")
-    //     .attr("transform", d => `translate(${d.x},${d.y})`)
-    //     .call(d3.drag()
-    //         .subject( d => d )
-    //         .on("start", function() {
-    //             this.parentNode.appendChild(this)
-    //         })
-    //         .on("drag", dragmove));
-    //
-    // node
-    //     .append("rect")
-    //     .attr("height", d => d.dy)
-    //     .attr("width", snek.nodeWidth())
-    //     .style("fill", d => d.color = color(d.id.replace(/ .*/, "")))
-    //     .style("stroke", d => d3.rgb(d.color).darker(2))
-    //     .append("title")
-    //     .text(d => d.name + "\n" + "This is a label");
-    //
-    // node
-    //     .append("text")
-    //     .attr("x", -6)
-    //     .attr("y", d => d.dy/2)
-    //     .attr("dy", ".35em")
-    //     .attr("text-anchor", "end")
-    //     .attr("transform", null)
-    //     .text(d => d.id)
-    //     .filter(d => d.x < width/2)
-    //     .attr("x", 6 + snek.nodeWidth())
-    //     .attr("text-anchor", "start");
-    //
-    // function dragmove(d){
-    //     d3.select(this)
-    //         .attr("transform", `translate(${d.x},${(d.y = Math.max(0, Math.min(height - d.dy, d3.event.y)))})`)
-    //     snek.relayout()
-    //     link.attr("d", snek.link())
-    // }
     sankey = d3.sankey()
         // .nodeAlign(d3[`sankey${align[0].toUpperCase()}${align.slice(1)}`])
         // .nodeSort(inputOrder ? null : undefined)
@@ -119,6 +37,8 @@ function renderSnek(data) {
         links: data.links
     })
 
+    console.log(nodes, links)
+
     canvas.append("g")
         .attr("class", "rects")
         .selectAll("rect")
@@ -128,16 +48,18 @@ function renderSnek(data) {
         .attr("y", d => d.y0)
         .attr("height", d => d.y1 - d.y0)
         .attr("width", d => d.x1 - d.x0 - 2)
-        .attr("fill", d => d.color = color(d.id.replace(/ .*/, "")))
+        // .attr("fill", d => d.color = color(d.id.replace(/ .*/, "")))
+        .attr("fill", d => d.color)
         .append("title")
-        .text(d => `${d.id} label`)
+        .text(d => `${d.id}`)
 
     const link = canvas.append("g")
         .attr("fill", "none")
-        .selectAll(".rects")
+        .selectAll(".rect")
         .data(links)
         .join("g")
-        .attr("stroke", "#000")
+        .attr("class", "link")
+        .attr("stroke", d => d.source.color)
         .attr("stroke-opacity", 0.2)
 
     link.append("path")
@@ -145,7 +67,7 @@ function renderSnek(data) {
         .attr("stroke-width", d => Math.max(1, d.width))
 
     link.append("title")
-        .text(d => `${d.source.id} -> ${d.target.id} \n this is the link title`)
+        .text(d => `${d.source.id} --> ${d.target.id}`)
 
     canvas.append("g")
         .style("font", "10px sans-serif")
@@ -159,7 +81,9 @@ function renderSnek(data) {
         .text(d => d.id)
         .append("tspan")
         .attr("fill-opacity", 0.7)
-        .text(d => `WTF is dis`)
+        .attr("y", d => (d.y1 + d.y0) / 2 - 15)
+        .attr("x", d => d.x0 < width / 2 ? d.x1 + 6 : d.x0 - 6)
+        .text(d => `  ${d.art}`)
 
     console.log(link)
 }

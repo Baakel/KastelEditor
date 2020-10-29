@@ -1239,23 +1239,93 @@ def api():
 
 @app.route('/dendapi')
 def dendapi():
-    data = {
-"nodes":[
-{"id":"node0"},
-{"id":"node1"},
-{"id":"node2"},
-{"id":"node3"},
-{"id":"node4"}
-],
-"links":[
-{"source":0,"target":2,"value":2},
-{"source":1,"target":2,"value":2},
-{"source":1,"target":3,"value":2},
-{"source":0,"target":4,"value":2},
-{"source":2,"target":3,"value":2},
-{"source":2,"target":4,"value":2},
-{"source":3,"target":4,"value":4}
-]}
+    hard_goal_id = request.args.get("hg")
+    hg = HardGoal.query.filter_by(id=hard_goal_id).first()
+    original_hg = HardGoal.query.filter_by(id=hg.original_hg).first()
+    all_hgs = HardGoal.query.filter_by(original_hg=original_hg.id).all()
+    data = {"nodes": [], "links": []}
+    hgs_list = []
+    for hg in all_hgs:
+        hg_dict = {}
+        extra_component = SubService.query.filter_by(id=hg.component_id).first()
+        extra_fr = FunctionalRequirement.query.filter_by(id=hg.freq_id).first()
+        extra_sg = SoftGoal.query.filter_by(id=hg.sg_id).first()
+        extra_asset_id = re.findall(r'\d+', extra_sg.cb_value)
+        extra_asset = Good.query.filter_by(id=extra_asset_id).first()
+        goal = {}
+        if extra_sg.authenticity:
+            goal['desc'] = extra_sg.authenticity
+        elif extra_sg.confidentiality:
+            goal['desc'] = extra_sg.confidentiality
+        else:
+            goal['desc'] = extra_sg.integrity
+
+        hg_dict['component'] = {"id": extra_component.name, "art": "Component", "color": "#ff5722"}
+        hg_dict['freq'] = {"id": extra_fr.description, "art": "FR", "color": "#ff9800"}
+        hg_dict['sg'] = {"id": goal["desc"], "art": "SG", "color": "#4caf50"}
+        hg_dict['asset'] = {"id": extra_asset.description, "art": "Asset", "color": "#ffc107"}
+        hg_dict['desc'] = {"id": hg.description, "art": "HG", "color": "#651fff"}
+
+        hg_dict['links'] = [(hg_dict["component"], hg_dict["desc"]), (hg_dict["freq"], hg_dict["desc"]),
+                            (hg_dict["asset"], hg_dict["sg"]), (hg_dict["sg"], hg_dict["desc"])]
+
+        hgs_list.append(hg_dict)
+
+    og_hg = {"id": original_hg.description, "art": "OHG", "color": "#b71c1c"}
+    for hg in hgs_list:
+        if hg['component'] not in data["nodes"]:
+            data["nodes"].append(hg['component'])
+        if hg['freq'] not in data["nodes"]:
+            data["nodes"].append(hg['freq'])
+        if hg["asset"] not in data["nodes"]:
+            data["nodes"].append(hg["asset"])
+        if hg["sg"] not in data["nodes"]:
+            data["nodes"].append(hg["sg"])
+        if hg["desc"] not in data["nodes"]:
+            data["nodes"].append(hg["desc"])
+
+
+        if og_hg not in data["nodes"]:
+            data["nodes"].append(og_hg)
+        comp_dic = {"source": data["nodes"].index(og_hg), "target": data["nodes"].index(hg["component"]), "value": 1}
+        freq_dic = {"source": data["nodes"].index(og_hg), "target": data["nodes"].index(hg["freq"]), "value": 1}
+        asset_dic = {"source": data["nodes"].index(og_hg), "target": data["nodes"].index(hg["asset"]), "value": 1}
+        if comp_dic not in data["links"]:
+            data["links"].append(comp_dic)
+        if freq_dic not in data["links"]:
+            data["links"].append(freq_dic)
+        if asset_dic not in data["links"]:
+            data["links"].append(asset_dic)
+
+        for pair in hg["links"]:
+            if {"source": data["nodes"].index(pair[0]), "target": data["nodes"].index(pair[1]), "value": 1} not \
+                in \
+                    data["links"]:
+                data["links"].append({"source": data["nodes"].index(pair[0]), "target": data["nodes"].index(pair[1]),
+                                      "value": 1})
+
+    # print(data["links"])
+    sg_indeces = [index for index, hg in enumerate(data["nodes"]) if hg["art"] == "SG"]
+    # print(sg_indeces)
+    og_hg_index = data["nodes"].index(og_hg)
+    for node in range(len(data["nodes"])):
+        used = 0
+        for link in data["links"]:
+            if node == link["source"]:
+                used += 1
+
+        for link in data["links"]:
+            if used > 0 and link["source"] == node and node != og_hg_index:
+                link["value"] = 1/used
+            if used > 0 and link["source"] == node and node in sg_indeces:
+                link["value"] /= used
+
+    #     print(f"node {data['nodes'][node]} with index {node} was used {used} times")
+    # print(data["links"])
+
+
+
+
     return jsonify(data)
 
 

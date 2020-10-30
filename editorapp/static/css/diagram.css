@@ -173,3 +173,12 @@ circle {
   justify-items: left;
   align-items: center;
 }
+
+.extra-hg {
+  cursor: pointer;
+}
+
+.e-hg-n {
+  font-style: italic;
+  /*fill: #00bcd4;*/
+}

@@ -920,11 +920,11 @@ def diagram(project):
         return redirect(url_for('index'))
 
 
-@app.route('/dendrogram/<proj>/<hardgoal>', methods=['GET', 'POST'])
+@app.route('/dendrogram/<project>/<hardgoal>', methods=['GET', 'POST'])
 @login_required
-def dendrogram(proj, hardgoal):
+def dendrogram(project, hardgoal):
     hg = HardGoal.query.filter_by(id=hardgoal).first()
-    project = Projects.query.filter_by(name=proj).first()
+    project = Projects.query.filter_by(name=project).first()
     if hg is None:
         flash(f'Hardgoal id {hardgoal} doesn\'t exist.', 'error')
         return redirect(url_for('index'))
@@ -1141,7 +1141,9 @@ def api():
                     }
                 ],
                 'desc': 'Hard Goal',
-                'status': hardgoal.correctly_implemented
+                'status': hardgoal.correctly_implemented,
+                'extra_hg': True if hardgoal.extra_hg and hardgoal.original_hg else False,
+                'original_hg': hardgoal.id if hardgoal.original_hg else None
             }
             parent['children'].append(data)
         elif parent['sg_id']:
@@ -1159,7 +1161,9 @@ def api():
                             }
                         ],
                         'desc': 'Hard Goal',
-                        'status': hg.correctly_implemented
+                        'status': hg.correctly_implemented,
+                        'extra_hg': True if hg.extra_hg and hg.original_hg else False,
+                        'original_hg': hg.id if hg.original_hg else None
                     }
                     parent['children'].append(data)
         return parent
@@ -1284,7 +1288,6 @@ def dendapi():
         if hg["desc"] not in data["nodes"]:
             data["nodes"].append(hg["desc"])
 
-
         if og_hg not in data["nodes"]:
             data["nodes"].append(og_hg)
         comp_dic = {"source": data["nodes"].index(og_hg), "target": data["nodes"].index(hg["component"]), "value": 1}
@@ -1304,27 +1307,55 @@ def dendapi():
                 data["links"].append({"source": data["nodes"].index(pair[0]), "target": data["nodes"].index(pair[1]),
                                       "value": 1})
 
-    # print(data["links"])
-    sg_indeces = [index for index, hg in enumerate(data["nodes"]) if hg["art"] == "SG"]
-    # print(sg_indeces)
+    sg_indices = [index for index, hg in enumerate(data["nodes"]) if hg["art"] == "SG"]
+    asset_indices = [index for index, hg in enumerate(data["nodes"]) if hg["art"] == "Asset"]
+    hg_indices = [index for index, hg in enumerate(data["nodes"]) if hg["art"] == "HG"]
     og_hg_index = data["nodes"].index(og_hg)
-    for node in range(len(data["nodes"])):
-        used = 0
+
+    targeted_hgs = []
+    for hg in hg_indices:
+        targeted = 0
         for link in data["links"]:
-            if node == link["source"]:
-                used += 1
+            if link["target"] == hg:
+                targeted += 1
+        if targeted > 0:
+            targeted_hgs.append((hg, targeted))
 
+    source_of = {}
+    for sg in sg_indices:
+        source = 0
         for link in data["links"]:
-            if used > 0 and link["source"] == node and node != og_hg_index:
-                link["value"] = 1/used
-            if used > 0 and link["source"] == node and node in sg_indeces:
-                link["value"] /= used
+            if link["source"] == sg:
+                source += 1
+        if source > 1:
+            source_of[sg] = source
 
-    #     print(f"node {data['nodes'][node]} with index {node} was used {used} times")
-    # print(data["links"])
+    asset_links_used = []
 
+    for asset in asset_indices:
+        for sg in sg_indices:
+            if {"source": asset, "target": sg, "value": 1} in data["links"]:
+                index = data["links"].index({"source": asset, "target": sg, "value": 1})
+                if sg in source_of.keys():
+                    data["links"][index]["value"] = source_of[sg]
+                    asset_links_used.append(index)
 
+    og_hg_connections = [link for link in data["links"] if link["source"] == og_hg_index]
 
+    og_asset_links = []
+    for conn in og_hg_connections:
+        target_connections = len([link for link in data["links"] if link["source"] == conn["target"]])
+        data["links"][data["links"].index(conn)]["value"] = target_connections
+
+        if conn["target"] in asset_indices:
+            og_asset_links.append(conn)
+
+    for og_link in og_asset_links:
+        new_val = 0
+        for link in asset_links_used:
+            if data["links"][link]["source"] == data["links"][data["links"].index(og_link)]["target"]:
+                new_val += data["links"][link]["value"]
+        data["links"][data["links"].index(og_link)]["value"] = new_val
 
     return jsonify(data)
 

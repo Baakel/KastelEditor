@@ -174,7 +174,17 @@ function renderTree(data, g) {
                 return 1 - (300 * d.depth / 1000) + "em"
             }
         })
-        .attr("class", d => d.data.desc === 'BBM' ? `names n-bbm-${d.data.status}` : `names n-${d.data.status}`)
+        .attr("class", function(d) {
+           if (d.data.desc === 'BBM') {
+               return `names n-bbm-${d.data.status}`
+           } else {
+               if (d.data.original_hg) {
+                   return `names n-${d.data.status} e-hg-n`
+               } else {
+                   return `names n-${d.data.status}`
+               }
+           }
+        })
         .attr("id", (d, i) => `name-${i}`)
         .text(d => d.data.name)
         .call(wrap, innerWidth/6)
@@ -183,6 +193,11 @@ function renderTree(data, g) {
         })
         // .on("mouseover", hoverZoom)
         .raise()
+        // .on('click', (d) => {
+        //     console.log(d)
+        //     location.href = `${window.origin}`
+        //     console.log(`${window.origin}`)
+        // })
 
     names.exit().remove();
 
@@ -262,11 +277,20 @@ function renderTree(data, g) {
             } else if(d.data.desc === 'Assumption') {
                 return `names assu-${d.data.fund}`
             } else {
-              return `names name-${d.data.status}`
+                if(d.data.original_hg) {
+                    return `names name-${d.data.status} extra-hg`
+                } else {
+                    return `names name-${d.data.status}`
+                }
             }
         })
         .on('mouseover', hoverZoom)
         .on('mouseout', hoverOut)
+        .on('click', function(d) {
+            if (d.data.extra_hg) {
+                window.location.href = `${window.origin}/dendrogram/${project_name}/${d.data.original_hg}`
+            }
+        })
         // .lower();
 
     nameBoxes.exit().remove();
